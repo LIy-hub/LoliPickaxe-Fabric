@@ -1,0 +1,34 @@
+package com.liymod;
+
+
+import com.liymod.combat.LoliExecutionManager;
+import com.liymod.damage_type.ModDamageTypes;
+import com.liymod.event.AttackBlockEvents;
+import com.liymod.event.AttackEntityEvents;
+import com.liymod.item.ModItemGroup;
+import com.liymod.item.ModItems;
+import com.liymod.loliability.LoliAbilityEvents;
+import com.liymod.protection.LoliProtection;
+import com.liymod.sound.ModSounds;
+import net.fabricmc.api.ModInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class LiyMod implements ModInitializer {
+	public static final String MOD_ID = "liymod";
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+
+	@Override
+	public void onInitialize() {
+		LOGGER.info("Welcome to LoliPickaxe");
+		ModSounds.registerSoundEvents();
+		ModItems.registerModItems();
+		ModItemGroup.registerModItemGroup();
+		ModDamageTypes.registerDamageTypes();
+		LoliProtection.registerProtection();
+		LoliExecutionManager.registerEvents();
+		AttackEntityEvents.registerEvents();
+		AttackBlockEvents.registerEvents();
+		LoliAbilityEvents.registerEvents();
+	}
+}
