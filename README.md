@@ -10,6 +10,35 @@ for attribution and third-party asset notes.
 
 LoliPickaxe is a Fabric mod for Minecraft 1.20.1. It adds the Loli Pickaxe, an intentionally overpowered item with special combat, mining, flight, movement, and survival abilities.
 
+## 中文说明
+
+LoliPickaxe（氪金萝莉）是经典 LoliPickaxe 模组的 Minecraft 1.20.1
+Fabric 纪念复刻版。本项目保留原模组的核心概念与玩法特色，并针对现代
+Fabric 环境重新实现；它并非原作者发布的官方续作。
+
+### 主要内容
+
+- 加入刻意设计为超规格强度的“氪金萝莉”镐。
+- 提供强力挖掘、特殊战斗、飞行、移动与生存能力。
+- 持有镐的玩家拥有完整的伤害、死亡、移除与处决防护。
+- 使用氪金萝莉主动攻击时，可通过独立的绝对处决机制命中其他目标。
+- 当攻击者与玩家目标都主手持有氪金萝莉时，同类武器免疫优先，不会创建处决请求，并会交替播放两段免疫提示音。
+- 持有者会从常规近战选取、射线检测、弹射物碰撞与生物目标判定中排除，但移动、背包、区块加载和网络同步仍保持正常。
+
+### 运行要求
+
+- Java 17
+- Minecraft 1.20.1
+- Fabric Loader 0.16.14 或更高版本
+- Fabric API
+
+### 原版与许可
+
+本项目基于并纪念原版
+[IslenautsGK/LoliPickaxe](https://github.com/IslenautsGK/LoliPickaxe)，按照
+原项目的 GNU GPL-3.0 许可证继续以相同许可证发布。作者署名及第三方素材
+说明见 [CREDITS.md](CREDITS.md)，完整许可证见 [LICENSE](LICENSE)。
+
 ## Requirements
 
 - Java 17
