@@ -23,3 +23,8 @@ authorization record and can provide it to platform moderation if requested:
 - `assets/liymod/sounds/loli_immunity_first.ogg`
 - `assets/liymod/sounds/loli_immunity_second.ogg`
 
+## Project avatar
+
+The CurseForge project avatar in `media/curseforge-avatar-400.png` was supplied
+for publication by the project maintainer and is distributed with this project
+under GPL-3.0.
