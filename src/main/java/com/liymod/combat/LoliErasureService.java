@@ -199,7 +199,7 @@ public final class LoliErasureService {
         player.incrementStat(Stats.DEATHS);
 
         if (source.getAttacker() instanceof ServerPlayerEntity killer && killer != player) {
-            killer.updateKilledAdvancementCriterion(player, 0, source);
+            killer.updateKilledAdvancementCriterion(player, source);
         }
 
         player.emitGameEvent(GameEvent.ENTITY_DIE);
