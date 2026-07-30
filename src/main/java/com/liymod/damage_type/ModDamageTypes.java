@@ -11,7 +11,7 @@ import static net.minecraft.registry.RegistryKeys.DAMAGE_TYPE;
 public final class ModDamageTypes {
     public static final RegistryKey<DamageType> LOLI_DAMAGE = RegistryKey.of(
             DAMAGE_TYPE,
-            new Identifier(MOD_ID, "loli_damage")
+            Identifier.of(MOD_ID, "loli_damage")
     );
 
     private ModDamageTypes() {

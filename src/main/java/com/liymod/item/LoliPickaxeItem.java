@@ -1,7 +1,7 @@
 package com.liymod.item;
 
 import com.liymod.combat.LoliErasureService;
-import net.minecraft.client.item.TooltipType;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.Entity;

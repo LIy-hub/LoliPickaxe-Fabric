@@ -289,7 +289,11 @@ public final class LoliExecutionManager {
         }
 
         try {
-            ServerPlayerEntity replacement = server.getPlayerManager().respawnPlayer(player, false);
+            ServerPlayerEntity replacement = server.getPlayerManager().respawnPlayer(
+                    player,
+                    false,
+                    Entity.RemovalReason.KILLED
+            );
             if (replacement == null) {
                 LiyMod.LOGGER.warn(
                         "Server returned no replacement while completing Loli execution for {}",

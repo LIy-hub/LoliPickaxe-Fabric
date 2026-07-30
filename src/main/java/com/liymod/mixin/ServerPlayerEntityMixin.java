@@ -6,6 +6,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.TeleportTarget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,17 +39,17 @@ public abstract class ServerPlayerEntityMixin {
         }
     }
 
-    @Inject(method = "moveToWorld", at = @At("HEAD"))
+    @Inject(method = "teleportTo", at = @At("HEAD"))
     private void lolipickaxe$beginTrustedDimensionMove(
-            ServerWorld destination,
+            TeleportTarget target,
             CallbackInfoReturnable<Entity> cir
     ) {
         TrustedPlayerLifecycle.begin((ServerPlayerEntity) (Object) this);
     }
 
-    @Inject(method = "moveToWorld", at = @At("RETURN"))
+    @Inject(method = "teleportTo", at = @At("RETURN"))
     private void lolipickaxe$endTrustedDimensionMove(
-            ServerWorld destination,
+            TeleportTarget target,
             CallbackInfoReturnable<Entity> cir
     ) {
         TrustedPlayerLifecycle.end((ServerPlayerEntity) (Object) this);

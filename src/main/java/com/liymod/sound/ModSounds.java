@@ -7,11 +7,11 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 
 public final class ModSounds {
-    public static final Identifier LOLI_IMMUNITY_FIRST_ID = new Identifier(
+    public static final Identifier LOLI_IMMUNITY_FIRST_ID = Identifier.of(
             LiyMod.MOD_ID,
             "loli_immunity_first"
     );
-    public static final Identifier LOLI_IMMUNITY_SECOND_ID = new Identifier(
+    public static final Identifier LOLI_IMMUNITY_SECOND_ID = Identifier.of(
             LiyMod.MOD_ID,
             "loli_immunity_second"
     );

@@ -14,7 +14,7 @@ import static com.liymod.LiyMod.MOD_ID;
 public final class ModItemGroup {
     public static final ItemGroup LIYMOD_GROUP = Registry.register(
             Registries.ITEM_GROUP,
-            new Identifier(MOD_ID, "liymod"),
+            Identifier.of(MOD_ID, "liymod"),
             FabricItemGroup.builder()
                     .displayName(Text.translatable("itemgroup.liymod"))
                     .icon(() -> new ItemStack(ModItems.LOLI_PICKAXE))

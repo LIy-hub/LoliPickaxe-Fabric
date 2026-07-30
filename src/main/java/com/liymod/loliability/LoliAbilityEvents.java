@@ -8,13 +8,14 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 public final class LoliAbilityEvents {
-    private static final UUID LEGACY_SPEED_BOOST_ID = UUID.fromString(
+    private static final Identifier LEGACY_SPEED_BOOST_ID = Identifier.ofVanilla(
             "49959a82-0a2e-4c3d-a8ab-2cfa74bb13d8"
     );
     private static final Set<UUID> FLIGHT_GRANTED = new HashSet<>();
