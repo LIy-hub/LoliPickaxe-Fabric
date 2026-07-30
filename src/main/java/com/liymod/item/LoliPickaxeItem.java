@@ -12,7 +12,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
@@ -75,7 +75,7 @@ public final class LoliPickaxeItem extends Item {
     }
 
     private static void spawnLightning(Level world, double x, double y, double z) {
-        LightningBolt lightning = new LightningBolt(EntityType.LIGHTNING_BOLT, world);
+        LightningBolt lightning = new LightningBolt(EntityTypes.LIGHTNING_BOLT, world);
         lightning.setPos(x, y, z);
         world.addFreshEntity(lightning);
     }

@@ -46,8 +46,8 @@ public final class AttackBlockEvents {
             Map.entry(DEEPSLATE_EMERALD_ORE, Items.EMERALD_BLOCK),
             Map.entry(LAPIS_ORE, Items.LAPIS_BLOCK),
             Map.entry(DEEPSLATE_LAPIS_ORE, Items.LAPIS_BLOCK),
-            Map.entry(COPPER_ORE, Items.COPPER_BLOCK),
-            Map.entry(DEEPSLATE_COPPER_ORE, Items.COPPER_BLOCK),
+            Map.entry(COPPER_ORE, Items.COPPER_BLOCK.weathering().unaffected()),
+            Map.entry(DEEPSLATE_COPPER_ORE, Items.COPPER_BLOCK.weathering().unaffected()),
             Map.entry(NETHER_QUARTZ_ORE, Items.QUARTZ_BLOCK),
             Map.entry(ANCIENT_DEBRIS, Items.NETHERITE_BLOCK)
     );
