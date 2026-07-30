@@ -9,8 +9,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.network.packet.s2c.play.DeathMessageS2CPacket;
 import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
+import net.minecraft.scoreboard.ScoreAccess;
 import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.stat.Stats;
@@ -189,8 +189,8 @@ public final class LoliErasureService {
 
         player.getScoreboard().forEachScore(
                 ScoreboardCriterion.DEATH_COUNT,
-                player.getEntityName(),
-                ScoreboardPlayerScore::incrementScore
+                player,
+                ScoreAccess::incrementScore
         );
         player.incrementStat(Stats.DEATHS);
 
