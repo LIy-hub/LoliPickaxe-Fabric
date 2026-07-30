@@ -8,7 +8,50 @@ reimplementing it for modern Fabric. It is distributed under GPL-3.0 in
 accordance with the original project's license. See [CREDITS.md](CREDITS.md)
 for attribution and third-party asset notes.
 
-LoliPickaxe is a Fabric mod for Minecraft 1.20.1. It adds the Loli Pickaxe, an intentionally overpowered item with special combat, mining, flight, movement, and survival abilities.
+LoliPickaxe is a Fabric mod for Minecraft 1.20.1. It adds the Loli Pickaxe, an
+intentionally overpowered item with special combat, mining, flight, and survival
+abilities. The gameplay contract is frozen across supported Minecraft branches;
+version branches contain compatibility changes only.
+
+## Gameplay and acquisition
+
+- Adds the fireproof `liymod:loli_pickaxe` and `liymod:loli` items to the
+  LoliPickaxe creative tab.
+- There is no crafting recipe in the current implementation. Use the creative
+  inventory or commands to obtain the items.
+- The pickaxe is kept unbreakable and has deliberately extreme mining and
+  combat attributes.
+- Attacking a block attempts to break it immediately. A fixed set of normally
+  restricted blocks and ores also produces the special drops defined by the
+  mod, including storage-block drops for ores.
+- A deliberate main-hand attack uses the mod's absolute execution path. If
+  normal targeting filters out a protected player, the server resolves the
+  swing from the attacker's view up to 1024 blocks with a six-degree aim
+  fallback.
+- Using the pickaxe processes non-lightning entities in the user's
+  32-block-expanded bounding box. Each successful execution creates a
+  lightning bolt at the target's previous position.
+- A main-hand holder rejects ordinary damage, death, forced removal and
+  standard execution attempts; the holder is also excluded from ordinary
+  combat targeting, raycasts, projectile collision and mob target predicates.
+- Holders receive flight, continuously restored survival state, high luck and
+  the existing level-two creative-operator check. The mod does not add the old
+  movement-speed attribute boost.
+- Two players holding the pickaxe in their main hands are immune to each
+  other's Loli attack. Unique immunity events alternate two bundled sound
+  samples for both players.
+
+## Multiplayer and administration warning
+
+This mod is intentionally unbalanced. It can execute players and multiple
+nearby entities, and it can break or drop normally restricted administrative
+blocks. Server owners should only distribute the item to trusted players and
+should test compatibility with their protection and administration mods. This
+project does not claim universal compatibility with every third-party combat or
+protection implementation.
+
+The normative compatibility contract and immutable asset hashes are documented
+in [PORTING_BASELINE.md](PORTING_BASELINE.md).
 
 ## 中文说明
 
@@ -18,18 +61,38 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 
 ### 主要内容
 
-- 加入刻意设计为超规格强度的“氪金萝莉”镐。
-- 提供强力挖掘、特殊战斗、飞行、移动与生存能力。
+- 加入防火的 `liymod:loli_pickaxe`（氪金萝莉）与
+  `liymod:loli`（萝莉碎片），并放入独立创造物品栏。
+- 当前实现没有合成配方，只能通过创造物品栏或命令获取；项目介绍不会凭空
+  捏造配方。
+- 氪金萝莉保持不可破坏，并拥有刻意设计为超规格的挖掘与战斗属性。
+- 左击方块会尝试立即破坏；固定清单中的管理类方块、不可破坏方块与矿石还会
+  产生模组定义的特殊掉落，矿石可额外掉落对应储存方块。
 - 持有镐的玩家拥有完整的伤害、死亡、移除与处决防护。
 - 使用氪金萝莉主动攻击时，可通过独立的绝对处决机制命中其他目标。
+- 普通命中被保护层过滤时，服务端会根据玩家视线在最远 1024 格内解析目标，
+  并提供 6 度辅助瞄准。
+- 右键会处理玩家碰撞箱向外扩展 32 格范围内除闪电外的实体；每个成功处决的
+  目标原位置都会生成闪电。
 - 当攻击者与玩家目标都主手持有氪金萝莉时，同类武器免疫优先，不会创建处决请求，并会交替播放两段免疫提示音。
 - 持有者会从常规近战选取、射线检测、弹射物碰撞与生物目标判定中排除，但移动、背包、区块加载和网络同步仍保持正常。
+- 持有者获得飞行、持续恢复的生存状态、高幸运值和既有的二级创造管理员检查；
+  当前实现不会重新添加旧版移动速度属性加成。
+
+### 多人服务器与管理风险
+
+本模组刻意保持不平衡玩法：它能处决玩家及多个附近实体，也能破坏或掉落通常
+受限制的管理类方块。服主应只向可信玩家发放，并自行验证领地、权限、战斗等
+第三方模组兼容性。本项目不声称能够兼容所有第三方保护或战斗实现。
+
+跨版本迁移必须遵守的完整玩法合同与不可变素材哈希见
+[PORTING_BASELINE.md](PORTING_BASELINE.md)。
 
 ### 运行要求
 
 - Java 17
 - Minecraft 1.20.1
-- Fabric Loader 0.16.14 或更高版本
+- Fabric Loader 0.19.3 或更高版本
 - Fabric API
 
 ### 原版与许可
@@ -43,7 +106,7 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 
 - Java 17
 - Minecraft 1.20.1
-- Fabric Loader 0.16.14 or newer
+- Fabric Loader 0.19.3 or newer
 - Fabric API
 
 ## Development

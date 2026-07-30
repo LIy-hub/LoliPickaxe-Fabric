@@ -7,16 +7,15 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-	archivesName = project.archives_base_name
+	archivesName = "${project.archives_base_name}-${project.minecraft_version}"
 }
 
 repositories {
 	maven {
-		url = 'https://maven.aliyun.com/nexus/content/groups/public'
+		name = 'Fabric'
+		url = 'https://maven.fabricmc.net/'
 	}
-	maven {
-		url = 'https://repository.hanbings.io/proxy'
-	}
+	mavenCentral()
 }
 
 dependencies {
