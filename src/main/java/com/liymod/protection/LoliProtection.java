@@ -36,7 +36,7 @@ public final class LoliProtection {
     }
 
     public static boolean blocksRemoval(PlayerEntity player, Entity.RemovalReason reason) {
-        return !player.getWorld().isClient
+        return !player.getEntityWorld().isClient()
                 && isProtected(player)
                 && !TrustedPlayerLifecycle.isRemovalAllowed(player);
     }

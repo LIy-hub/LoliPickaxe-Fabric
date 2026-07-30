@@ -35,7 +35,7 @@ public abstract class PlayerMixin extends LivingEntity {
             float amount,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        if (getWorld().isClient || !LoliProtection.isProtected((PlayerEntity) (Object) this)) {
+        if (getEntityWorld().isClient() || !LoliProtection.isProtected((PlayerEntity) (Object) this)) {
             return;
         }
 
@@ -45,7 +45,7 @@ public abstract class PlayerMixin extends LivingEntity {
 
     @Inject(method = "onDeath", at = @At("HEAD"), cancellable = true)
     private void liymod$preventDeath(DamageSource source, CallbackInfo ci) {
-        if (!getWorld().isClient && LoliProtection.isProtected((PlayerEntity) (Object) this)) {
+        if (!getEntityWorld().isClient() && LoliProtection.isProtected((PlayerEntity) (Object) this)) {
             ci.cancel();
         }
     }

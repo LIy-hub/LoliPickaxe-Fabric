@@ -44,12 +44,6 @@ public final class LoliPickaxeItem extends Item {
     }
 
     @Override
-    public void postProcessComponents(ItemStack stack) {
-        super.postProcessComponents(stack);
-        makeUnbreakable(stack);
-    }
-
-    @Override
     public void inventoryTick(
             ItemStack stack,
             ServerWorld world,
@@ -62,7 +56,7 @@ public final class LoliPickaxeItem extends Item {
 
     @Override
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
-        if (world.isClient) {
+        if (world.isClient()) {
             return ActionResult.PASS;
         }
 

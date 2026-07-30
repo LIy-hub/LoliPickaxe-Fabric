@@ -31,7 +31,7 @@ public abstract class EntityMixin {
     private void lolipickaxe$preventDiscard(CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
         if (self instanceof PlayerEntity player
-                && !self.getWorld().isClient
+                && !self.getEntityWorld().isClient()
                 && LoliProtection.isProtected(player)
                 && !TrustedPlayerLifecycle.isRemovalAllowed(player)) {
             ci.cancel();

@@ -41,7 +41,7 @@ public final class LoliErasureService {
             Entity target,
             ExecutionAuthority authority
     ) {
-        if (!(target.getWorld() instanceof ServerWorld serverWorld)
+        if (!(target.getEntityWorld() instanceof ServerWorld serverWorld)
                 || target == attacker) {
             return Result.IGNORED;
         }
@@ -156,7 +156,7 @@ public final class LoliErasureService {
             forcePlayerDeath(player, source);
         } else {
             target.emitGameEvent(GameEvent.ENTITY_DIE);
-            target.getWorld().sendEntityStatus(
+            target.getEntityWorld().sendEntityStatus(
                     target,
                     EntityStatuses.PLAY_DEATH_SOUND_OR_ADD_PROJECTILE_HIT_PARTICLES
             );
@@ -191,7 +191,7 @@ public final class LoliErasureService {
                 )
         );
 
-        player.getScoreboard().forEachScore(
+        player.getEntityWorld().getScoreboard().forEachScore(
                 ScoreboardCriterion.DEATH_COUNT,
                 player,
                 ScoreAccess::incrementScore
@@ -203,13 +203,13 @@ public final class LoliErasureService {
         }
 
         player.emitGameEvent(GameEvent.ENTITY_DIE);
-        player.getWorld().sendEntityStatus(
+        player.getEntityWorld().sendEntityStatus(
                 player,
                 EntityStatuses.PLAY_DEATH_SOUND_OR_ADD_PROJECTILE_HIT_PARTICLES
         );
         LiyMod.LOGGER.info(
                 "Forced fallback death commit for {} after its normal death path was blocked",
-                player.getGameProfile().getName()
+                player.getGameProfile().name()
         );
     }
 }

@@ -64,7 +64,7 @@ public final class AttackBlockEvents {
             Direction direction
     ) {
         ItemStack stack = player.getStackInHand(hand);
-        if (stack.getItem() instanceof LoliPickaxeItem && !world.isClient) {
+        if (stack.getItem() instanceof LoliPickaxeItem && !world.isClient()) {
             Block block = world.getBlockState(blockPos).getBlock();
             world.breakBlock(blockPos, true, player);
             world.playSound(
