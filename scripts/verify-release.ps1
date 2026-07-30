@@ -152,6 +152,7 @@ try {
         'assets/liymod/sounds/loli_immunity_second.ogg',
         'assets/liymod/sounds.json',
         'data/liymod/damage_type/loli_damage.json',
+        'data/liymod/tags/blocks/incorrect_for_loli_tool.json',
         'liymod.mixins.json'
     )
     foreach ($entryPath in $requiredEntries) {
@@ -160,6 +161,8 @@ try {
 
     $mixinConfig = (Get-ZipEntryText $archive 'liymod.mixins.json') | ConvertFrom-Json
     Assert-True ($mixinConfig.required -eq $true) "Mixin config must remain required"
+    Assert-True ($mixinConfig.compatibilityLevel -eq "JAVA_$ExpectedJavaRelease") `
+        "Mixin compatibility level must match Java $ExpectedJavaRelease"
     Assert-True ($mixinConfig.injectors.defaultRequire -eq 1) `
         "Mixin defaultRequire must remain 1"
     foreach ($mixinName in $mixinConfig.mixins) {

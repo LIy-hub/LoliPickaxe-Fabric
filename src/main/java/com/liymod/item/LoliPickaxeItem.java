@@ -1,22 +1,23 @@
 package com.liymod.item;
 
 import com.liymod.combat.LoliErasureService;
-import net.minecraft.client.item.TooltipContext;
+import net.minecraft.client.item.TooltipType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
 import net.minecraft.item.ToolMaterial;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
@@ -29,7 +30,16 @@ public final class LoliPickaxeItem extends PickaxeItem {
             float attackSpeed,
             Settings settings
     ) {
-        super(material, attackDamage, attackSpeed, settings);
+        super(
+                material,
+                settings.attributeModifiers(
+                        PickaxeItem.createAttributeModifiers(
+                                material,
+                                attackDamage,
+                                attackSpeed
+                        )
+                )
+        );
     }
 
     @Override
@@ -40,9 +50,9 @@ public final class LoliPickaxeItem extends PickaxeItem {
     }
 
     @Override
-    public void postProcessNbt(NbtCompound nbt) {
-        super.postProcessNbt(nbt);
-        nbt.putBoolean("Unbreakable", true);
+    public void postProcessComponents(ItemStack stack) {
+        super.postProcessComponents(stack);
+        makeUnbreakable(stack);
     }
 
     @Override
@@ -80,7 +90,7 @@ public final class LoliPickaxeItem extends PickaxeItem {
 
     private static void makeUnbreakable(ItemStack stack) {
         stack.setDamage(0);
-        stack.getOrCreateNbt().putBoolean("Unbreakable", true);
+        stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(true));
     }
 
     private static void spawnLightning(World world, double x, double y, double z) {
@@ -92,11 +102,11 @@ public final class LoliPickaxeItem extends PickaxeItem {
     @Override
     public void appendTooltip(
             ItemStack stack,
-            @Nullable World world,
+            Item.TooltipContext context,
             List<Text> tooltip,
-            TooltipContext context
+            TooltipType type
     ) {
         tooltip.add(Text.translatable("liymod.loli_pickaxe.tip").formatted(Formatting.AQUA));
-        super.appendTooltip(stack, world, tooltip, context);
+        super.appendTooltip(stack, context, tooltip, type);
     }
 }

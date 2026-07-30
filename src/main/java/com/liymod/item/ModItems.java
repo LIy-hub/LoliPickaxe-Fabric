@@ -15,7 +15,7 @@ public final class ModItems {
     }
 
     private static Item registerItem(String name, Item item) {
-        return Registry.register(Registries.ITEM, new Identifier(MOD_ID, name), item);
+        return Registry.register(Registries.ITEM, Identifier.of(MOD_ID, name), item);
     }
 
     public static final Item LOLI = registerItem("loli", new Item(new Item.Settings().fireproof()));

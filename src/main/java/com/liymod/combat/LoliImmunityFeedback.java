@@ -6,7 +6,6 @@ import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
@@ -77,10 +76,10 @@ public final class LoliImmunityFeedback {
 
     private static void playForParticipant(
             @Nullable Entity participant,
-            SoundEvent sound
+        SoundEvent sound
     ) {
         if (participant instanceof ServerPlayerEntity player) {
-            player.playSound(sound, SoundCategory.PLAYERS, 1.0F, 1.0F);
+            player.playSound(sound, 1.0F, 1.0F);
         }
     }
 
