@@ -89,7 +89,7 @@ public final class LoliExecutionManager {
             restoreDefendedPlayer(player);
             LiyMod.LOGGER.info(
                     "Loli defense revoked execution ticket for {} in state {}",
-                    player.getGameProfile().getName(),
+                    player.getGameProfile().name(),
                     removed.state()
             );
         }
@@ -178,7 +178,7 @@ public final class LoliExecutionManager {
             refreshRemotePlayerTracking(newPlayer);
             LiyMod.LOGGER.info(
                     "Completed Loli execution lifecycle for {} (entity {} -> {})",
-                    oldPlayer.getGameProfile().getName(),
+                    oldPlayer.getGameProfile().name(),
                     oldPlayer.getId(),
                     newPlayer.getId()
             );
@@ -187,19 +187,19 @@ public final class LoliExecutionManager {
 
     private static void refreshRemotePlayerTracking(ServerPlayerEntity player) {
         EntitiesDestroyS2CPacket removeStaleEntity = new EntitiesDestroyS2CPacket(player.getId());
-        for (ServerPlayerEntity observer : player.getWorld().getServer()
+        for (ServerPlayerEntity observer : player.getEntityWorld().getServer()
                 .getPlayerManager().getPlayerList()) {
             if (observer != player) {
                 observer.networkHandler.sendPacket(removeStaleEntity);
             }
         }
 
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         world.getChunkManager().unloadEntity(player);
         world.getChunkManager().loadEntity(player);
         LiyMod.LOGGER.info(
                 "Refreshed remote tracking for respawned player {} (entity {})",
-                player.getGameProfile().getName(),
+                player.getGameProfile().name(),
                 player.getId()
         );
     }
@@ -213,7 +213,7 @@ public final class LoliExecutionManager {
         normalizeCompletedPlayer(player);
         LiyMod.LOGGER.info(
                 "Completed disconnected Loli execution lifecycle for {}",
-                player.getGameProfile().getName()
+                player.getGameProfile().name()
         );
     }
 
@@ -298,7 +298,7 @@ public final class LoliExecutionManager {
             if (replacement == null) {
                 LiyMod.LOGGER.warn(
                         "Server returned no replacement while completing Loli execution for {}",
-                        player.getGameProfile().getName()
+                        player.getGameProfile().name()
                 );
                 return;
             }
@@ -307,7 +307,7 @@ public final class LoliExecutionManager {
         } catch (RuntimeException exception) {
             LiyMod.LOGGER.warn(
                     "Server-side respawn failed while completing Loli execution for {} at locked tick {}",
-                    player.getGameProfile().getName(),
+                    player.getGameProfile().name(),
                     ticket.lockedTicks(),
                     exception
             );

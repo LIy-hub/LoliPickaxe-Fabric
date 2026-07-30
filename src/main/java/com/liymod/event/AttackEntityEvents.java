@@ -27,7 +27,7 @@ public final class AttackEntityEvents {
             @Nullable EntityHitResult hitResult
     ) {
         ItemStack stack = player.getStackInHand(hand);
-        if (!world.isClient && stack.getItem() instanceof LoliPickaxeItem) {
+        if (!world.isClient() && stack.getItem() instanceof LoliPickaxeItem) {
             LoliErasureService.executeAbsolute(player, target);
             return ActionResult.SUCCESS;
         }

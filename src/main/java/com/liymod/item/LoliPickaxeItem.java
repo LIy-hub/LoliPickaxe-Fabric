@@ -33,7 +33,8 @@ public final class LoliPickaxeItem extends Item {
             float attackSpeed,
             Settings settings
     ) {
-        super(settings.pickaxe(material, attackDamage, attackSpeed));
+        super(settings.pickaxe(material, attackDamage, attackSpeed)
+                .component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE));
     }
 
     @Override
@@ -41,12 +42,6 @@ public final class LoliPickaxeItem extends Item {
         ItemStack stack = super.getDefaultStack();
         makeUnbreakable(stack);
         return stack;
-    }
-
-    @Override
-    public void postProcessComponents(ItemStack stack) {
-        super.postProcessComponents(stack);
-        makeUnbreakable(stack);
     }
 
     @Override
@@ -62,7 +57,7 @@ public final class LoliPickaxeItem extends Item {
 
     @Override
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
-        if (world.isClient) {
+        if (world.isClient()) {
             return ActionResult.PASS;
         }
 

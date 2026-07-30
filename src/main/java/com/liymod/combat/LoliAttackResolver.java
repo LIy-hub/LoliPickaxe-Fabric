@@ -35,8 +35,8 @@ public final class LoliAttackResolver {
         if (result == LoliErasureService.Result.EXECUTED) {
             LiyMod.LOGGER.debug(
                     "Absolute Loli swing from {} resolved to {}",
-                    attacker.getGameProfile().getName(),
-                    target.getGameProfile().getName()
+                    attacker.getGameProfile().name(),
+                    target.getGameProfile().name()
             );
             return true;
         }
@@ -56,7 +56,7 @@ public final class LoliAttackResolver {
         double assistedDot = MIN_AIM_DOT;
         double assistedDistanceSquared = Double.POSITIVE_INFINITY;
 
-        for (ServerPlayerEntity candidate : attacker.getWorld().getPlayers()) {
+        for (ServerPlayerEntity candidate : attacker.getEntityWorld().getPlayers()) {
             if (candidate == attacker
                     || candidate.isRemoved()
                     || LoliExecutionManager.isDeadLocked(candidate)) {
