@@ -3,10 +3,15 @@ package com.liymod.item;
 
 import com.liymod.LiyMod;
 import com.liymod.tool.ModToolMaterials;
-import net.minecraft.item.Item;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.util.Identifier;
+import java.util.function.Function;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Unit;
+import net.minecraft.world.item.Item;
 
 import static com.liymod.LiyMod.MOD_ID;
 
@@ -14,19 +19,26 @@ public final class ModItems {
     private ModItems() {
     }
 
-    private static Item registerItem(String name, Item item) {
-        return Registry.register(Registries.ITEM, new Identifier(MOD_ID, name), item);
+    private static Item registerItem(String name, Function<Item.Properties, Item> factory, Item.Properties properties) {
+        Identifier id = Identifier.fromNamespaceAndPath(MOD_ID, name);
+        ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, id);
+        Item item = factory.apply(properties.setId(key));
+        return Registry.register(BuiltInRegistries.ITEM, key, item);
     }
 
-    public static final Item LOLI = registerItem("loli", new Item(new Item.Settings().fireproof()));
+    public static final Item LOLI = registerItem(
+            "loli",
+            Item::new,
+            new Item.Properties().fireResistant()
+    );
     public static final Item LOLI_PICKAXE = registerItem(
             "loli_pickaxe",
-            new LoliPickaxeItem(
-                    ModToolMaterials.LOLI,
-                    Integer.MAX_VALUE,
-                    Float.POSITIVE_INFINITY,
-                    new Item.Settings().fireproof().maxCount(1)
-            )
+            LoliPickaxeItem::new,
+            new Item.Properties()
+                    .fireResistant()
+                    .stacksTo(1)
+                    .pickaxe(ModToolMaterials.LOLI, Integer.MAX_VALUE, Float.POSITIVE_INFINITY)
+                    .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
     );
 
     public static void registerModItems() {

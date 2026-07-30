@@ -3,7 +3,7 @@ param(
     [string]$ExpectedMinecraftVersion,
 
     [Parameter(Mandatory = $true)]
-    [ValidateSet(17, 21)]
+    [ValidateSet(17, 21, 25)]
     [int]$ExpectedJavaRelease,
 
     [string]$JarPath
@@ -63,11 +63,11 @@ Assert-True ($properties.minecraft_version -eq $ExpectedMinecraftVersion) `
     "minecraft_version is $($properties.minecraft_version), expected $ExpectedMinecraftVersion"
 Assert-True ($properties.loader_version -eq '0.19.3') `
     "loader_version must remain pinned to 0.19.3"
-Assert-True ($properties.loom_version -eq '1.10.5') `
-    "loom_version must remain pinned to stable 1.10.5"
-Assert-True ($properties.yarn_mappings -notmatch 'SNAPSHOT') `
-    "Yarn mappings must be an exact release"
-Assert-True ($properties.fabric_version -notmatch 'SNAPSHOT') `
+Assert-True ($properties.loom_version -eq '1.17.17') `
+    "loom_version must remain pinned to stable 1.17.17"
+Assert-True (-not $properties.ContainsKey('yarn_mappings')) `
+    "26.x builds must use Minecraft's unobfuscated official names"
+Assert-True ($properties.fabric_api_version -notmatch 'SNAPSHOT') `
     "Fabric API must be an exact release"
 
 $buildScript = Get-Content -LiteralPath (Join-Path $projectRoot 'build.gradle') -Raw
@@ -81,6 +81,8 @@ Assert-True ($buildScript -match 'https://maven\.fabricmc\.net/') `
     "Official Fabric Maven repository is missing"
 Assert-True ($buildScript -notmatch 'hanbings|aliyun|SNAPSHOT') `
     "Unapproved proxy or snapshot dependency remains in build.gradle"
+Assert-True ($buildScript -notmatch '\bmappings\s+') `
+    "26.x builds must not add a mappings dependency"
 
 if ([string]::IsNullOrWhiteSpace($JarPath)) {
     $JarPath = Join-Path $projectRoot (
@@ -115,7 +117,7 @@ $annotationCounts = [ordered]@{
     '@Inject' = 39
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
-    '@Accessor' = 4
+    '@Accessor' = 2
 }
 $javaSources = Get-ChildItem -LiteralPath $mixinSourceRoot -Recurse -Filter '*.java'
 $combinedMixinSource = ($javaSources | Get-Content) -join "`n"
@@ -151,7 +153,11 @@ try {
         'assets/liymod/sounds/loli_immunity_first.ogg',
         'assets/liymod/sounds/loli_immunity_second.ogg',
         'assets/liymod/sounds.json',
+        'assets/liymod/items/loli.json',
+        'assets/liymod/items/loli_pickaxe.json',
         'data/liymod/damage_type/loli_damage.json',
+        'data/liymod/tags/block/incorrect_for_loli_tool.json',
+        'data/liymod/tags/item/loli_repair_materials.json',
         'liymod.mixins.json'
     )
     foreach ($entryPath in $requiredEntries) {

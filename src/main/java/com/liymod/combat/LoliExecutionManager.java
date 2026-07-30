@@ -1,20 +1,19 @@
 package com.liymod.combat;
 
 import com.liymod.LiyMod;
-import com.liymod.mixin.accessor.EntityAccessor;
 import com.liymod.mixin.accessor.LivingEntityAccessor;
 import com.liymod.protection.LoliProtection;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket;
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundRemoveEntitiesPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -49,7 +48,7 @@ public final class LoliExecutionManager {
             return null;
         }
 
-        LoliExecutionTicket existing = TICKETS.get(target.getUuid());
+        LoliExecutionTicket existing = TICKETS.get(target.getUUID());
         if (existing != null
                 && existing.authority().priority() >= authority.priority()) {
             existing.bind(target);
@@ -62,13 +61,13 @@ public final class LoliExecutionManager {
                 source,
                 authority
         );
-        TICKETS.put(target.getUuid(), ticket);
+        TICKETS.put(target.getUUID(), ticket);
         if (existing != null) {
             LiyMod.LOGGER.info(
                     "Superseded {} execution ticket with {} authority for {}",
                     existing.authority(),
                     authority,
-                    target.getUuid()
+                    target.getUUID()
             );
         }
         return ticket;
@@ -79,17 +78,17 @@ public final class LoliExecutionManager {
             return false;
         }
 
-        LoliExecutionTicket active = TICKETS.get(target.getUuid());
+        LoliExecutionTicket active = TICKETS.get(target.getUUID());
         if (active != null && active.authority().piercesExecutionDefense()) {
             return false;
         }
 
-        LoliExecutionTicket removed = TICKETS.remove(target.getUuid());
-        if (removed != null && target instanceof ServerPlayerEntity player) {
+        LoliExecutionTicket removed = TICKETS.remove(target.getUUID());
+        if (removed != null && target instanceof ServerPlayer player) {
             restoreDefendedPlayer(player);
             LiyMod.LOGGER.info(
                     "Loli defense revoked execution ticket for {} in state {}",
-                    player.getGameProfile().getName(),
+                    player.getGameProfile().name(),
                     removed.state()
             );
         }
@@ -101,7 +100,7 @@ public final class LoliExecutionManager {
             return;
         }
 
-        LoliExecutionTicket ticket = TICKETS.get(target.getUuid());
+        LoliExecutionTicket ticket = TICKETS.get(target.getUUID());
         if (ticket == null) {
             return;
         }
@@ -115,7 +114,7 @@ public final class LoliExecutionManager {
             return;
         }
 
-        LoliExecutionTicket ticket = TICKETS.get(target.getUuid());
+        LoliExecutionTicket ticket = TICKETS.get(target.getUUID());
         if (ticket == null) {
             return;
         }
@@ -125,14 +124,14 @@ public final class LoliExecutionManager {
     }
 
     public static boolean isTerminal(Entity entity) {
-        LoliExecutionTicket ticket = TICKETS.get(entity.getUuid());
+        LoliExecutionTicket ticket = TICKETS.get(entity.getUUID());
         return ticket != null
                 && ticket.isTerminal()
                 && !isBlockedByDefense(entity, ticket);
     }
 
     public static boolean isDeadLocked(Entity entity) {
-        LoliExecutionTicket ticket = TICKETS.get(entity.getUuid());
+        LoliExecutionTicket ticket = TICKETS.get(entity.getUUID());
         return ticket != null
                 && ticket.state() == LoliExecutionTicket.State.DEAD_LOCK
                 && !isBlockedByDefense(entity, ticket);
@@ -147,7 +146,7 @@ public final class LoliExecutionManager {
     }
 
     public static boolean shouldReportRemoved(Entity entity) {
-        return !(entity instanceof PlayerEntity) && isDeadLocked(entity);
+        return !(entity instanceof Player) && isDeadLocked(entity);
     }
 
     public static void markVanillaDeathCommitted(LivingEntity entity) {
@@ -159,52 +158,52 @@ public final class LoliExecutionManager {
             return;
         }
 
-        LoliExecutionTicket ticket = TICKETS.get(entity.getUuid());
+        LoliExecutionTicket ticket = TICKETS.get(entity.getUUID());
         if (ticket != null) {
             ticket.markDeathCommitted();
         }
     }
 
     public static boolean isDeathCommitted(Entity entity) {
-        LoliExecutionTicket ticket = TICKETS.get(entity.getUuid());
+        LoliExecutionTicket ticket = TICKETS.get(entity.getUUID());
         return ticket != null && ticket.isDeathCommitted();
     }
 
-    public static void completeRespawn(ServerPlayerEntity oldPlayer, ServerPlayerEntity newPlayer) {
-        LoliExecutionTicket ticket = TICKETS.get(oldPlayer.getUuid());
+    public static void completeRespawn(ServerPlayer oldPlayer, ServerPlayer newPlayer) {
+        LoliExecutionTicket ticket = TICKETS.get(oldPlayer.getUUID());
         if (ticket != null && ticket.isDeathCommitted()) {
-            TICKETS.remove(oldPlayer.getUuid());
+            TICKETS.remove(oldPlayer.getUUID());
             normalizeCompletedPlayer(newPlayer);
             refreshRemotePlayerTracking(newPlayer);
             LiyMod.LOGGER.info(
                     "Completed Loli execution lifecycle for {} (entity {} -> {})",
-                    oldPlayer.getGameProfile().getName(),
+                    oldPlayer.getGameProfile().name(),
                     oldPlayer.getId(),
                     newPlayer.getId()
             );
         }
     }
 
-    private static void refreshRemotePlayerTracking(ServerPlayerEntity player) {
-        EntitiesDestroyS2CPacket removeStaleEntity = new EntitiesDestroyS2CPacket(player.getId());
-        for (ServerPlayerEntity observer : player.server.getPlayerManager().getPlayerList()) {
+    private static void refreshRemotePlayerTracking(ServerPlayer player) {
+        ClientboundRemoveEntitiesPacket removeStaleEntity = new ClientboundRemoveEntitiesPacket(player.getId());
+        for (ServerPlayer observer : player.level().getServer().getPlayerList().getPlayers()) {
             if (observer != player) {
-                observer.networkHandler.sendPacket(removeStaleEntity);
+                observer.connection.send(removeStaleEntity);
             }
         }
 
-        ServerWorld world = player.getServerWorld();
-        world.getChunkManager().unloadEntity(player);
-        world.getChunkManager().loadEntity(player);
+        ServerLevel world = player.level();
+        world.getChunkSource().removeEntity(player);
+        world.getChunkSource().addEntity(player);
         LiyMod.LOGGER.info(
                 "Refreshed remote tracking for respawned player {} (entity {})",
-                player.getGameProfile().getName(),
+                player.getGameProfile().name(),
                 player.getId()
         );
     }
 
-    public static void completeDisconnect(ServerPlayerEntity player) {
-        LoliExecutionTicket ticket = TICKETS.remove(player.getUuid());
+    public static void completeDisconnect(ServerPlayer player) {
+        LoliExecutionTicket ticket = TICKETS.remove(player.getUUID());
         if (ticket == null || !ticket.isDeathCommitted()) {
             return;
         }
@@ -212,12 +211,12 @@ public final class LoliExecutionManager {
         normalizeCompletedPlayer(player);
         LiyMod.LOGGER.info(
                 "Completed disconnected Loli execution lifecycle for {}",
-                player.getGameProfile().getName()
+                player.getGameProfile().name()
         );
     }
 
     public static void forceRemoval(Entity entity) {
-        if (entity instanceof PlayerEntity
+        if (entity instanceof Player
                 || entity.getRemovalReason() != null) {
             return;
         }
@@ -226,23 +225,21 @@ public final class LoliExecutionManager {
         try {
             entity.remove(reason);
         } catch (RuntimeException exception) {
-            LiyMod.LOGGER.warn("Normal removal failed for executed entity {}", entity.getUuid(), exception);
+            LiyMod.LOGGER.warn("Normal removal failed for executed entity {}", entity.getUUID(), exception);
         }
 
         if (entity.getRemovalReason() == null) {
-            EntityAccessor accessor = (EntityAccessor) entity;
             entity.stopRiding();
-            entity.getPassengerList().forEach(Entity::stopRiding);
-            accessor.lolipickaxe$setRemovalReason(reason);
-            accessor.lolipickaxe$getChangeListener().remove(reason);
+            entity.getPassengers().forEach(Entity::stopRiding);
+            entity.setRemoved(reason);
         }
     }
 
     private static void enforceAll(MinecraftServer server) {
         for (LoliExecutionTicket ticket : TICKETS.values().toArray(LoliExecutionTicket[]::new)) {
             Entity target = ticket.target();
-            if (target instanceof ServerPlayerEntity) {
-                ServerPlayerEntity current = server.getPlayerManager().getPlayer(ticket.targetId());
+            if (target instanceof ServerPlayer) {
+                ServerPlayer current = server.getPlayerList().getPlayer(ticket.targetId());
                 if (current == null) {
                     TICKETS.remove(ticket.targetId());
                     continue;
@@ -263,14 +260,14 @@ public final class LoliExecutionManager {
 
             if (ticket.state() == LoliExecutionTicket.State.DEAD_LOCK) {
                 int lockedTicks = ticket.incrementLockedTicks();
-                if (target instanceof ServerPlayerEntity player
+                if (target instanceof ServerPlayer player
                         && ticket.isDeathCommitted()
                         && lockedTicks >= PLAYER_RESPAWN_DELAY_TICKS) {
                     completePlayerLifecycle(server, ticket, player);
                     continue;
                 }
 
-                if (!(target instanceof PlayerEntity)
+                if (!(target instanceof Player)
                         && lockedTicks >= NON_PLAYER_TICKET_LIFETIME
                         && target.getRemovalReason() != null) {
                     TICKETS.remove(ticket.targetId());
@@ -282,18 +279,22 @@ public final class LoliExecutionManager {
     private static void completePlayerLifecycle(
             MinecraftServer server,
             LoliExecutionTicket ticket,
-            ServerPlayerEntity player
+            ServerPlayer player
     ) {
         if (abortForDefense(player)) {
             return;
         }
 
         try {
-            ServerPlayerEntity replacement = server.getPlayerManager().respawnPlayer(player, false);
+            ServerPlayer replacement = server.getPlayerList().respawn(
+                    player,
+                    false,
+                    Entity.RemovalReason.KILLED
+            );
             if (replacement == null) {
                 LiyMod.LOGGER.warn(
                         "Server returned no replacement while completing Loli execution for {}",
-                        player.getGameProfile().getName()
+                        player.getGameProfile().name()
                 );
                 return;
             }
@@ -302,14 +303,14 @@ public final class LoliExecutionManager {
         } catch (RuntimeException exception) {
             LiyMod.LOGGER.warn(
                     "Server-side respawn failed while completing Loli execution for {} at locked tick {}",
-                    player.getGameProfile().getName(),
+                    player.getGameProfile().name(),
                     ticket.lockedTicks(),
                     exception
             );
         }
     }
 
-    private static void normalizeCompletedPlayer(ServerPlayerEntity player) {
+    private static void normalizeCompletedPlayer(ServerPlayer player) {
         float maximumHealth = player.getMaxHealth();
         if (!Float.isFinite(maximumHealth) || maximumHealth <= 0.0F) {
             maximumHealth = 20.0F;
@@ -317,14 +318,14 @@ public final class LoliExecutionManager {
 
         ((LivingEntityAccessor) player).lolipickaxe$setDead(false);
         player.deathTime = 0;
-        player.getDataTracker().set(
+        player.getEntityData().set(
                 LivingEntityAccessor.lolipickaxe$getHealthTrackedData(),
                 maximumHealth
         );
         player.setAbsorptionAmount(0.0F);
     }
 
-    private static void restoreDefendedPlayer(ServerPlayerEntity player) {
+    private static void restoreDefendedPlayer(ServerPlayer player) {
         float maximumHealth = player.getMaxHealth();
         if (!Float.isFinite(maximumHealth) || maximumHealth <= 0.0F) {
             maximumHealth = 20.0F;
@@ -332,22 +333,22 @@ public final class LoliExecutionManager {
 
         ((LivingEntityAccessor) player).lolipickaxe$setDead(false);
         player.deathTime = 0;
-        player.getDataTracker().set(
+        player.getEntityData().set(
                 LivingEntityAccessor.lolipickaxe$getHealthTrackedData(),
                 maximumHealth
         );
-        player.networkHandler.sendPacket(
-                new HealthUpdateS2CPacket(
+        player.connection.send(
+                new ClientboundSetHealthPacket(
                         maximumHealth,
-                        player.getHungerManager().getFoodLevel(),
-                        player.getHungerManager().getSaturationLevel()
+                        player.getFoodData().getFoodLevel(),
+                        player.getFoodData().getSaturationLevel()
                 )
         );
     }
 
     private static void forceCommittingState(Entity target) {
         if (target instanceof LivingEntity living) {
-            living.getDataTracker().set(LivingEntityAccessor.lolipickaxe$getHealthTrackedData(), 0.0F);
+            living.getEntityData().set(LivingEntityAccessor.lolipickaxe$getHealthTrackedData(), 0.0F);
             living.setAbsorptionAmount(0.0F);
         }
     }
@@ -360,7 +361,7 @@ public final class LoliExecutionManager {
             living.deathTime = Math.max(living.deathTime, 1);
         }
 
-        if (!(target instanceof PlayerEntity)
+        if (!(target instanceof Player)
                 && ticket.state() == LoliExecutionTicket.State.DEAD_LOCK) {
             forceRemoval(target);
         }

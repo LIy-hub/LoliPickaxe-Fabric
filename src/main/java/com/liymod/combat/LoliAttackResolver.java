@@ -2,12 +2,12 @@ package com.liymod.combat;
 
 import com.liymod.LiyMod;
 import com.liymod.protection.LoliProtection;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 public final class LoliAttackResolver {
     private static final double MAX_RANGE = 1024.0D;
@@ -17,13 +17,13 @@ public final class LoliAttackResolver {
     private LoliAttackResolver() {
     }
 
-    public static boolean executeFromLook(ServerPlayerEntity attacker) {
+    public static boolean executeFromLook(ServerPlayer attacker) {
         if (!LoliProtection.isProtected(attacker)
                 || LoliExecutionManager.isDeadLocked(attacker)) {
             return false;
         }
 
-        ServerPlayerEntity target = findTarget(attacker);
+        ServerPlayer target = findTarget(attacker);
         if (target == null) {
             return false;
         }
@@ -35,8 +35,8 @@ public final class LoliAttackResolver {
         if (result == LoliErasureService.Result.EXECUTED) {
             LiyMod.LOGGER.debug(
                     "Absolute Loli swing from {} resolved to {}",
-                    attacker.getGameProfile().getName(),
-                    target.getGameProfile().getName()
+                    attacker.getGameProfile().name(),
+                    target.getGameProfile().name()
             );
             return true;
         }
@@ -44,29 +44,29 @@ public final class LoliAttackResolver {
     }
 
     @Nullable
-    private static ServerPlayerEntity findTarget(ServerPlayerEntity attacker) {
-        Vec3d origin = attacker.getEyePos();
-        Vec3d look = attacker.getRotationVec(1.0F).normalize();
-        Vec3d rayEnd = origin.add(look.multiply(MAX_RANGE));
+    private static ServerPlayer findTarget(ServerPlayer attacker) {
+        Vec3 origin = attacker.getEyePosition();
+        Vec3 look = attacker.getViewVector(1.0F).normalize();
+        Vec3 rayEnd = origin.add(look.scale(MAX_RANGE));
         double maximumDistanceSquared = MAX_RANGE * MAX_RANGE;
 
-        ServerPlayerEntity directTarget = null;
+        ServerPlayer directTarget = null;
         double directDistanceSquared = Double.POSITIVE_INFINITY;
-        ServerPlayerEntity assistedTarget = null;
+        ServerPlayer assistedTarget = null;
         double assistedDot = MIN_AIM_DOT;
         double assistedDistanceSquared = Double.POSITIVE_INFINITY;
 
-        for (ServerPlayerEntity candidate : attacker.getServerWorld().getPlayers()) {
+        for (ServerPlayer candidate : attacker.level().players()) {
             if (candidate == attacker
                     || candidate.isRemoved()
                     || LoliExecutionManager.isDeadLocked(candidate)) {
                 continue;
             }
 
-            Box targetBox = candidate.getBoundingBox().expand(TARGET_BOX_EXPANSION);
-            Optional<Vec3d> intersection = targetBox.raycast(origin, rayEnd);
+            AABB targetBox = candidate.getBoundingBox().inflate(TARGET_BOX_EXPANSION);
+            Optional<Vec3> intersection = targetBox.clip(origin, rayEnd);
             if (intersection.isPresent()) {
-                double hitDistanceSquared = origin.squaredDistanceTo(intersection.get());
+                double hitDistanceSquared = origin.distanceToSqr(intersection.get());
                 if (hitDistanceSquared < directDistanceSquared) {
                     directTarget = candidate;
                     directDistanceSquared = hitDistanceSquared;
@@ -74,13 +74,13 @@ public final class LoliAttackResolver {
                 continue;
             }
 
-            Vec3d delta = targetBox.getCenter().subtract(origin);
-            double distanceSquared = delta.lengthSquared();
+            Vec3 delta = targetBox.getCenter().subtract(origin);
+            double distanceSquared = delta.lengthSqr();
             if (distanceSquared <= 0.0D || distanceSquared > maximumDistanceSquared) {
                 continue;
             }
 
-            double dot = delta.dotProduct(look) / Math.sqrt(distanceSquared);
+            double dot = delta.dot(look) / Math.sqrt(distanceSquared);
             if (dot < MIN_AIM_DOT) {
                 continue;
             }

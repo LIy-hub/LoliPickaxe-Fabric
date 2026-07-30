@@ -1,17 +1,17 @@
 package com.liymod.damage_type;
 
 import com.liymod.LiyMod;
-import net.minecraft.entity.damage.DamageType;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.damagesource.DamageType;
 
 import static com.liymod.LiyMod.MOD_ID;
-import static net.minecraft.registry.RegistryKeys.DAMAGE_TYPE;
+import static net.minecraft.core.registries.Registries.DAMAGE_TYPE;
 
 public final class ModDamageTypes {
-    public static final RegistryKey<DamageType> LOLI_DAMAGE = RegistryKey.of(
+    public static final ResourceKey<DamageType> LOLI_DAMAGE = ResourceKey.create(
             DAMAGE_TYPE,
-            new Identifier(MOD_ID, "loli_damage")
+            Identifier.fromNamespaceAndPath(MOD_ID, "loli_damage")
     );
 
     private ModDamageTypes() {

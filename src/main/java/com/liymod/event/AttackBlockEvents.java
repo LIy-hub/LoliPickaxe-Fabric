@@ -3,24 +3,23 @@ package com.liymod.event;
 import com.liymod.LiyMod;
 import com.liymod.item.LoliPickaxeItem;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
-import net.minecraft.block.Block;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
-
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import java.util.Map;
 
 import static com.liymod.LiyMod.MOD_ID;
-import static net.minecraft.block.Blocks.*;
+import static net.minecraft.world.level.block.Blocks.*;
 
 public final class AttackBlockEvents {
     private static final Map<Block, Item> SPECIAL_DROPS = Map.ofEntries(
@@ -56,22 +55,22 @@ public final class AttackBlockEvents {
     private AttackBlockEvents() {
     }
 
-    private static ActionResult onAttackBlock(
-            PlayerEntity player,
-            World world,
-            Hand hand,
+    private static InteractionResult onAttackBlock(
+            Player player,
+            Level world,
+            InteractionHand hand,
             BlockPos blockPos,
             Direction direction
     ) {
-        ItemStack stack = player.getStackInHand(hand);
-        if (stack.getItem() instanceof LoliPickaxeItem && !world.isClient) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (stack.getItem() instanceof LoliPickaxeItem && !world.isClientSide()) {
             Block block = world.getBlockState(blockPos).getBlock();
-            world.breakBlock(blockPos, true, player);
+            world.destroyBlock(blockPos, true, player);
             world.playSound(
                     player,
                     blockPos,
-                    SoundEvents.BLOCK_AMETHYST_BLOCK_BREAK,
-                    SoundCategory.BLOCKS,
+                    SoundEvents.AMETHYST_BLOCK_BREAK,
+                    SoundSource.BLOCKS,
                     1.0f,
                     1.0f);
 
@@ -79,12 +78,12 @@ public final class AttackBlockEvents {
             if (specialDrop != null) {
                 spawnItemEntity(world, blockPos, specialDrop);
             }
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
-    private static void spawnItemEntity(World world, BlockPos blockPos, Item item) {
+    private static void spawnItemEntity(Level world, BlockPos blockPos, Item item) {
         ItemStack stack = new ItemStack(item, 1);
         ItemEntity itemEntity = new ItemEntity(
                 world,
@@ -93,7 +92,7 @@ public final class AttackBlockEvents {
                 blockPos.getZ() + 0.5,
                 stack
         );
-        world.spawnEntity(itemEntity);
+        world.addFreshEntity(itemEntity);
     }
 
     public static void registerEvents() {

@@ -3,10 +3,10 @@ package com.liymod.protection;
 import com.liymod.LiyMod;
 import com.liymod.combat.LoliErasureService;
 import com.liymod.item.ModItems;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
 
 public final class LoliProtection {
     private LoliProtection() {
@@ -19,12 +19,12 @@ public final class LoliProtection {
     }
 
     public static boolean isProtected(Entity entity) {
-        return entity instanceof PlayerEntity player && isProtected(player);
+        return entity instanceof Player player && isProtected(player);
     }
 
-    public static boolean isProtected(PlayerEntity player) {
-        PlayerInventory inventory = player.getInventory();
-        return inventory != null && inventory.getMainHandStack().isOf(ModItems.LOLI_PICKAXE);
+    public static boolean isProtected(Player player) {
+        Inventory inventory = player.getInventory();
+        return inventory != null && inventory.getSelectedItem().is(ModItems.LOLI_PICKAXE);
     }
 
     public static boolean isExecutionImmune(Entity entity) {
@@ -35,14 +35,14 @@ public final class LoliProtection {
         return isProtected(entity);
     }
 
-    public static boolean blocksRemoval(PlayerEntity player, Entity.RemovalReason reason) {
-        return !player.getWorld().isClient
+    public static boolean blocksRemoval(Player player, Entity.RemovalReason reason) {
+        return !player.level().isClientSide()
                 && isProtected(player)
                 && !TrustedPlayerLifecycle.isRemovalAllowed(player);
     }
 
-    public static void retaliate(PlayerEntity protectedPlayer, DamageSource source) {
-        Entity attacker = source.getAttacker();
+    public static void retaliate(Player protectedPlayer, DamageSource source) {
+        Entity attacker = source.getEntity();
         if (attacker == null || attacker == protectedPlayer || isProtected(attacker)) {
             return;
         }

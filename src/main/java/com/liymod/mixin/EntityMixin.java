@@ -3,8 +3,8 @@ package com.liymod.mixin;
 import com.liymod.combat.LoliExecutionManager;
 import com.liymod.protection.LoliProtection;
 import com.liymod.protection.TrustedPlayerLifecycle;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,14 +15,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityMixin {
     @Inject(method = "remove", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventRemoval(Entity.RemovalReason reason, CallbackInfo ci) {
-        if ((Object) this instanceof PlayerEntity player && LoliProtection.blocksRemoval(player, reason)) {
+        if ((Object) this instanceof Player player && LoliProtection.blocksRemoval(player, reason)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "setRemoved", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventDirectRemoval(Entity.RemovalReason reason, CallbackInfo ci) {
-        if ((Object) this instanceof PlayerEntity player && LoliProtection.blocksRemoval(player, reason)) {
+        if ((Object) this instanceof Player player && LoliProtection.blocksRemoval(player, reason)) {
             ci.cancel();
         }
     }
@@ -30,8 +30,8 @@ public abstract class EntityMixin {
     @Inject(method = "discard", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventDiscard(CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
-        if (self instanceof PlayerEntity player
-                && !self.getWorld().isClient
+        if (self instanceof Player player
+                && !self.level().isClientSide()
                 && LoliProtection.isProtected(player)
                 && !TrustedPlayerLifecycle.isRemovalAllowed(player)) {
             ci.cancel();
@@ -64,7 +64,7 @@ public abstract class EntityMixin {
     @Inject(method = "isAlive", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$reportNonLivingExecutionState(CallbackInfoReturnable<Boolean> cir) {
         Entity self = (Entity) (Object) this;
-        if (!(self instanceof net.minecraft.entity.LivingEntity)
+        if (!(self instanceof net.minecraft.world.entity.LivingEntity)
                 && LoliExecutionManager.isDeadLocked(self)) {
             cir.setReturnValue(false);
         }

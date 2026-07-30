@@ -1,25 +1,25 @@
 package com.liymod.mixin;
 
 import com.liymod.combat.LoliExecutionManager;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.network.ServerPlayerInteractionManager;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerPlayerGameMode;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = ServerPlayerInteractionManager.class, priority = Integer.MAX_VALUE)
+@Mixin(value = ServerPlayerGameMode.class, priority = Integer.MAX_VALUE)
 public abstract class ServerPlayerInteractionManagerMixin {
     @Shadow
-    protected ServerPlayerEntity player;
+    protected ServerPlayer player;
 
-    @Inject(method = "tryBreakBlock", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "destroyBlock", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$blockBreakingWhileDead(
             BlockPos pos,
             CallbackInfoReturnable<Boolean> cir
@@ -29,16 +29,16 @@ public abstract class ServerPlayerInteractionManagerMixin {
         }
     }
 
-    @Inject(method = "interactItem", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "useItem", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$blockItemUseWhileDead(
-            ServerPlayerEntity interactingPlayer,
-            World world,
+            ServerPlayer interactingPlayer,
+            Level world,
             ItemStack stack,
-            Hand hand,
-            CallbackInfoReturnable<ActionResult> cir
+            InteractionHand hand,
+            CallbackInfoReturnable<InteractionResult> cir
     ) {
         if (LoliExecutionManager.isDeadLocked(player)) {
-            cir.setReturnValue(ActionResult.FAIL);
+            cir.setReturnValue(InteractionResult.FAIL);
         }
     }
 }

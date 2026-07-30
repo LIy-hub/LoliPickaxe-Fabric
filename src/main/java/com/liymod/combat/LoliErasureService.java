@@ -3,19 +3,19 @@ package com.liymod.combat;
 import com.liymod.LiyMod;
 import com.liymod.damage_type.ModDamageSources;
 import com.liymod.protection.LoliProtection;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityStatuses;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.network.packet.s2c.play.DeathMessageS2CPacket;
-import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
-import net.minecraft.scoreboard.ScoreAccess;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.stat.Stats;
-import net.minecraft.text.Text;
-import net.minecraft.world.event.GameEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundPlayerCombatKillPacket;
+import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.stats.Stats;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.scores.ScoreAccess;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.Nullable;
 
 public final class LoliErasureService {
@@ -41,7 +41,7 @@ public final class LoliErasureService {
             Entity target,
             ExecutionAuthority authority
     ) {
-        if (!(target.getWorld() instanceof ServerWorld serverWorld)
+        if (!(target.level() instanceof ServerLevel serverWorld)
                 || target == attacker) {
             return Result.IGNORED;
         }
@@ -115,7 +115,7 @@ public final class LoliErasureService {
     }
 
     private static Result immune(
-            ServerWorld world,
+            ServerLevel world,
             @Nullable Entity attacker,
             Entity protectedTarget
     ) {
@@ -125,11 +125,11 @@ public final class LoliErasureService {
 
     private static void tryNormalDamage(Entity target, DamageSource source) {
         try {
-            target.damage(source, Float.MAX_VALUE);
+            target.hurt(source, Float.MAX_VALUE);
         } catch (RuntimeException exception) {
             LiyMod.LOGGER.warn(
                     "Normal damage path failed for {}; continuing with forced execution",
-                    target.getUuid(),
+                    target.getUUID(),
                     exception
             );
         }
@@ -137,75 +137,75 @@ public final class LoliErasureService {
 
     private static void tryNormalDeath(LivingEntity target, DamageSource source) {
         try {
-            target.onDeath(source);
+            target.die(source);
         } catch (RuntimeException exception) {
             LiyMod.LOGGER.warn(
                     "Normal death path failed for {}; continuing with forced execution",
-                    target.getUuid(),
+                    target.getUUID(),
                     exception
             );
         }
     }
 
     private static void forceFallbackDeath(LivingEntity target, DamageSource source) {
-        if (target instanceof ServerPlayerEntity player) {
+        if (target instanceof ServerPlayer player) {
             forcePlayerDeath(player, source);
         } else {
-            target.emitGameEvent(GameEvent.ENTITY_DIE);
-            target.getWorld().sendEntityStatus(
+            target.gameEvent(GameEvent.ENTITY_DIE);
+            target.level().broadcastEntityEvent(
                     target,
-                    EntityStatuses.PLAY_DEATH_SOUND_OR_ADD_PROJECTILE_HIT_PARTICLES
+                    EntityEvent.DEATH
             );
         }
         LoliExecutionManager.markDeathCommitted(target);
     }
 
     private static int getPlayerDeathCount(Entity target) {
-        if (!(target instanceof ServerPlayerEntity player)) {
+        if (!(target instanceof ServerPlayer player)) {
             return -1;
         }
-        return player.getStatHandler().getStat(Stats.CUSTOM, Stats.DEATHS);
+        return player.getStats().getValue(Stats.CUSTOM, Stats.DEATHS);
     }
 
     private static void recordObservedPlayerDeath(Entity target, int deathsBefore) {
-        if (!(target instanceof ServerPlayerEntity player) || deathsBefore < 0) {
+        if (!(target instanceof ServerPlayer player) || deathsBefore < 0) {
             return;
         }
-        if (player.getStatHandler().getStat(Stats.CUSTOM, Stats.DEATHS) > deathsBefore) {
+        if (player.getStats().getValue(Stats.CUSTOM, Stats.DEATHS) > deathsBefore) {
             LoliExecutionManager.markDeathCommitted(player);
         }
     }
 
-    private static void forcePlayerDeath(ServerPlayerEntity player, DamageSource source) {
-        Text deathMessage = source.getDeathMessage(player);
-        player.networkHandler.sendPacket(new DeathMessageS2CPacket(player.getId(), deathMessage));
-        player.networkHandler.sendPacket(
-                new HealthUpdateS2CPacket(
+    private static void forcePlayerDeath(ServerPlayer player, DamageSource source) {
+        Component deathMessage = source.getLocalizedDeathMessage(player);
+        player.connection.send(new ClientboundPlayerCombatKillPacket(player.getId(), deathMessage));
+        player.connection.send(
+                new ClientboundSetHealthPacket(
                         0.0F,
-                        player.getHungerManager().getFoodLevel(),
-                        player.getHungerManager().getSaturationLevel()
+                        player.getFoodData().getFoodLevel(),
+                        player.getFoodData().getSaturationLevel()
                 )
         );
 
-        player.getScoreboard().forEachScore(
-                ScoreboardCriterion.DEATH_COUNT,
+        player.level().getServer().getScoreboard().forAllObjectives(
+                ObjectiveCriteria.DEATH_COUNT,
                 player,
-                ScoreAccess::incrementScore
+                ScoreAccess::increment
         );
-        player.incrementStat(Stats.DEATHS);
+        player.awardStat(Stats.DEATHS);
 
-        if (source.getAttacker() instanceof ServerPlayerEntity killer && killer != player) {
-            killer.updateKilledAdvancementCriterion(player, 0, source);
+        if (source.getEntity() instanceof ServerPlayer killer && killer != player) {
+            killer.awardKillScore(player, source);
         }
 
-        player.emitGameEvent(GameEvent.ENTITY_DIE);
-        player.getWorld().sendEntityStatus(
+        player.gameEvent(GameEvent.ENTITY_DIE);
+        player.level().broadcastEntityEvent(
                 player,
-                EntityStatuses.PLAY_DEATH_SOUND_OR_ADD_PROJECTILE_HIT_PARTICLES
+                EntityEvent.DEATH
         );
         LiyMod.LOGGER.info(
                 "Forced fallback death commit for {} after its normal death path was blocked",
-                player.getGameProfile().getName()
+                player.getGameProfile().name()
         );
     }
 }
