@@ -4,6 +4,7 @@ import com.liymod.combat.LoliExecutionManager;
 import com.liymod.protection.LoliProtection;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,6 +15,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = LivingEntity.class, priority = Integer.MAX_VALUE)
 public abstract class LivingEntityMixin {
+    @ModifyVariable(method = "setAbsorptionAmount", at = @At("HEAD"), argsOnly = true)
+    private float lolipickaxe$blockPlayerAbsorptionWhileDead(float amount) {
+        LivingEntity self = (LivingEntity) (Object) this;
+        if (self instanceof PlayerEntity && LoliExecutionManager.isTerminal(self)) {
+            return 0.0F;
+        }
+        return amount;
+    }
+
     @ModifyVariable(method = "setHealth", at = @At("HEAD"), argsOnly = true)
     private float lolipickaxe$forceMaximumHealth(float requestedHealth) {
         LivingEntity self = (LivingEntity) (Object) this;
