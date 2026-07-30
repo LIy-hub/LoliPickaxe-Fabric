@@ -1,68 +1,32 @@
 package com.liymod.tool;
 
-import com.liymod.item.ModItems;
+import com.liymod.LiyMod;
 import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ToolMaterial;
-import net.minecraft.recipe.Ingredient;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Identifier;
 
-import java.util.function.Supplier;
+public final class ModToolMaterials {
+    private static final TagKey<Block> INCORRECT_FOR_LOLI_TOOL = TagKey.of(
+            RegistryKeys.BLOCK,
+            Identifier.of(LiyMod.MOD_ID, "incorrect_for_loli_tool")
+    );
+    private static final TagKey<Item> LOLI_REPAIR_MATERIALS = TagKey.of(
+            RegistryKeys.ITEM,
+            Identifier.of(LiyMod.MOD_ID, "loli_repair_materials")
+    );
 
-public enum ModToolMaterials implements ToolMaterial {
-    LOLI(
+    public static final ToolMaterial LOLI = new ToolMaterial(
+            INCORRECT_FOR_LOLI_TOOL,
             Integer.MAX_VALUE,
             Float.MAX_VALUE,
             Float.POSITIVE_INFINITY,
             30,
-            () -> Ingredient.ofItems(ModItems.LOLI)
+            LOLI_REPAIR_MATERIALS
     );
 
-    private final int itemDurability;
-    private final float miningSpeed;
-    private final float attackDamage;
-    private final int enchantability;
-    private final Supplier<Ingredient> repairIngredient;
-
-    ModToolMaterials(
-            int itemDurability,
-            float miningSpeed,
-            float attackDamage,
-            int enchantability,
-            Supplier<Ingredient> repairIngredient
-    ) {
-        this.itemDurability = itemDurability;
-        this.miningSpeed = miningSpeed;
-        this.attackDamage = attackDamage;
-        this.enchantability = enchantability;
-        this.repairIngredient = repairIngredient;
-    }
-
-    public int getDurability() {
-        return this.itemDurability;
-    }
-
-    public float getMiningSpeedMultiplier() {
-        return this.miningSpeed;
-    }
-
-    public float getAttackDamage() {
-        return this.attackDamage;
-    }
-
-    public TagKey<Block> getInverseTag() {
-        return TagKey.of(
-                RegistryKeys.BLOCK,
-                Identifier.of("liymod", "incorrect_for_loli_tool")
-        );
-    }
-
-    public int getEnchantability() {
-        return this.enchantability;
-    }
-
-    public Ingredient getRepairIngredient() {
-        return this.repairIngredient.get();
+    private ModToolMaterials() {
     }
 }

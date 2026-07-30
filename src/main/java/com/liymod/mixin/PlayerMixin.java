@@ -7,6 +7,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -29,6 +30,7 @@ public abstract class PlayerMixin extends LivingEntity {
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void liymod$preventDamageAndRetaliate(
+            ServerWorld world,
             DamageSource source,
             float amount,
             CallbackInfoReturnable<Boolean> cir

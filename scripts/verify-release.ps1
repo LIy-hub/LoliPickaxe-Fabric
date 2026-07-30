@@ -152,7 +152,8 @@ try {
         'assets/liymod/sounds/loli_immunity_second.ogg',
         'assets/liymod/sounds.json',
         'data/liymod/damage_type/loli_damage.json',
-        'data/liymod/tags/blocks/incorrect_for_loli_tool.json',
+        'data/liymod/tags/block/incorrect_for_loli_tool.json',
+        'data/liymod/tags/item/loli_repair_materials.json',
         'liymod.mixins.json'
     )
     foreach ($entryPath in $requiredEntries) {

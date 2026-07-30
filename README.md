@@ -1,6 +1,6 @@
 # LoliPickaxe
 
-> A Fabric 1.21.1 memorial port of the classic LoliPickaxe mod.
+> A Fabric 1.21.2 memorial port of the classic LoliPickaxe mod.
 
 This project preserves the concept and gameplay identity of the original
 [IslenautsGK/LoliPickaxe](https://github.com/IslenautsGK/LoliPickaxe) while
@@ -8,7 +8,7 @@ reimplementing it for modern Fabric. It is distributed under GPL-3.0 in
 accordance with the original project's license. See [CREDITS.md](CREDITS.md)
 for attribution and third-party asset notes.
 
-LoliPickaxe is a Fabric mod for Minecraft 1.21.1. It adds the Loli Pickaxe, an
+LoliPickaxe is a Fabric mod for Minecraft 1.21.2. It adds the Loli Pickaxe, an
 intentionally overpowered item with special combat, mining, flight, and survival
 abilities. The gameplay contract is frozen across supported Minecraft branches;
 version branches contain compatibility changes only.
@@ -55,7 +55,7 @@ in [PORTING_BASELINE.md](PORTING_BASELINE.md).
 
 ## 中文说明
 
-LoliPickaxe（氪金萝莉）是经典 LoliPickaxe 模组的 Minecraft 1.21.1
+LoliPickaxe（氪金萝莉）是经典 LoliPickaxe 模组的 Minecraft 1.21.2
 Fabric 纪念复刻版。本项目保留原模组的核心概念与玩法特色，并针对现代
 Fabric 环境重新实现；它并非原作者发布的官方续作。
 
@@ -91,7 +91,7 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 ### 运行要求
 
 - Java 21
-- Minecraft 1.21.1
+- Minecraft 1.21.2
 - Fabric Loader 0.19.3 或更高版本
 - Fabric API
 
@@ -105,7 +105,7 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 ## Requirements
 
 - Java 21
-- Minecraft 1.21.1
+- Minecraft 1.21.2
 - Fabric Loader 0.19.3 or newer
 - Fabric API
 

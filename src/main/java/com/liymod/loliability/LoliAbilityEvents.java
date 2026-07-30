@@ -75,7 +75,7 @@ public final class LoliAbilityEvents {
     }
 
     private static void removeLegacySpeedBoost(ServerPlayerEntity player) {
-        EntityAttributeInstance speed = player.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        EntityAttributeInstance speed = player.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
         if (speed != null) {
             speed.removeModifier(LEGACY_SPEED_BOOST_ID);
         }

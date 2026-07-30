@@ -71,7 +71,7 @@ public final class LoliErasureService {
         }
 
         int playerDeathsBefore = getPlayerDeathCount(target);
-        tryNormalDamage(target, source);
+        tryNormalDamage(serverWorld, target, source);
         recordObservedPlayerDeath(target, playerDeathsBefore);
         if (LoliExecutionManager.abortForDefense(target)) {
             return immune(serverWorld, attacker, target);
@@ -123,9 +123,13 @@ public final class LoliErasureService {
         return Result.IMMUNE;
     }
 
-    private static void tryNormalDamage(Entity target, DamageSource source) {
+    private static void tryNormalDamage(
+            ServerWorld world,
+            Entity target,
+            DamageSource source
+    ) {
         try {
-            target.damage(source, Float.MAX_VALUE);
+            target.damage(world, source, Float.MAX_VALUE);
         } catch (RuntimeException exception) {
             LiyMod.LOGGER.warn(
                     "Normal damage path failed for {}; continuing with forced execution",

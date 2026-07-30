@@ -2,6 +2,7 @@ package com.liymod.mixin;
 
 import com.liymod.combat.LoliExecutionManager;
 import com.liymod.protection.TrustedPlayerLifecycle;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,6 +28,7 @@ public abstract class PlayerManagerMixin {
     private void lolipickaxe$beginTrustedRespawn(
             ServerPlayerEntity player,
             boolean alive,
+            Entity.RemovalReason removalReason,
             CallbackInfoReturnable<ServerPlayerEntity> cir
     ) {
         TrustedPlayerLifecycle.begin(player);
@@ -36,6 +38,7 @@ public abstract class PlayerManagerMixin {
     private void lolipickaxe$finishTrustedRespawn(
             ServerPlayerEntity oldPlayer,
             boolean alive,
+            Entity.RemovalReason removalReason,
             CallbackInfoReturnable<ServerPlayerEntity> cir
     ) {
         TrustedPlayerLifecycle.end(oldPlayer);

@@ -6,6 +6,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -97,7 +98,7 @@ public abstract class LivingEntityMixin {
     }
 
     @Inject(method = "kill", at = @At("HEAD"), cancellable = true)
-    private void lolipickaxe$preventKill(CallbackInfo ci) {
+    private void lolipickaxe$preventKill(ServerWorld world, CallbackInfo ci) {
         if (LoliProtection.isProtected((LivingEntity) (Object) this)) {
             ci.cancel();
         }

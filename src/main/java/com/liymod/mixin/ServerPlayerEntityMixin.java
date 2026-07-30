@@ -4,6 +4,7 @@ import com.liymod.protection.LoliProtection;
 import com.liymod.protection.TrustedPlayerLifecycle;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.TeleportTarget;
@@ -13,10 +14,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Set;
+
 @Mixin(value = ServerPlayerEntity.class, priority = Integer.MAX_VALUE)
 public abstract class ServerPlayerEntityMixin {
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventServerDamage(
+            ServerWorld world,
             DamageSource source,
             float amount,
             CallbackInfoReturnable<Boolean> cir
@@ -56,7 +60,7 @@ public abstract class ServerPlayerEntityMixin {
     }
 
     @Inject(
-            method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDFF)V",
+            method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDLjava/util/Set;FFZ)Z",
             at = @At("HEAD")
     )
     private void lolipickaxe$beginTrustedCrossWorldTeleport(
@@ -64,15 +68,17 @@ public abstract class ServerPlayerEntityMixin {
             double x,
             double y,
             double z,
+            Set<PositionFlag> positionFlags,
             float yaw,
             float pitch,
-            CallbackInfo ci
+            boolean resetCamera,
+            CallbackInfoReturnable<Boolean> cir
     ) {
         TrustedPlayerLifecycle.begin((ServerPlayerEntity) (Object) this);
     }
 
     @Inject(
-            method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDFF)V",
+            method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDLjava/util/Set;FFZ)Z",
             at = @At("RETURN")
     )
     private void lolipickaxe$endTrustedCrossWorldTeleport(
@@ -80,9 +86,11 @@ public abstract class ServerPlayerEntityMixin {
             double x,
             double y,
             double z,
+            Set<PositionFlag> positionFlags,
             float yaw,
             float pitch,
-            CallbackInfo ci
+            boolean resetCamera,
+            CallbackInfoReturnable<Boolean> cir
     ) {
         TrustedPlayerLifecycle.end((ServerPlayerEntity) (Object) this);
     }

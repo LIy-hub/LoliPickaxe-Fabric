@@ -15,10 +15,12 @@ public final class ModDamageSources {
     }
 
     public static DamageSource loli(World world, @Nullable Entity attacker) {
+        var damageTypes = world.getRegistryManager()
+                .getOrThrow(RegistryKeys.DAMAGE_TYPE);
         return new DamageSource(
-                world.getRegistryManager()
-                        .get(RegistryKeys.DAMAGE_TYPE)
-                        .entryOf(ModDamageTypes.LOLI_DAMAGE),
+                damageTypes.getEntry(
+                        damageTypes.getValueOrThrow(ModDamageTypes.LOLI_DAMAGE)
+                ),
                 attacker
         );
     }

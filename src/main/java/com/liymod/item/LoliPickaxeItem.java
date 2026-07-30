@@ -13,9 +13,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.PickaxeItem;
 import net.minecraft.item.ToolMaterial;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
@@ -32,13 +32,9 @@ public final class LoliPickaxeItem extends PickaxeItem {
     ) {
         super(
                 material,
-                settings.attributeModifiers(
-                        PickaxeItem.createAttributeModifiers(
-                                material,
-                                attackDamage,
-                                attackSpeed
-                        )
-                )
+                attackDamage,
+                attackSpeed,
+                settings
         );
     }
 
@@ -62,10 +58,9 @@ public final class LoliPickaxeItem extends PickaxeItem {
     }
 
     @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        ItemStack stack = user.getStackInHand(hand);
+    public ActionResult use(World world, PlayerEntity user, Hand hand) {
         if (world.isClient) {
-            return TypedActionResult.pass(stack);
+            return ActionResult.PASS;
         }
 
         Box area = user.getBoundingBox().expand(ABILITY_RANGE);
@@ -85,7 +80,7 @@ public final class LoliPickaxeItem extends PickaxeItem {
             }
         }
 
-        return TypedActionResult.success(stack);
+        return ActionResult.SUCCESS_SERVER;
     }
 
     private static void makeUnbreakable(ItemStack stack) {
