@@ -56,7 +56,7 @@ public final class LoliAttackResolver {
         double assistedDot = MIN_AIM_DOT;
         double assistedDistanceSquared = Double.POSITIVE_INFINITY;
 
-        for (ServerPlayerEntity candidate : attacker.getServerWorld().getPlayers()) {
+        for (ServerPlayerEntity candidate : attacker.getWorld().getPlayers()) {
             if (candidate == attacker
                     || candidate.isRemoved()
                     || LoliExecutionManager.isDeadLocked(candidate)) {

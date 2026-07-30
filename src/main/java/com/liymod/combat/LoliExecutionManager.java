@@ -187,13 +187,14 @@ public final class LoliExecutionManager {
 
     private static void refreshRemotePlayerTracking(ServerPlayerEntity player) {
         EntitiesDestroyS2CPacket removeStaleEntity = new EntitiesDestroyS2CPacket(player.getId());
-        for (ServerPlayerEntity observer : player.server.getPlayerManager().getPlayerList()) {
+        for (ServerPlayerEntity observer : player.getWorld().getServer()
+                .getPlayerManager().getPlayerList()) {
             if (observer != player) {
                 observer.networkHandler.sendPacket(removeStaleEntity);
             }
         }
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         world.getChunkManager().unloadEntity(player);
         world.getChunkManager().loadEntity(player);
         LiyMod.LOGGER.info(

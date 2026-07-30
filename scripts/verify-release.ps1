@@ -63,10 +63,12 @@ Assert-True ($properties.minecraft_version -eq $ExpectedMinecraftVersion) `
     "minecraft_version is $($properties.minecraft_version), expected $ExpectedMinecraftVersion"
 Assert-True ($properties.loader_version -eq '0.19.3') `
     "loader_version must remain pinned to 0.19.3"
-Assert-True ($properties.loom_version -eq '1.10.5') `
-    "loom_version must remain pinned to stable 1.10.5"
+Assert-True ($properties.loom_version -eq '1.17.17') `
+    "loom_version must remain pinned to stable 1.17.17"
 Assert-True ($properties.yarn_mappings -notmatch 'SNAPSHOT') `
     "Yarn mappings must be an exact release"
+Assert-True ($properties.yarn_mappings -like "$ExpectedMinecraftVersion+build.*") `
+    "Yarn mappings do not match Minecraft $ExpectedMinecraftVersion"
 Assert-True ($properties.fabric_version -notmatch 'SNAPSHOT') `
     "Fabric API must be an exact release"
 
@@ -110,6 +112,103 @@ foreach ($relativePath in $expectedAssets.Keys) {
         "Asset hash changed: $relativePath"
 }
 
+$dataRoot = Join-Path $projectRoot 'src/main/resources/data'
+$recipeFiles = @(
+    Get-ChildItem -LiteralPath $dataRoot -Recurse -File |
+        Where-Object { $_.FullName -match '[\\/](recipes?)[\\/]' }
+)
+Assert-True ($recipeFiles.Count -eq 0) "Compatibility branch must not add recipes"
+
+$attackBlockSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/event/AttackBlockEvents.java'
+) -Raw
+$expectedDropBlocks = @(
+    'SPAWNER', 'STRUCTURE_BLOCK', 'JIGSAW', 'END_PORTAL_FRAME',
+    'COMMAND_BLOCK', 'CHAIN_COMMAND_BLOCK', 'REPEATING_COMMAND_BLOCK',
+    'BEDROCK', 'BARRIER', 'COAL_ORE', 'DEEPSLATE_COAL_ORE', 'IRON_ORE',
+    'DEEPSLATE_IRON_ORE', 'GOLD_ORE', 'DEEPSLATE_GOLD_ORE',
+    'REDSTONE_ORE', 'DEEPSLATE_REDSTONE_ORE', 'DIAMOND_ORE',
+    'DEEPSLATE_DIAMOND_ORE', 'EMERALD_ORE', 'DEEPSLATE_EMERALD_ORE',
+    'LAPIS_ORE', 'DEEPSLATE_LAPIS_ORE', 'COPPER_ORE',
+    'DEEPSLATE_COPPER_ORE', 'NETHER_QUARTZ_ORE', 'ANCIENT_DEBRIS'
+)
+$dropCount = ([regex]::Matches($attackBlockSource, 'Map\.entry\(')).Count
+Assert-True ($dropCount -eq 27) "Special drop count is $dropCount, expected 27"
+foreach ($block in $expectedDropBlocks) {
+    Assert-True ($attackBlockSource -match "Map\.entry\($block,") `
+        "Special drop source missing: $block"
+}
+
+$pickaxeSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliPickaxeItem.java'
+) -Raw
+Assert-True ($pickaxeSource -match 'ABILITY_RANGE\s*=\s*32\.0') `
+    "Ability range must remain 32 blocks"
+Assert-True ($pickaxeSource -match 'DataComponentTypes\.UNBREAKABLE') `
+    "Version-appropriate unbreakable component is missing"
+Assert-True ($pickaxeSource -match 'stack\.setDamage\(0\)') `
+    "Pickaxe damage reset is missing"
+
+$resolverSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliAttackResolver.java'
+) -Raw
+Assert-True ($resolverSource -match 'MAX_RANGE\s*=\s*1024\.0D') `
+    "Swing resolver range must remain 1024 blocks"
+Assert-True ($resolverSource -match 'Math\.toRadians\(6\.0D\)') `
+    "Swing resolver fallback must remain six degrees"
+
+$materialSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/tool/ModToolMaterials.java'
+) -Raw
+foreach ($requiredValue in @(
+    'Integer\.MAX_VALUE', 'Float\.MAX_VALUE',
+    'Float\.POSITIVE_INFINITY', '\b30\b'
+)) {
+    Assert-True ($materialSource -match $requiredValue) `
+        "Frozen tool material value missing: $requiredValue"
+}
+
+$authoritySource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/ExecutionAuthority.java'
+) -Raw
+Assert-True ($authoritySource -match 'STANDARD\(0,\s*false\)') `
+    "STANDARD authority changed"
+Assert-True ($authoritySource -match 'ABSOLUTE_EXECUTION\(Integer\.MAX_VALUE,\s*true\)') `
+    "ABSOLUTE_EXECUTION authority changed"
+
+$ticketSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliExecutionTicket.java'
+) -Raw
+Assert-True ($ticketSource -match 'PREPARE,\s*COMMITTING,\s*DEAD_LOCK') `
+    "Execution ticket state order changed"
+
+$protectionSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/protection/LoliProtection.java'
+) -Raw
+Assert-True ($protectionSource -match 'ModItems\.LOLI_PICKAXE') `
+    "Holder protection no longer checks the Loli Pickaxe"
+
+$abilitySource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/loliability/LoliAbilityEvents.java'
+) -Raw
+Assert-True ($abilitySource -notmatch '(?i)add(?:Persistent|Temporary)?Modifier\s*\(') `
+    "Movement-speed modifier must remain retired"
+Assert-True ($abilitySource -match 'removeModifier\(LEGACY_SPEED_BOOST_ID\)') `
+    "Legacy movement-speed cleanup is missing"
+
+$immunitySource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliImmunityFeedback.java'
+) -Raw
+foreach ($requiredToken in @(
+    'server\.getTicks\(\)', 'world\.getRegistryKey\(\)',
+    'attacker\.getUuid\(\)', 'protectedTarget\.getUuid\(\)',
+    'eventsThisTick', 'playFirstNext',
+    'LOLI_IMMUNITY_FIRST', 'LOLI_IMMUNITY_SECOND'
+)) {
+    Assert-True ($immunitySource -match $requiredToken) `
+        "Same-item immunity/audio contract missing: $requiredToken"
+}
+
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
 $annotationCounts = [ordered]@{
     '@Inject' = 39
@@ -141,6 +240,9 @@ try {
         "JAR Java dependency is $($metadata.depends.java)"
     Assert-True ($metadata.depends.fabricloader -eq '>=0.19.3') `
         "JAR Fabric Loader dependency is not >=0.19.3"
+    $expectedFabricMinimum = '>=' + ($properties.fabric_version -split '\+')[0]
+    Assert-True ($metadata.depends.'fabric-api' -eq $expectedFabricMinimum) `
+        "JAR Fabric API dependency is not $expectedFabricMinimum"
 
     $requiredEntries = @(
         "LICENSE_LoliPickaxe-$ExpectedMinecraftVersion",
