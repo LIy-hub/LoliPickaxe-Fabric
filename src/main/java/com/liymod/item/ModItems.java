@@ -3,12 +3,14 @@ package com.liymod.item;
 
 import com.liymod.LiyMod;
 import com.liymod.tool.ModToolMaterials;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Unit;
 
 import java.util.function.Function;
 
@@ -36,13 +38,16 @@ public final class ModItems {
     );
     public static final Item LOLI_PICKAXE = registerItem(
             "loli_pickaxe",
-            settings -> new LoliPickaxeItem(
-                    ModToolMaterials.LOLI,
-                    Integer.MAX_VALUE,
-                    Float.POSITIVE_INFINITY,
-                    settings
-            ),
-            new Item.Settings().fireproof().maxCount(1)
+            LoliPickaxeItem::new,
+            new Item.Settings()
+                    .fireproof()
+                    .maxCount(1)
+                    .pickaxe(
+                            ModToolMaterials.LOLI,
+                            Integer.MAX_VALUE,
+                            Float.POSITIVE_INFINITY
+                    )
+                    .component(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE)
     );
 
     public static void registerModItems() {

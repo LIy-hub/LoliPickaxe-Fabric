@@ -24,7 +24,7 @@ public final class LoliProtection {
 
     public static boolean isProtected(PlayerEntity player) {
         PlayerInventory inventory = player.getInventory();
-        return inventory != null && inventory.getMainHandStack().isOf(ModItems.LOLI_PICKAXE);
+        return inventory != null && inventory.getSelectedStack().isOf(ModItems.LOLI_PICKAXE);
     }
 
     public static boolean isExecutionImmune(Entity entity) {

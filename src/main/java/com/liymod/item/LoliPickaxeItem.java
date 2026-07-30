@@ -1,41 +1,33 @@
 package com.liymod.item;
 
 import com.liymod.combat.LoliErasureService;
-import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LightningEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.PickaxeItem;
-import net.minecraft.item.ToolMaterial;
+import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Unit;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
 import java.util.List;
+import java.util.function.Consumer;
 
-public final class LoliPickaxeItem extends PickaxeItem {
+public final class LoliPickaxeItem extends Item {
     private static final double ABILITY_RANGE = 32.0;
 
-    public LoliPickaxeItem(
-            ToolMaterial material,
-            int attackDamage,
-            float attackSpeed,
-            Settings settings
-    ) {
-        super(
-                material,
-                attackDamage,
-                attackSpeed,
-                settings
-        );
+    public LoliPickaxeItem(Settings settings) {
+        super(settings);
     }
 
     @Override
@@ -52,9 +44,14 @@ public final class LoliPickaxeItem extends PickaxeItem {
     }
 
     @Override
-    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+    public void inventoryTick(
+            ItemStack stack,
+            ServerWorld world,
+            Entity entity,
+        EquipmentSlot slot
+    ) {
         makeUnbreakable(stack);
-        super.inventoryTick(stack, world, entity, slot, selected);
+        super.inventoryTick(stack, world, entity, slot);
     }
 
     @Override
@@ -85,7 +82,7 @@ public final class LoliPickaxeItem extends PickaxeItem {
 
     private static void makeUnbreakable(ItemStack stack) {
         stack.setDamage(0);
-        stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(true));
+        stack.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
     }
 
     private static void spawnLightning(World world, double x, double y, double z) {
@@ -98,10 +95,11 @@ public final class LoliPickaxeItem extends PickaxeItem {
     public void appendTooltip(
             ItemStack stack,
             Item.TooltipContext context,
-            List<Text> tooltip,
+            TooltipDisplayComponent display,
+            Consumer<Text> tooltip,
             TooltipType type
     ) {
-        tooltip.add(Text.translatable("liymod.loli_pickaxe.tip").formatted(Formatting.AQUA));
-        super.appendTooltip(stack, context, tooltip, type);
+        tooltip.accept(Text.translatable("liymod.loli_pickaxe.tip").formatted(Formatting.AQUA));
+        super.appendTooltip(stack, context, display, tooltip, type);
     }
 }
