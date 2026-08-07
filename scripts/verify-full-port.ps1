@@ -170,19 +170,83 @@ foreach ($relativePath in $enchantmentResources) {
     $null = Get-Content -LiteralPath $resourcePath -Raw | ConvertFrom-Json
 }
 
-$allModJava = (Get-ChildItem -LiteralPath (
-    Join-Path $projectRoot 'src/main/java'
-) -Recurse -Filter '*.java' | Get-Content) -join "`n"
+$javaSourceRoots = @(
+    (Join-Path $projectRoot 'src/main/java'),
+    (Join-Path $projectRoot 'src/client/java')
+)
+$allModJava = ($javaSourceRoots | ForEach-Object {
+    Get-ChildItem -LiteralPath $_ -Recurse -Filter '*.java'
+} | Get-Content) -join "`n"
 $unsafePatterns = @(
     'ProcessBuilder',
     'Runtime\.getRuntime\(\)\.exec',
     'System\.exit',
-    'BlueScreen\.exe'
+    'BlueScreen\.exe',
+    'new\s+Thread\s*\(',
+    'while\s*\(\s*true\s*\)'
 )
 foreach ($pattern in $unsafePatterns) {
     Assert-True ($allModJava -notmatch $pattern) `
         "Unsafe operating-system or JVM behavior found: $pattern"
 }
+
+$functionalSources = @(
+    'src/main/java/com/liymod/block/BuffAttackTntBlock.java',
+    'src/main/java/com/liymod/block/LoliAltarBlock.java',
+    'src/main/java/com/liymod/entity/ModEntities.java',
+    'src/main/java/com/liymod/entity/LoliEntity.java',
+    'src/main/java/com/liymod/entity/LoliPrimedTntEntity.java',
+    'src/main/java/com/liymod/safe/SafeTntEffect.java',
+    'src/main/java/com/liymod/safe/SafeTntEffectPayload.java',
+    'src/main/java/com/liymod/safe/SafeTntEffectService.java',
+    'src/main/java/com/liymod/network/ModNetworking.java',
+    'src/client/java/com/liymod/client/LiyModClient.java',
+    'src/client/java/com/liymod/client/render/LoliEntityModel.java',
+    'src/client/java/com/liymod/client/render/LoliEntityRenderer.java',
+    'src/client/java/com/liymod/client/safe/BlueScreenEffectScreen.java',
+    'src/client/java/com/liymod/client/safe/FailRespondEffectScreen.java'
+)
+foreach ($relativePath in $functionalSources) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Functional block/entity source missing: $relativePath"
+}
+
+$entitiesSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/entity/ModEntities.java'
+) -Raw
+Assert-True ($entitiesSource -match '"loli"') 'Entity id missing: liymod:loli'
+Assert-True ($entitiesSource -match '"loli_buff_attack_tnt"') `
+    'Entity id missing: liymod:loli_buff_attack_tnt'
+
+$altarPatternPath = Join-Path $projectRoot (
+    'src/main/resources/data/liymod/loli_altar_pattern/default.json'
+)
+Assert-True (Test-Path -LiteralPath $altarPatternPath) 'Exact Loli altar pattern is missing'
+$altarPattern = Get-Content -LiteralPath $altarPatternPath -Raw | ConvertFrom-Json
+$altarRows = @($altarPattern.rows_by_x)
+Assert-True ($altarRows.Count -eq 63) 'Loli altar pattern must contain 63 rows'
+$altarCharacters = $altarRows -join ''
+Assert-True ($altarCharacters.Length -eq 3969) 'Loli altar pattern must contain 3969 positions'
+Assert-True (($altarRows | Where-Object { $_.Length -ne 63 }).Count -eq 0) `
+    'Every Loli altar pattern row must be 63 positions wide'
+$altarCount = ($altarCharacters.ToCharArray() | Where-Object { $_ -eq '#' }).Count
+$airCount = ($altarCharacters.ToCharArray() | Where-Object { $_ -eq '.' }).Count
+Assert-True ($altarCount -eq 1169) "Loli altar block count is $altarCount, expected 1169"
+Assert-True ($airCount -eq 2800) "Loli altar air count is $airCount, expected 2800"
+
+$safeServiceSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/safe/SafeTntEffectService.java'
+) -Raw
+Assert-True ($safeServiceSource -match 'new Settings\(false, false, false\)') `
+    'Safe TNT effects must remain disabled by default'
+Assert-True ($safeServiceSource -match 'player\.connection\.disconnect') `
+    'Safe EXIT effect must disconnect only the affected player'
+
+$metadataSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/resources/fabric.mod.json'
+) -Raw | ConvertFrom-Json
+Assert-True ($metadataSource.entrypoints.client -contains 'com.liymod.client.LiyModClient') `
+    'Client entrypoint for safe effects and entity rendering is missing'
 
 foreach ($id in $recipeIds) {
     $recipePath = Join-Path $projectRoot "src/main/resources/data/liymod/recipe/$id.json"
@@ -247,6 +311,22 @@ try {
         $entryPath = $relativePath.Replace('src/main/resources/', '')
         Assert-True ($null -ne $archive.GetEntry($entryPath)) `
             "JAR Auto-Smelt resource missing: $entryPath"
+    }
+    $functionalEntries = @(
+        'com/liymod/entity/LoliEntity.class',
+        'com/liymod/entity/LoliPrimedTntEntity.class',
+        'com/liymod/block/LoliAltarBlock.class',
+        'com/liymod/block/BuffAttackTntBlock.class',
+        'com/liymod/client/LiyModClient.class',
+        'com/liymod/client/render/LoliEntityRenderer.class',
+        'com/liymod/client/safe/BlueScreenEffectScreen.class',
+        'com/liymod/client/safe/FailRespondEffectScreen.class',
+        'assets/liymod/textures/entity/loli.png',
+        'data/liymod/loli_altar_pattern/default.json'
+    )
+    foreach ($entryPath in $functionalEntries) {
+        Assert-True ($null -ne $archive.GetEntry($entryPath)) `
+            "JAR functional block/entity entry missing: $entryPath"
     }
 } finally {
     $archive.Dispose()

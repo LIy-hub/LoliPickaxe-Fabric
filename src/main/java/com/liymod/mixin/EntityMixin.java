@@ -1,6 +1,7 @@
 package com.liymod.mixin;
 
 import com.liymod.combat.LoliExecutionManager;
+import com.liymod.entity.LoliEntity;
 import com.liymod.protection.LoliProtection;
 import com.liymod.protection.TrustedPlayerLifecycle;
 import net.minecraft.world.entity.Entity;
@@ -15,6 +16,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class EntityMixin {
     @Inject(method = "remove", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventRemoval(Entity.RemovalReason reason, CallbackInfo ci) {
+        if ((Object) this instanceof LoliEntity loli && loli.blocksRemoval(reason)) {
+            ci.cancel();
+            return;
+        }
         if ((Object) this instanceof Player player && LoliProtection.blocksRemoval(player, reason)) {
             ci.cancel();
         }
@@ -22,6 +27,10 @@ public abstract class EntityMixin {
 
     @Inject(method = "setRemoved", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventDirectRemoval(Entity.RemovalReason reason, CallbackInfo ci) {
+        if ((Object) this instanceof LoliEntity loli && loli.blocksRemoval(reason)) {
+            ci.cancel();
+            return;
+        }
         if ((Object) this instanceof Player player && LoliProtection.blocksRemoval(player, reason)) {
             ci.cancel();
         }
@@ -30,6 +39,10 @@ public abstract class EntityMixin {
     @Inject(method = "discard", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventDiscard(CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
+        if (self instanceof LoliEntity loli && !loli.isDispersalRemovalAllowed()) {
+            ci.cancel();
+            return;
+        }
         if (self instanceof Player player
                 && !self.level().isClientSide()
                 && LoliProtection.isProtected(player)

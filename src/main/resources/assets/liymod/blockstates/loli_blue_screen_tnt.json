@@ -1,6 +1,9 @@
 {
   "variants": {
-    "": {
+    "unstable=false": {
+      "model": "liymod:block/loli_blue_screen_tnt"
+    },
+    "unstable=true": {
       "model": "liymod:block/loli_blue_screen_tnt"
     }
   }

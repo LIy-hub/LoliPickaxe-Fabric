@@ -1,6 +1,9 @@
 {
   "variants": {
-    "": {
+    "unstable=false": {
+      "model": "liymod:block/loli_fail_respond_tnt"
+    },
+    "unstable=true": {
       "model": "liymod:block/loli_fail_respond_tnt"
     }
   }

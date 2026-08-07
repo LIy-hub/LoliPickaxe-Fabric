@@ -1,6 +1,7 @@
 package com.liymod.block;
 
 import com.liymod.LiyMod;
+import com.liymod.safe.SafeTntEffect;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -8,6 +9,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 
@@ -16,22 +18,22 @@ import static com.liymod.LiyMod.MOD_ID;
 public final class ModBlocks {
     public static final Block LOLI_BLUE_SCREEN_TNT = registerBlock(
             "loli_blue_screen_tnt",
-            Block::new,
-            BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS)
+            properties -> new BuffAttackTntBlock(SafeTntEffect.BLUE_SCREEN, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.TNT)
     );
     public static final Block LOLI_EXIT_TNT = registerBlock(
             "loli_exit_tnt",
-            Block::new,
-            BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS)
+            properties -> new BuffAttackTntBlock(SafeTntEffect.EXIT, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.TNT)
     );
     public static final Block LOLI_FAIL_RESPOND_TNT = registerBlock(
             "loli_fail_respond_tnt",
-            Block::new,
-            BlockBehaviour.Properties.of().strength(0.0F).sound(SoundType.GRASS)
+            properties -> new BuffAttackTntBlock(SafeTntEffect.FAIL_RESPOND, properties),
+            BlockBehaviour.Properties.ofFullCopy(Blocks.TNT)
     );
     public static final Block LOLI_ALTAR = registerBlock(
             "loli_altar",
-            Block::new,
+            LoliAltarBlock::new,
             BlockBehaviour.Properties.of().strength(5.0F, 1_200.0F).sound(SoundType.STONE)
     );
     public static final Block PASSWORD_WORK_BENCH = registerBlock(

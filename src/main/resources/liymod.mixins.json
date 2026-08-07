@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "accessor.LivingEntityAccessor",
+    "accessor.PrimedTntAccessor",
     "EntityMixin",
     "LivingEntityMixin",
     "PlayerManagerMixin",

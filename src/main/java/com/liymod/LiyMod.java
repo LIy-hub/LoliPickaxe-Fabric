@@ -6,11 +6,13 @@ import com.liymod.combat.LoliExecutionManager;
 import com.liymod.damage_type.ModDamageTypes;
 import com.liymod.event.AttackBlockEvents;
 import com.liymod.event.AttackEntityEvents;
+import com.liymod.entity.ModEntities;
 import com.liymod.item.ModItemGroup;
 import com.liymod.item.ModItems;
 import com.liymod.item.SmallLoliGameplayEvents;
 import com.liymod.item.SmallLoliMiningEvents;
 import com.liymod.loliability.LoliAbilityEvents;
+import com.liymod.network.ModNetworking;
 import com.liymod.protection.LoliProtection;
 import com.liymod.recipe.ModRecipes;
 import com.liymod.sound.ModSounds;
@@ -25,7 +27,9 @@ public class LiyMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Welcome to LoliPickaxe");
+		ModNetworking.register();
 		ModSounds.registerSoundEvents();
+		ModEntities.registerEntities();
 		ModBlocks.registerModBlocks();
 		ModItems.registerModItems();
 		ModRecipes.registerRecipes();

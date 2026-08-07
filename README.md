@@ -27,6 +27,10 @@ and survival implementation.
   tracked in [FULL_PORT_MATRIX.md](FULL_PORT_MATRIX.md).
 - Restores the level-one `liymod:loli_auto_furnace` enchantment through the
   native 26.2 enchantment registry and `minecraft:smelts_loot` contract.
+- Restores the exact 63 by 63 Loli Altar ritual, the persistent Loli entity and
+  the three special TNT blocks. The legacy operating-system attacks are replaced
+  by bounded, responsive in-game effects or a single-player disconnect; they
+  never start a process, terminate the JVM or run a busy loop.
 - The pickaxe is kept unbreakable and has deliberately extreme mining and
   combat attributes.
 - Attacking a block attempts to break it immediately. A fixed set of normally
@@ -79,6 +83,9 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   接入；内部储存与自动收纳仍按 `FULL_PORT_MATRIX.md` 继续移植。
 - 已通过 26.2 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级
   `liymod:loli_auto_furnace` 自动熔炼附魔。
+- 已恢复精确 63×63 萝莉祭坛仪式、持久且只能被退散物品移除的萝莉实体，以及
+  三种特殊 TNT。原版操作系统级破坏行为已替换为有时限、可响应的游戏内效果
+  或仅断开受影响玩家，不会启动进程、退出 JVM 或制造忙循环。
 - 氪金萝莉保持不可破坏，并拥有刻意设计为超规格的挖掘与战斗属性。
 - 左击方块会尝试立即破坏；固定清单中的管理类方块、不可破坏方块与矿石还会
   产生模组定义的特殊掉落，矿石可额外掉落对应储存方块。

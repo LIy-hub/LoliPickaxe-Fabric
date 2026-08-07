@@ -2,6 +2,7 @@ package com.liymod.protection;
 
 import com.liymod.LiyMod;
 import com.liymod.combat.LoliErasureService;
+import com.liymod.entity.LoliEntity;
 import com.liymod.item.ModItems;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -28,7 +29,7 @@ public final class LoliProtection {
     }
 
     public static boolean isExecutionImmune(Entity entity) {
-        return isProtected(entity);
+        return entity instanceof LoliEntity || isProtected(entity);
     }
 
     public static boolean isUntargetable(Entity entity) {

@@ -117,7 +117,7 @@ $annotationCounts = [ordered]@{
     '@Inject' = 39
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
-    '@Accessor' = 2
+    '@Accessor' = 3
 }
 $javaSources = Get-ChildItem -LiteralPath $mixinSourceRoot -Recurse -Filter '*.java'
 $combinedMixinSource = ($javaSources | Get-Content) -join "`n"

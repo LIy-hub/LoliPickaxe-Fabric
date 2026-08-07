@@ -1,6 +1,9 @@
 {
   "variants": {
-    "": {
+    "unstable=false": {
+      "model": "liymod:block/loli_exit_tnt"
+    },
+    "unstable=true": {
       "model": "liymod:block/loli_exit_tnt"
     }
   }
