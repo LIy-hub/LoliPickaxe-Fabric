@@ -2,6 +2,11 @@ package com.liymod.loliability;
 
 import com.liymod.LiyMod;
 import com.liymod.protection.LoliProtection;
+import com.liymod.combat.LoliErasureService;
+import com.liymod.config.LoliConfigOption;
+import com.liymod.config.LoliItemSettings;
+import com.liymod.item.LoliFinalEffects;
+import com.liymod.item.LoliPickaxeItem;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -9,6 +14,15 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LightningBolt;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -17,23 +31,34 @@ public final class LoliAbilityEvents {
     private static final Identifier LEGACY_SPEED_BOOST_ID = Identifier.withDefaultNamespace(
             "49959a82-0a2e-4c3d-a8ab-2cfa74bb13d8"
     );
+    private static final Identifier BLOCK_REACH_ID = Identifier.fromNamespaceAndPath(
+            LiyMod.MOD_ID,
+            "loli_block_reach"
+    );
     private static final Set<UUID> FLIGHT_GRANTED = new HashSet<>();
     private static final Set<UUID> INVULNERABILITY_GRANTED = new HashSet<>();
+    private static int tick;
 
     private LoliAbilityEvents() {
     }
 
     private static void onServerTick(net.minecraft.server.MinecraftServer server) {
+        tick++;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (LoliProtection.isProtected(player)) {
-                applyAbilities(player);
+            ItemStack protectingPickaxe = LoliProtection.getProtectingPickaxe(player);
+            if (!protectingPickaxe.isEmpty()) {
+                applyAbilities(player, protectingPickaxe);
             } else {
                 removeAbilities(player);
+            }
+            synchronizeReach(player);
+            if (tick % 5 == 0) {
+                autoExecute(player);
             }
         }
     }
 
-    private static void applyAbilities(ServerPlayer player) {
+    private static void applyAbilities(ServerPlayer player, ItemStack pickaxe) {
         player.setHealth(player.getMaxHealth());
         player.deathTime = 0;
         player.hurtTime = 0;
@@ -56,6 +81,10 @@ public final class LoliAbilityEvents {
         }
 
         removeLegacySpeedBoost(player);
+        if (tick % 100 == 0) {
+            applyConfiguredEffects(player, pickaxe);
+        }
+        player.getFoodData().eat(20, 1.0F);
     }
 
     private static void removeAbilities(ServerPlayer player) {
@@ -71,6 +100,72 @@ public final class LoliAbilityEvents {
         }
 
         removeLegacySpeedBoost(player);
+        removeReach(player);
+    }
+
+    private static void synchronizeReach(ServerPlayer player) {
+        ItemStack stack = player.getMainHandItem();
+        if (!(stack.getItem() instanceof LoliPickaxeItem)) {
+            removeReach(player);
+            return;
+        }
+        AttributeInstance reach = player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
+        if (reach == null) {
+            return;
+        }
+        double configured = LoliItemSettings.getDouble(stack, LoliConfigOption.BLOCK_REACH_DISTANCE);
+        double target = configured > 0.0D ? configured : 5.0D;
+        reach.addOrUpdateTransientModifier(new AttributeModifier(
+                BLOCK_REACH_ID,
+                target - reach.getBaseValue(),
+                AttributeModifier.Operation.ADD_VALUE
+        ));
+    }
+
+    private static void removeReach(ServerPlayer player) {
+        AttributeInstance reach = player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
+        if (reach != null) {
+            reach.removeModifier(BLOCK_REACH_ID);
+        }
+    }
+
+    private static void applyConfiguredEffects(ServerPlayer player, ItemStack pickaxe) {
+        Registry<MobEffect> registry = player.level().registryAccess().lookupOrThrow(Registries.MOB_EFFECT);
+        int maximum = com.liymod.config.LoliServerConfig.getInt(LoliConfigOption.EFFECT_LEVEL_LIMIT);
+        if (maximum <= 0) {
+            return;
+        }
+        LoliFinalEffects.get(pickaxe).forEach((id, level) -> registry.get(id).ifPresent(holder -> {
+            int validatedLevel = Math.clamp(level, 1, maximum);
+            player.addEffect(new MobEffectInstance(
+                    holder,
+                    410,
+                    validatedLevel - 1,
+                    false,
+                    false,
+                    true
+            ));
+        }));
+    }
+
+    private static void autoExecute(ServerPlayer player) {
+        ItemStack stack = player.getMainHandItem();
+        if (!(stack.getItem() instanceof LoliPickaxeItem)
+                || !LoliItemSettings.getBoolean(stack, LoliConfigOption.AUTO_KILL_RANGE_ENTITY)) {
+            return;
+        }
+        int radius = LoliItemSettings.getInt(stack, LoliConfigOption.AUTO_KILL_RANGE);
+        if (radius <= 0) {
+            return;
+        }
+        AABB area = player.getBoundingBox().inflate(radius);
+        for (Entity target : player.level().getEntities(
+                player,
+                area,
+                target -> !(target instanceof LightningBolt)
+        )) {
+            LoliErasureService.executeAbsolute(player, target);
+        }
     }
 
     private static void removeLegacySpeedBoost(ServerPlayer player) {
@@ -103,6 +198,7 @@ public final class LoliAbilityEvents {
                     UUID playerId = handler.player.getUUID();
                     FLIGHT_GRANTED.remove(playerId);
                     INVULNERABILITY_GRANTED.remove(playerId);
+                    removeReach(handler.player);
                 }
         );
     }

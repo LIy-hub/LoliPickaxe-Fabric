@@ -18,6 +18,9 @@ import com.liymod.protection.LoliProtection;
 import com.liymod.recipe.ModRecipes;
 import com.liymod.sound.ModSounds;
 import com.liymod.storage.LoliStorageEvents;
+import com.liymod.config.LoliServerConfig;
+import com.liymod.item.LoliFinalItemEvents;
+import com.liymod.command.LoliCommands;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +32,8 @@ public class LiyMod implements ModInitializer {
 	@Override
 	public void onInitialize() {
 		LOGGER.info("Welcome to LoliPickaxe");
+		LoliServerConfig.initialize();
+		LoliCommands.register();
 		ModNetworking.register();
 		ModMenus.registerMenus();
 		ModSounds.registerSoundEvents();
@@ -40,6 +45,7 @@ public class LiyMod implements ModInitializer {
 		SmallLoliGameplayEvents.registerEvents();
 		SmallLoliMiningEvents.registerEvents();
 		LoliStorageEvents.registerEvents();
+		LoliFinalItemEvents.registerEvents();
 		ModDamageTypes.registerDamageTypes();
 		LoliProtection.registerProtection();
 		LoliExecutionManager.registerEvents();

@@ -18,7 +18,7 @@ public final class LoliAttackResolver {
     }
 
     public static boolean executeFromLook(ServerPlayer attacker) {
-        if (!LoliProtection.isProtected(attacker)
+        if (!LoliProtection.isMainHandProtected(attacker)
                 || LoliExecutionManager.isDeadLocked(attacker)) {
             return false;
         }

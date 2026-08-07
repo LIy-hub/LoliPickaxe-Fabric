@@ -1,6 +1,7 @@
 package com.liymod.client.input;
 
 import com.liymod.item.ModItems;
+import com.liymod.network.LoliMenuOpenPayload;
 import com.liymod.network.StorageDropAllPayload;
 import com.liymod.network.StorageOpenPayload;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -12,7 +13,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 
-/** Safe in-game-only B/Shift+B/U bindings from the upstream mod. */
+/** Safe in-game-only B/Shift+B/U and final-pickaxe N/M/P/K bindings from the upstream mod. */
 public final class LoliKeyMappings {
     private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
             Identifier.fromNamespaceAndPath("liymod", "general"));
@@ -25,6 +26,26 @@ public final class LoliKeyMappings {
             "key.liymod.loli_container_blacklist",
             InputConstants.Type.KEYSYM,
             InputConstants.KEY_U,
+            CATEGORY));
+    private static final KeyMapping FINAL_CONFIG = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.liymod.loli_config",
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_N,
+            CATEGORY));
+    private static final KeyMapping FINAL_ENCHANTMENT = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.liymod.loli_enchantment",
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_M,
+            CATEGORY));
+    private static final KeyMapping FINAL_EFFECT = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.liymod.loli_potion",
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_P,
+            CATEGORY));
+    private static final KeyMapping FINAL_TELEPORT = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+            "key.liymod.loli_space_folding",
+            InputConstants.Type.KEYSYM,
+            InputConstants.KEY_K,
             CATEGORY));
 
     private static boolean registered;
@@ -43,22 +64,38 @@ public final class LoliKeyMappings {
     private static void handleKeys(Minecraft client) {
         boolean storagePressed = consumeAllClicks(STORAGE);
         boolean blacklistPressed = consumeAllClicks(BLACKLIST);
-        if ((!storagePressed && !blacklistPressed)
-                || client.player == null
-                || client.gui.screen() != null
-                || !holdsLoliTool(client)) {
+        boolean configPressed = consumeAllClicks(FINAL_CONFIG);
+        boolean enchantmentPressed = consumeAllClicks(FINAL_ENCHANTMENT);
+        boolean effectPressed = consumeAllClicks(FINAL_EFFECT);
+        boolean teleportPressed = consumeAllClicks(FINAL_TELEPORT);
+        if (client.player == null || client.gui.screen() != null) {
             return;
         }
 
-        if (storagePressed) {
-            if (client.hasShiftDown()) {
-                ClientPlayNetworking.send(new StorageDropAllPayload());
-            } else {
-                ClientPlayNetworking.send(new StorageOpenPayload(StorageOpenPayload.Mode.STORAGE));
+        if ((storagePressed || blacklistPressed) && holdsLoliTool(client)) {
+            if (storagePressed) {
+                if (client.hasShiftDown()) {
+                    ClientPlayNetworking.send(new StorageDropAllPayload());
+                } else {
+                    ClientPlayNetworking.send(new StorageOpenPayload(StorageOpenPayload.Mode.STORAGE));
+                }
+            }
+            if (blacklistPressed) {
+                ClientPlayNetworking.send(new StorageOpenPayload(StorageOpenPayload.Mode.BLACKLIST));
             }
         }
-        if (blacklistPressed) {
-            ClientPlayNetworking.send(new StorageOpenPayload(StorageOpenPayload.Mode.BLACKLIST));
+
+        if (!holdsFinalLoliPickaxe(client)) {
+            return;
+        }
+        if (configPressed) {
+            ClientPlayNetworking.send(new LoliMenuOpenPayload(LoliMenuOpenPayload.Mode.CONFIG));
+        } else if (enchantmentPressed) {
+            ClientPlayNetworking.send(new LoliMenuOpenPayload(LoliMenuOpenPayload.Mode.ENCHANTMENT));
+        } else if (effectPressed) {
+            ClientPlayNetworking.send(new LoliMenuOpenPayload(LoliMenuOpenPayload.Mode.EFFECT));
+        } else if (teleportPressed) {
+            ClientPlayNetworking.send(new LoliMenuOpenPayload(LoliMenuOpenPayload.Mode.TELEPORT));
         }
     }
 
@@ -72,6 +109,11 @@ public final class LoliKeyMappings {
 
     private static boolean holdsLoliTool(Minecraft client) {
         return isLoliTool(client.player.getMainHandItem()) || isLoliTool(client.player.getOffhandItem());
+    }
+
+    private static boolean holdsFinalLoliPickaxe(Minecraft client) {
+        return client.player.getMainHandItem().is(ModItems.LOLI_PICKAXE)
+                || client.player.getOffhandItem().is(ModItems.LOLI_PICKAXE);
     }
 
     private static boolean isLoliTool(ItemStack stack) {

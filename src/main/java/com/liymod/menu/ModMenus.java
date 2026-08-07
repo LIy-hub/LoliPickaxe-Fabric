@@ -24,6 +24,26 @@ public final class ModMenus {
             Identifier.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_blacklist"),
             new ExtendedMenuType<>(BlacklistMenu::new, ToolMenuData.STREAM_CODEC)
     );
+    public static final MenuType<FinalConfigMenu> FINAL_CONFIG = Registry.register(
+            BuiltInRegistries.MENU,
+            Identifier.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_config"),
+            new ExtendedMenuType<>(FinalConfigMenu::new, ToolMenuData.STREAM_CODEC)
+    );
+    public static final MenuType<FinalEnchantmentMenu> FINAL_ENCHANTMENT = Registry.register(
+            BuiltInRegistries.MENU,
+            Identifier.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_enchantment"),
+            new ExtendedMenuType<>(FinalEnchantmentMenu::new, ToolMenuData.STREAM_CODEC)
+    );
+    public static final MenuType<FinalEffectMenu> FINAL_EFFECT = Registry.register(
+            BuiltInRegistries.MENU,
+            Identifier.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_effect"),
+            new ExtendedMenuType<>(FinalEffectMenu::new, ToolMenuData.STREAM_CODEC)
+    );
+    public static final MenuType<FinalTeleportMenu> FINAL_TELEPORT = Registry.register(
+            BuiltInRegistries.MENU,
+            Identifier.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_teleport"),
+            new ExtendedMenuType<>(FinalTeleportMenu::new, ToolMenuData.STREAM_CODEC)
+    );
 
     private ModMenus() {
     }

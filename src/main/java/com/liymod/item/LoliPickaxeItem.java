@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Unit;
@@ -16,14 +19,19 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.player.Player;
+import com.liymod.config.LoliItemSettings;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 public final class LoliPickaxeItem extends Item {
+    public static final int FORTUNE_LEVEL = 32;
     private static final double ABILITY_RANGE = 32.0;
 
     public LoliPickaxeItem(Properties settings) {
@@ -40,7 +48,24 @@ public final class LoliPickaxeItem extends Item {
     @Override
     public void inventoryTick(ItemStack stack, ServerLevel world, Entity entity, EquipmentSlot slot) {
         makeUnbreakable(stack);
+        refreshEnchantments(stack, world);
+        if (entity instanceof Player player) {
+            LoliItemSettings.ensureDefaults(stack);
+            LoliItemSettings.bindOwnerIfAbsent(stack, player);
+            LoliFinalEffects.ensureDefaults(stack);
+        }
         super.inventoryTick(stack, world, entity, slot);
+    }
+
+    public static void refreshEnchantments(ItemStack stack, ServerLevel level) {
+        if (!(stack.getItem() instanceof LoliPickaxeItem)) {
+            return;
+        }
+        Registry<Enchantment> registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> fortune = registry.getOrThrow(Enchantments.FORTUNE);
+        if (EnchantmentHelper.getItemEnchantmentLevel(fortune, stack) < FORTUNE_LEVEL) {
+            EnchantmentHelper.updateEnchantments(stack, mutable -> mutable.set(fortune, FORTUNE_LEVEL));
+        }
     }
 
     @Override
