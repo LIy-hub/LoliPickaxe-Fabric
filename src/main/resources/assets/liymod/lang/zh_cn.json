@@ -69,7 +69,7 @@
   "config.liymod.loli.auto_kill_range": "自动攻击范围",
   "config.liymod.loli.target_friendly_entities": "自动攻击可选中友好生物",
   "config.liymod.loli.target_all_entities": "自动攻击可选中非生物实体",
-  "config.liymod.loli.force_remove": "立即强制移除兼容语义",
+  "config.liymod.loli.force_remove": "将反伤提升为绝对强制处决",
   "config.liymod.loli.clear_inventory": "安全清背包为可回收掉落物",
   "config.liymod.loli.drop_equipment": "缴械为可回收掉落物",
   "config.liymod.loli.kick_player": "断开被处决玩家",

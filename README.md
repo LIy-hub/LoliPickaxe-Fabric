@@ -53,8 +53,11 @@ and survival implementation.
   inventory clearing, disarming, disconnect messages, reincarnation and soul
   redemption. Every destructive toggle defaults to `false`, applies only after
   a successful server-side `ABSOLUTE_EXECUTION`, and never bypasses same-item
-  immunity. Inventory clearing/disarming creates owner-targeted, invulnerable,
-  unlimited-lifetime drops instead of deleting stacks. `/loli playerlist
+  immunity. Inventory clearing/disarming is detached transactionally before
+  vanilla death drops, rolled back to exact slots on any abort, and committed
+  only after `DEAD_LOCK` as owner-targeted, invulnerable, unlimited-lifetime
+  drops. `force_remove` upgrades thorns from standard to absolute execution
+  without bypassing the execution service. `/loli playerlist
   <reincarnation|soul_redemption|soul_whitelist> <list|add|remove>` manages the
   three persisted, deduplicated lists (at most 24 UUIDs or player names).
   `/loliattack` exposes only the bounded in-game
@@ -134,9 +137,11 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 - 管理员可用 `/loli list|get|set|reload` 管理持久化白名单配置；`/loliattack`
   仅调用安全的游戏内替代表现，且总开关与三个效果默认全部关闭。氪金萝莉单件
   配置还恢复了自动范围攻击的友好/非生物实体过滤、立即强制移除、清背包、缴械、
-  自定义踢出消息、轮回与灵魂超度；这些危险开关默认均为 `false`，只在服务端
-  `ABSOLUTE_EXECUTION` 成功且目标没有同物免疫后触发。清背包与缴械不会删除物品，
-  而会生成绑定目标、无敌且无限寿命的可回收掉落物。管理员可用 `/loli playerlist
+  自定义踢出消息、轮回与灵魂超度；这些危险开关默认均为 `false`。清背包与缴械
+  会在原版死亡掉落前事务式移出物品，任何免疫/撤销分支均按原槽回滚，只在最终
+  `DEAD_LOCK` 后生成绑定目标、无敌且无限寿命的可回收掉落物；名单与踢出也只在
+  此提交点发生。`force_remove` 会将反伤从标准处决升级为绝对处决，但仍经过统一
+  服务且不绕过同物免疫。管理员可用 `/loli playerlist
   <reincarnation|soul_redemption|soul_whitelist> <list|add|remove>` 管理三个持久化
   名单；名单去重且最多包含 24 个 UUID 或玩家名。
 - 密码工作台已恢复 3×3 合成区、密码输入与服务端判定。与原版发行源码一致，

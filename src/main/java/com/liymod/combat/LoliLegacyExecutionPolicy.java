@@ -6,7 +6,6 @@ import com.liymod.config.LoliItemSettings;
 import com.liymod.config.LoliServerConfig;
 import com.liymod.item.ModItems;
 import com.liymod.protection.LoliProtection;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -16,6 +15,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -67,40 +67,221 @@ public final class LoliLegacyExecutionPolicy {
                 || target instanceof Enemy;
     }
 
-    /** Called only after the existing service has returned a successful ABSOLUTE execution. */
-    public static void afterSuccessfulAbsolute(Entity attacker, Entity target) {
+    /**
+     * Prepares reversible player inventory state after an ABSOLUTE ticket exists but before
+     * vanilla death can run Inventory.dropAll. The caller must commit only after DEAD_LOCK.
+     */
+    public static PreparedExecution prepare(Entity attacker, Entity target) {
+        PreparedExecution session = new PreparedExecution(target);
+        if (attacker == null) {
+            return session;
+        }
         ItemStack tool = findExecutionTool(attacker);
-        if (tool.isEmpty()) {
-            return;
-        }
-
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.FORCE_REMOVE)
-                && !(target instanceof ServerPlayer)) {
-            // Keep removal inside the existing execution manager; this option only accelerates its normal lock.
-            LoliExecutionManager.forceRemoval(target);
-        }
-
-        if (!(target instanceof ServerPlayer player)
+        if (tool.isEmpty()
+                || !(target instanceof ServerPlayer player)
                 || LoliProtection.isExecutionImmune(player)) {
-            return;
+            return session;
         }
 
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.CLEAR_INVENTORY)) {
-            safelyDropInventory(player);
-        } else if (LoliItemSettings.getBoolean(tool, LoliConfigOption.DROP_EQUIPMENT)) {
-            safelyDropEquipment(player);
+        try {
+            session.prepare(player, tool);
+            return session;
+        } catch (RuntimeException exception) {
+            session.close();
+            LiyMod.LOGGER.warn(
+                    "Could not prepare reversible legacy execution effects for {}; continuing safely",
+                    player.getUUID(),
+                    exception
+            );
+            return new PreparedExecution(target);
+        }
+    }
+
+    public static final class PreparedExecution implements AutoCloseable {
+        private final Entity target;
+        private final Map<Integer, ItemStack> inventorySnapshots = new LinkedHashMap<>();
+        private final Map<EquipmentSlot, ItemStack> equipmentSnapshots = new LinkedHashMap<>();
+        private ServerPlayer player;
+        private AbstractContainerMenu preparedMenu;
+        private ItemStack carriedSnapshot = ItemStack.EMPTY;
+        private boolean reincarnation;
+        private boolean soulRedemption;
+        private boolean kickPlayer;
+        private String kickMessage = "";
+        private boolean committed;
+
+        private PreparedExecution(Entity target) {
+            this.target = target;
         }
 
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.REINCARNATION)) {
-            addPlayer(LoliConfigOption.REINCARNATION_LIST, player);
-        }
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.SOUL_REDEMPTION)
-                && !containsPlayer(LoliConfigOption.SOUL_REDEMPTION_WHITELIST, player)) {
-            addPlayer(LoliConfigOption.SOUL_REDEMPTION_LIST, player);
+        private void prepare(ServerPlayer targetPlayer, ItemStack tool) {
+            player = targetPlayer;
+            preparedMenu = targetPlayer.containerMenu;
+            reincarnation = LoliItemSettings.getBoolean(tool, LoliConfigOption.REINCARNATION);
+            soulRedemption = LoliItemSettings.getBoolean(tool, LoliConfigOption.SOUL_REDEMPTION);
+            kickPlayer = LoliItemSettings.getBoolean(tool, LoliConfigOption.KICK_PLAYER);
+            kickMessage = safeKickMessage(tool);
+
+            if (LoliItemSettings.getBoolean(tool, LoliConfigOption.CLEAR_INVENTORY)) {
+                detachInventory();
+            } else if (LoliItemSettings.getBoolean(tool, LoliConfigOption.DROP_EQUIPMENT)) {
+                detachEquipment();
+            }
+            synchronizeMenus();
         }
 
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.KICK_PLAYER)) {
-            player.connection.disconnect(Component.literal(safeKickMessage(tool)));
+        private void detachInventory() {
+            for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+                ItemStack stack = player.getInventory().removeItemNoUpdate(slot);
+                if (!stack.isEmpty()) {
+                    inventorySnapshots.put(slot, stack);
+                }
+            }
+            ItemStack carried = preparedMenu.getCarried();
+            if (!carried.isEmpty()) {
+                carriedSnapshot = carried;
+                preparedMenu.setCarried(ItemStack.EMPTY);
+            }
+        }
+
+        private void detachEquipment() {
+            for (EquipmentSlot slot : DISARM_SLOTS) {
+                ItemStack stack = player.getItemBySlot(slot);
+                if (stack.isEmpty()) {
+                    continue;
+                }
+                equipmentSnapshots.put(slot, stack);
+                player.setItemSlot(slot, ItemStack.EMPTY);
+            }
+        }
+
+        public void commit() {
+            if (committed) {
+                return;
+            }
+            if (!LoliExecutionManager.isDeadLocked(target)) {
+                throw new IllegalStateException("Legacy execution effects require a final DEAD_LOCK");
+            }
+            committed = true;
+            if (player == null) {
+                return;
+            }
+
+            commitRecoverableDrops();
+            if (reincarnation) {
+                addPlayer(LoliConfigOption.REINCARNATION_LIST, player);
+            }
+            if (soulRedemption
+                    && !containsPlayer(LoliConfigOption.SOUL_REDEMPTION_WHITELIST, player)) {
+                addPlayer(LoliConfigOption.SOUL_REDEMPTION_LIST, player);
+            }
+            if (kickPlayer) {
+                try {
+                    player.connection.disconnect(Component.literal(kickMessage));
+                } catch (RuntimeException exception) {
+                    LiyMod.LOGGER.warn("Safe legacy disconnect failed for {}", player.getUUID(), exception);
+                }
+            }
+        }
+
+        private void commitRecoverableDrops() {
+            inventorySnapshots.forEach((slot, stack) -> {
+                if (!spawnRecoverableDrop(player, stack)) {
+                    player.getInventory().setItem(slot, stack);
+                }
+            });
+            equipmentSnapshots.forEach((slot, stack) -> {
+                if (!spawnRecoverableDrop(player, stack)) {
+                    player.setItemSlot(slot, stack);
+                }
+            });
+            if (!carriedSnapshot.isEmpty() && !spawnRecoverableDrop(player, carriedSnapshot)) {
+                player.containerMenu.setCarried(carriedSnapshot);
+            }
+            int recoveredCount = inventorySnapshots.size()
+                    + equipmentSnapshots.size()
+                    + (carriedSnapshot.isEmpty() ? 0 : 1);
+            if (recoveredCount > 0) {
+                LiyMod.LOGGER.info(
+                        "Committed {} protected recoverable drops for {} at {}, {}, {}",
+                        recoveredCount,
+                        player.getGameProfile().name(),
+                        player.blockPosition().getX(),
+                        player.blockPosition().getY(),
+                        player.blockPosition().getZ()
+                );
+            }
+            inventorySnapshots.clear();
+            equipmentSnapshots.clear();
+            carriedSnapshot = ItemStack.EMPTY;
+            synchronizeMenus();
+        }
+
+        @Override
+        public void close() {
+            if (committed || player == null) {
+                return;
+            }
+            inventorySnapshots.forEach((slot, stack) -> {
+                try {
+                    player.getInventory().setItem(slot, stack);
+                } catch (RuntimeException exception) {
+                    LiyMod.LOGGER.error(
+                            "Could not roll back inventory slot {} for {}; preserving it as a safe drop",
+                            slot,
+                            player.getUUID(),
+                            exception
+                    );
+                    spawnRecoverableDrop(player, stack);
+                }
+            });
+            equipmentSnapshots.forEach((slot, stack) -> {
+                try {
+                    player.setItemSlot(slot, stack);
+                } catch (RuntimeException exception) {
+                    LiyMod.LOGGER.error(
+                            "Could not roll back equipment slot {} for {}; preserving it as a safe drop",
+                            slot,
+                            player.getUUID(),
+                            exception
+                    );
+                    spawnRecoverableDrop(player, stack);
+                }
+            });
+            if (!carriedSnapshot.isEmpty()) {
+                try {
+                    player.containerMenu.setCarried(carriedSnapshot);
+                } catch (RuntimeException exception) {
+                    LiyMod.LOGGER.error(
+                            "Could not roll back carried stack for {}; preserving it as a safe drop",
+                            player.getUUID(),
+                            exception
+                    );
+                    spawnRecoverableDrop(player, carriedSnapshot);
+                }
+            }
+            inventorySnapshots.clear();
+            equipmentSnapshots.clear();
+            carriedSnapshot = ItemStack.EMPTY;
+            synchronizeMenus();
+        }
+
+        private void synchronizeMenus() {
+            if (player == null) {
+                return;
+            }
+            try {
+                player.getInventory().setChanged();
+                player.inventoryMenu.broadcastChanges();
+                if (preparedMenu != null && preparedMenu != player.inventoryMenu) {
+                    preparedMenu.broadcastChanges();
+                }
+                if (player.containerMenu != preparedMenu && player.containerMenu != player.inventoryMenu) {
+                    player.containerMenu.broadcastChanges();
+                }
+            } catch (RuntimeException exception) {
+                LiyMod.LOGGER.warn("Could not synchronize rollback menus for {}", player.getUUID(), exception);
+            }
         }
     }
 
@@ -170,70 +351,31 @@ public final class LoliLegacyExecutionPolicy {
         }
     }
 
-    private static void safelyDropInventory(ServerPlayer player) {
-        List<ItemStack> removed = new ArrayList<>();
-        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = player.getInventory().removeItemNoUpdate(slot);
-            if (!stack.isEmpty()) {
-                removed.add(stack);
-            }
-        }
-        ItemStack carried = player.containerMenu.getCarried();
-        if (!carried.isEmpty()) {
-            removed.add(carried.copy());
-            player.containerMenu.setCarried(ItemStack.EMPTY);
-        }
-        player.inventoryMenu.broadcastChanges();
-        if (player.containerMenu != player.inventoryMenu) {
-            player.containerMenu.broadcastChanges();
-        }
-        removed.forEach(stack -> spawnRecoverableDrop(player, stack));
-        if (!removed.isEmpty()) {
-            LiyMod.LOGGER.info(
-                    "Safely cleared {} inventory stacks from {} as protected recoverable drops at {}, {}, {}",
-                    removed.size(),
-                    player.getGameProfile().name(),
-                    player.blockPosition().getX(),
-                    player.blockPosition().getY(),
-                    player.blockPosition().getZ()
-            );
-        }
-    }
-
-    private static void safelyDropEquipment(ServerPlayer player) {
-        List<ItemStack> removed = new ArrayList<>();
-        for (EquipmentSlot slot : DISARM_SLOTS) {
-            ItemStack stack = player.getItemBySlot(slot);
-            if (stack.isEmpty()) {
-                continue;
-            }
-            removed.add(stack.copy());
-            player.setItemSlot(slot, ItemStack.EMPTY);
-        }
-        player.inventoryMenu.broadcastChanges();
-        if (player.containerMenu != player.inventoryMenu) {
-            player.containerMenu.broadcastChanges();
-        }
-        removed.forEach(stack -> spawnRecoverableDrop(player, stack));
-        if (!removed.isEmpty()) {
-            LiyMod.LOGGER.info(
-                    "Safely disarmed {} equipment stacks from {} as protected recoverable drops",
-                    removed.size(),
-                    player.getGameProfile().name()
-            );
-        }
-    }
-
-    private static void spawnRecoverableDrop(ServerPlayer owner, ItemStack stack) {
+    private static boolean spawnRecoverableDrop(ServerPlayer owner, ItemStack stack) {
         if (!(owner.level() instanceof ServerLevel level) || stack.isEmpty()) {
-            return;
+            return false;
         }
-        ItemEntity drop = new ItemEntity(level, owner.getX(), owner.getY() + 0.5D, owner.getZ(), stack);
-        drop.setTarget(owner.getUUID());
-        drop.setUnlimitedLifetime();
-        drop.setInvulnerable(true);
-        drop.setPickUpDelay(20);
-        level.addFreshEntity(drop);
+        try {
+            ItemEntity drop = new ItemEntity(
+                    level,
+                    owner.getX(),
+                    owner.getY() + 0.5D,
+                    owner.getZ(),
+                    stack
+            );
+            drop.setTarget(owner.getUUID());
+            drop.setUnlimitedLifetime();
+            drop.setInvulnerable(true);
+            drop.setPickUpDelay(20);
+            return level.addFreshEntity(drop);
+        } catch (RuntimeException exception) {
+            LiyMod.LOGGER.warn(
+                    "Could not spawn a recoverable legacy-execution drop for {}; restoring its slot",
+                    owner.getUUID(),
+                    exception
+            );
+            return false;
+        }
     }
 
     private static ItemStack findExecutionTool(Entity attacker) {

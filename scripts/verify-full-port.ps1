@@ -385,14 +385,20 @@ Assert-True ($finalOptionSource -match 'entries\.size\(\)\s*>\s*24') `
     'Legacy player lists are not bounded to 24 entries'
 Assert-True ($finalOptionSource -match '\[A-Za-z0-9_\]\{1,16\}') `
     'Legacy player-list name validation is missing'
-Assert-True ($legacyPolicySource -match 'afterSuccessfulAbsolute') `
-    'Legacy execution effects are not isolated behind the successful ABSOLUTE hook'
+Assert-True ($legacyPolicySource -match 'PreparedExecution implements AutoCloseable') `
+    'Legacy execution inventory effects are not transactionally scoped'
+Assert-True ($legacyPolicySource -match 'removeItemNoUpdate') `
+    'Legacy execution transaction does not detach inventory before vanilla death drops'
+Assert-True ($legacyPolicySource -match 'LoliExecutionManager\.isDeadLocked\(target\)') `
+    'Legacy execution transaction can commit before DEAD_LOCK'
 Assert-True ($legacyPolicySource -match 'setUnlimitedLifetime\(\)') `
     'Safe inventory clearing does not create unlimited-lifetime recovery drops'
 Assert-True ($legacyPolicySource -match 'SOUL_REDEMPTION_WHITELIST') `
     'Safe soul-redemption whitelist consumer is missing'
-Assert-True ($erasureServiceSource -match '(?s)ExecutionAuthority\.ABSOLUTE_EXECUTION.+afterSuccessfulAbsolute') `
-    'Legacy execution policy is not gated by ABSOLUTE_EXECUTION'
+Assert-True ($erasureServiceSource -match '(?s)LoliLegacyExecutionPolicy\.prepare.+tryNormalDamage.+legacyExecution\.commit') `
+    'Legacy execution transaction is not prepared before death and committed after execution'
+Assert-True ($protectionSource -match '(?s)FORCE_REMOVE.+executeAbsolute.+else.+execute\(') `
+    'force_remove does not observably upgrade retaliatory execution authority'
 Assert-True ($commandsSource -match 'Commands\.literal\("playerlist"\)') `
     'Operator player-list recovery command is missing'
 foreach ($keyCode in @('KEY_N', 'KEY_M', 'KEY_P', 'KEY_K')) {

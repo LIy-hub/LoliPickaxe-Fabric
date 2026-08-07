@@ -69,7 +69,7 @@
   "config.liymod.loli.auto_kill_range": "Automatic attack range",
   "config.liymod.loli.target_friendly_entities": "Automatic attack targets friendly living entities",
   "config.liymod.loli.target_all_entities": "Automatic attack includes non-living entities",
-  "config.liymod.loli.force_remove": "Eager forced removal compatibility",
+  "config.liymod.loli.force_remove": "Upgrade thorns to absolute forced execution",
   "config.liymod.loli.clear_inventory": "Safely clear inventory into recoverable drops",
   "config.liymod.loli.drop_equipment": "Disarm into recoverable drops",
   "config.liymod.loli.kick_player": "Disconnect executed players",

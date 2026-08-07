@@ -82,6 +82,10 @@ public final class LoliProtection {
             return;
         }
 
-        LoliErasureService.execute(protectedPlayer, attacker);
+        if (LoliItemSettings.getBoolean(pickaxe, LoliConfigOption.FORCE_REMOVE)) {
+            LoliErasureService.executeAbsolute(protectedPlayer, attacker);
+        } else {
+            LoliErasureService.execute(protectedPlayer, attacker);
+        }
     }
 }
