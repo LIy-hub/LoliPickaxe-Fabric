@@ -29,6 +29,25 @@ and survival implementation.
   to drop all stored stacks, and U to edit its 9x9 ghost-slot blacklist. The
   final Loli Pickaxe has 100 pages; Ordinary Loli page count follows its storage
   upgrade tier. Stored stacks use normal modern stack limits and bounded NBT.
+- While holding the final Loli Pickaxe, press N for per-item mining/combat
+  settings, M for enchantments, P for status effects and K for bounded relative
+  space folding. The server validates every id, level, setting, dimension,
+  distance, loaded chunk and landing position.
+- The final pickaxe now restores configurable radius mining, Fortune 32,
+  auto-smelting, automatic storage acceptance, reach, thorns, optional automatic
+  range execution, status effects and owner-bound dropped-item recall. Its
+  existing 32-block right-click execution and 1024-block/six-degree attack
+  resolver remain unchanged. Inventory-wide holder protection is available as
+  an operator option but is disabled by default, preserving the port's original
+  main-hand rule.
+- Bundled cards and the album display all ten original artworks. The online card
+  accepts HTTPS URLs through sneak-use and loads them asynchronously with strict
+  time, size, MIME and image-dimension limits. The Loli record is a playable
+  jukebox disc. Legacy card, album, creeper-record and entity-soul drop chances
+  are restored and configurable.
+- Operators can inspect and change the persisted server whitelist with
+  `/loli list|get|set|reload`. `/loliattack` exposes only the bounded in-game
+  replacements for the legacy destructive effects and is disabled by default.
 - The Password Workbench restores the original 3x3/password interface and
   server-authoritative password matching. As in the released legacy build, its
   built-in password recipe registry is empty until integrations register recipes.
@@ -91,6 +110,17 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   储存遵守现代正常堆叠上限与有界 NBT 安全限制。
+- 手持氪金萝莉时，N 打开单件配置，M 编辑附魔，P 编辑状态效果，K 打开空间折叠。
+  选项、注册表 ID、等级、维度、距离、区块加载状态和落点安全均由服务端校验。
+- 氪金萝莉已融合原版可调范围采掘、时运 32、自动熔炼/收纳、触及距离、反伤、
+  可选自动范围处决、药水效果和主人绑定掉落物召回；现有 32 格右键处决与
+  1024 格/6 度挥击解析保持不变。背包任意位置防护可由管理员开启，但默认关闭，
+  因而仍保持当前移植的主手防护规则。
+- 卡片与卡片册可浏览原版全部十张图片；网络卡片通过潜行右键配置 HTTPS 地址，
+  并以异步、超时、大小/MIME/尺寸上限安全加载。萝莉唱片可由唱片机播放；卡片、
+  卡册、苦力怕唱片和生物灵魂的原版掉落概率也已恢复并可配置。
+- 管理员可用 `/loli list|get|set|reload` 管理持久化白名单配置；`/loliattack`
+  仅调用安全的游戏内替代表现，且总开关与三个效果默认全部关闭。
 - 密码工作台已恢复 3×3 合成区、密码输入与服务端判定。与原版发行源码一致，
   内置密码配方注册表默认为空，供后续兼容集成注册配方。
 - 已通过 26.2 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级

@@ -69,8 +69,10 @@ path.
 
 ## Holder defense and abilities
 
-- Protection applies only while the player's main-hand stack is the Loli
-  Pickaxe.
+- Protection applies while the player's main-hand stack is the Loli Pickaxe by
+  default. An explicit server `inventory_protection=true` option may extend
+  passive protection to inventory stacks, but the 1024-block swing resolver and
+  active execution entry points still require the main-hand pickaxe.
 - Ordinary damage and death are rejected. A non-holder attacker is retaliated
   against with `STANDARD` authority.
 - Health, death/hurt timers, regeneration delay, fall distance, frozen ticks,
@@ -121,6 +123,28 @@ Legacy online-card support must not download arbitrary content on the render
 thread. The card and its configuration flow remain available, while remote
 images are fetched only through a bounded, validated asynchronous path or are
 represented by a safe placeholder.
+
+## Restored legacy extensions
+
+- The final pickaxe stores validated per-stack options for mining radius,
+  mandatory drops, liquid boundaries, auto-smelting, auto-accept, thorns,
+  reach and optional automatic range execution. Legacy kill-capable paths call
+  `LoliErasureService`; none reintroduces the old direct kill/hack path.
+- N/M/P/K open server-authoritative configuration, enchantment, effect and
+  relative space-folding screens. Space folding refuses unloaded chunks,
+  blacklisted dimensions, out-of-border or colliding destinations and
+  non-finite/over-limit offsets.
+- Owner metadata protects and recalls dropped final pickaxes without blocking
+  administrator entity cleanup. Internal storage remains bounded to normal
+  stack limits, 32 KiB per encoded stack and 4 MiB total rather than restoring
+  unsafe unbounded legacy counts.
+- Cards, grouped albums, the HTTPS online-card editor/viewer, Loli dispersal,
+  client-only ghost cleanup and the jukebox record are functional. Remote card
+  loading is asynchronous, HTTPS-only, timeout-bounded and capped by response
+  bytes and decoded image dimensions.
+- The legacy `blue_screen`, `exit` and `fail_respond` triggers are present only
+  as disabled-by-default safe effects. No implementation writes or starts an
+  executable, terminates the JVM or creates an unbounded thread/loop.
 
 ## 中文冻结合同
 

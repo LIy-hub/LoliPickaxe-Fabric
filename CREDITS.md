@@ -22,6 +22,9 @@ called out separately below.
 
 ## Audio
 
+`assets/liymod/sounds/lolirecord.ogg` is restored from the GPL-3.0 upstream
+source baseline identified above and is used by the modern jukebox-song entry.
+
 The following bundled sound effects are included with redistribution
 permission from their rights holder. The project maintainer retains the
 authorization record and can provide it to platform moderation if requested:

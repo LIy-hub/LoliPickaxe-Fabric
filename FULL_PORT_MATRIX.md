@@ -15,17 +15,17 @@
 
 | Area | Weight | Upstream scope | Status |
 |---|---:|---|---|
-| Stable Fabric Loli core | 10 | Existing pickaxe, execution tickets, holder defense, special drops, same-item immunity | Preserved; regression checks pending |
+| Stable Fabric Loli core | 10 | Existing pickaxe, execution tickets, holder defense, special drops, same-item immunity | Preserved; automated regression checks cover the fixed 27 drops, 32-block use, 1024/6-degree resolver, ABSOLUTE tickets and main-hand immunity |
 | Static content and assets | 10 | 21 fixed items, one default record, five block items, textures/models/translations | Complete |
 | Small Loli progression | 13 | Small pickaxe, 14 add-ons, ten-tier superposition, transformed mining/combat stats | Complete: tier data, formulas, Fortune/Looting, range mining/attack, auto-smelt, flight, buffs, dodge, damage return and storage integration |
 | Recipes and enchantment | 8 | 20 legacy JSON recipes, dynamic upgrade recipes, Auto Furnace enchantment | Complete: 20 static recipes, 3 dynamic recipes and native 26.2 Auto-Smelt enchantment |
 | Functional blocks | 9 | Three effect TNT blocks, Loli Altar, Password Workbench | Complete: three TNT blocks, exact 63x63 altar and server-authoritative password workbench; its released password recipe registry intentionally starts empty like upstream |
 | Entities and altar summoning | 10 | Loli entity, target/attack/swim AI, effect TNT entity and rendering | Complete: both entity ids, persistent/invulnerable Loli AI, safe effect TNT, exact altar ritual and client renderers |
 | Storage and automation | 12 | Internal inventories, blacklist, auto-accept, drop-all, auto-smelt and range mining | Complete: bounded 81-slot paging (100 final-pickaxe pages), tiered Small Loli pages, blacklist, nearby auto-accept, direct mining-drop insertion, drop-all, auto-smelt and range mining |
-| Configuration and commands | 6 | Per-item settings, server config, `/loli`, `/loliattack` | Not started |
-| Client screens and networking | 12 | Config, enchantment, potion, folding, storage, blacklist and password screens plus payloads | Safe TNT, password, storage and blacklist screens/payloads complete, including B/Shift+B/U and ordered page synchronization; config, enchantment, potion and folding screens pending |
-| Cards, record and auxiliary tools | 6 | Card, album, bounded online card, dispersal, client-ghost cleanup and music disc | Not started |
-| Validation, metadata and documentation | 4 | Build, server smoke test, content contract, attribution and migration notes | In progress |
+| Configuration and commands | 6 | Per-item settings, server config, `/loli`, `/loliattack` | Complete: validated per-stack settings, persisted server properties, operator commands, safe-effect gates and live consumers for every option |
+| Client screens and networking | 12 | Config, enchantment, potion, folding, storage, blacklist and password screens plus payloads | Complete: all seven legacy utility screens, server-authoritative payload validation, ordered storage pages and B/Shift+B/U/N/M/P/K bindings |
+| Cards, record and auxiliary tools | 6 | Card, album, bounded online card, dispersal, client-ghost cleanup and music disc | Complete: ten bundled artworks, card/album viewers, bounded asynchronous HTTPS card, exact drop chances, safe client-only ghost cleanup, Loli dispersal and playable jukebox record |
+| Validation, metadata and documentation | 4 | Build, server smoke test, content contract, attribution and migration notes | Complete: clean build, 131-JSON parse, JAR contract, upstream asset hashes, dedicated-server initialization smoke test, safety scan, attribution and bilingual migration documentation |
 | **Total** | **100** | | |
 
 The independent reviewer may lower a score when an id exists but its behavior

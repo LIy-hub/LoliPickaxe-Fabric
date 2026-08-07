@@ -275,6 +275,183 @@ Assert-True ($storageKeySource -match 'InputConstants\.KEY_B') `
 Assert-True ($storageKeySource -match 'InputConstants\.KEY_U') `
     'Loli blacklist U key binding is missing'
 
+$finalUtilitySources = @(
+    'src/main/java/com/liymod/config/LoliConfigOption.java',
+    'src/main/java/com/liymod/config/LoliServerConfig.java',
+    'src/main/java/com/liymod/config/LoliItemSettings.java',
+    'src/main/java/com/liymod/item/LoliFinalMiningEvents.java',
+    'src/main/java/com/liymod/item/LoliFinalItemEvents.java',
+    'src/main/java/com/liymod/item/LoliFinalEnchantments.java',
+    'src/main/java/com/liymod/item/LoliFinalEffects.java',
+    'src/main/java/com/liymod/item/LoliTeleportService.java',
+    'src/main/java/com/liymod/command/LoliCommands.java',
+    'src/main/java/com/liymod/menu/FinalConfigMenu.java',
+    'src/main/java/com/liymod/menu/FinalEnchantmentMenu.java',
+    'src/main/java/com/liymod/menu/FinalEffectMenu.java',
+    'src/main/java/com/liymod/menu/FinalTeleportMenu.java',
+    'src/main/java/com/liymod/network/LoliMenuOpenPayload.java',
+    'src/main/java/com/liymod/network/LoliItemSettingPayload.java',
+    'src/main/java/com/liymod/network/LoliEnchantmentUpdatePayload.java',
+    'src/main/java/com/liymod/network/LoliEffectUpdatePayload.java',
+    'src/main/java/com/liymod/network/LoliTeleportPayload.java',
+    'src/client/java/com/liymod/client/screen/FinalConfigScreen.java',
+    'src/client/java/com/liymod/client/screen/FinalEnchantmentScreen.java',
+    'src/client/java/com/liymod/client/screen/FinalEffectScreen.java',
+    'src/client/java/com/liymod/client/screen/FinalTeleportScreen.java'
+)
+foreach ($relativePath in $finalUtilitySources) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Final Loli utility source missing: $relativePath"
+}
+
+$finalOptionSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/config/LoliConfigOption.java'
+) -Raw
+$finalMiningSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliFinalMiningEvents.java'
+) -Raw
+$attackResolverSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliAttackResolver.java'
+) -Raw
+$pickaxeSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliPickaxeItem.java'
+) -Raw
+$protectionSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/protection/LoliProtection.java'
+) -Raw
+$commandsSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/command/LoliCommands.java'
+) -Raw
+Assert-True ($finalMiningSource -match 'SPECIAL_DROPS\s*=') `
+    'Final Loli special-drop table is missing'
+Assert-True ([regex]::Matches($finalMiningSource, 'Map\.entry\(').Count -eq 27) `
+    'Final Loli special-drop table must contain exactly 27 entries'
+Assert-True ($pickaxeSource -match 'ABILITY_RANGE\s*=\s*32\.0') `
+    'Existing 32-block right-click execution range changed'
+Assert-True ($attackResolverSource -match 'MAX_RANGE\s*=\s*1024\.0D') `
+    'Existing 1024-block swing resolver range changed'
+Assert-True ($attackResolverSource -match 'Math\.toRadians\(6\.0D\)') `
+    'Existing six-degree swing resolver changed'
+Assert-True ($attackResolverSource -match 'isMainHandProtected') `
+    'Active execution resolver no longer requires the main-hand pickaxe'
+Assert-True ($protectionSource -match 'INVENTORY_PROTECTION') `
+    'Optional inventory protection integration is missing'
+Assert-True ($commandsSource -match 'SafeTntEffectService\.apply') `
+    '/loliattack must call only the safe effect service'
+foreach ($defaultOff in @('SAFE_ATTACK_COMMAND', 'SAFE_BLUE_SCREEN', 'SAFE_EXIT', 'SAFE_FAIL_RESPOND')) {
+    Assert-True ($finalOptionSource -match ($defaultOff + '\("[^"]+",\s*ValueType\.BOOLEAN,\s*false')) `
+        "Dangerous legacy trigger is not disabled by default: $defaultOff"
+}
+foreach ($keyCode in @('KEY_N', 'KEY_M', 'KEY_P', 'KEY_K')) {
+    Assert-True ($storageKeySource -match ('InputConstants\.' + $keyCode)) `
+        "Final Loli key binding missing: $keyCode"
+}
+
+$finalGuiTextures = @(
+    'src/main/resources/assets/liymod/textures/gui/loli_pickaxe_config.png',
+    'src/main/resources/assets/liymod/textures/gui/loli_pickaxe_space_folding.png'
+)
+foreach ($relativePath in $finalGuiTextures) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Final Loli GUI texture missing: $relativePath"
+}
+
+$cardAndAuxiliarySources = @(
+    'src/main/java/com/liymod/item/LoliCardCatalog.java',
+    'src/main/java/com/liymod/item/LoliCardData.java',
+    'src/main/java/com/liymod/item/LoliCardItem.java',
+    'src/main/java/com/liymod/item/LoliOnlineCardItem.java',
+    'src/main/java/com/liymod/item/LoliDispersalItem.java',
+    'src/main/java/com/liymod/item/BugEntityClearItem.java',
+    'src/main/java/com/liymod/item/LoliAuxiliaryDropEvents.java',
+    'src/main/java/com/liymod/network/LoliCardOpenPayload.java',
+    'src/main/java/com/liymod/network/LoliCardOnlineUpdatePayload.java',
+    'src/client/java/com/liymod/client/card/CardClient.java',
+    'src/client/java/com/liymod/client/card/CardViewerScreen.java',
+    'src/client/java/com/liymod/client/card/CardOnlineConfigScreen.java',
+    'src/client/java/com/liymod/client/card/OnlineCardImageLoader.java'
+)
+foreach ($relativePath in $cardAndAuxiliarySources) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Card or auxiliary source missing: $relativePath"
+}
+
+$cardCatalogSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliCardCatalog.java'
+) -Raw
+$auxiliaryDropSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliAuxiliaryDropEvents.java'
+) -Raw
+$dispersalSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliDispersalItem.java'
+) -Raw
+$bugClearSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/BugEntityClearItem.java'
+) -Raw
+$onlineLoaderSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/client/java/com/liymod/client/card/OnlineCardImageLoader.java'
+) -Raw
+Assert-True ([regex]::Matches($cardCatalogSource, 'new Art\(').Count -eq 10) `
+    'Bundled Loli card catalog must contain exactly ten original images'
+Assert-True ($cardCatalogSource -match 'xiaomo_daughter_8') `
+    'Eight-image album group is incomplete'
+Assert-True ($auxiliaryDropSource -match 'LOLI_CARD_DROP_CHANCE') `
+    'Legacy card drop chance is not consumed'
+Assert-True ($auxiliaryDropSource -match 'instanceof Creeper') `
+    'Legacy record drop must remain creeper-only'
+Assert-True ($dispersalSource -match '\.disperse\(\)') `
+    'Loli dispersal item does not use the intended removal path'
+Assert-True ($bugClearSource -match 'isClientSide\(\)') `
+    'Bug-entity clear item must remain client-only'
+Assert-True ($onlineLoaderSource -match 'supplyAsync') `
+    'Online card loading is not asynchronous'
+Assert-True ($onlineLoaderSource -match 'MAX_BYTES\s*=\s*8\s*\*\s*1024\s*\*\s*1024') `
+    'Online card 8 MiB response limit is missing'
+Assert-True ($onlineLoaderSource -match 'MAX_DIMENSION\s*=\s*4096') `
+    'Online card decoded-dimension limit is missing'
+Assert-True ($onlineLoaderSource -match 'setInstanceFollowRedirects\(false\)') `
+    'Online card redirects must remain disabled'
+$cardDataSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliCardData.java'
+) -Raw
+Assert-True ($cardDataSource -match 'isPublicHostname') `
+    'Online card localhost/private-host validation is missing'
+
+$cardResourcePaths = @(
+    'src/main/resources/assets/liymod/sounds/lolirecord.ogg',
+    'src/main/resources/data/liymod/jukebox_song/loli_record.json',
+    'src/main/resources/assets/liymod/textures/gui/loli_card_online_config.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_1.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_2.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_3.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_4.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_5.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_6.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_7.png',
+    'src/main/resources/assets/liymod/textures/lolicards/card_xiaomo_8.png',
+    'src/main/resources/assets/liymod/textures/lolicards/altar_guide.png',
+    'src/main/resources/assets/liymod/textures/lolicards/gk_head_portrait.png'
+)
+foreach ($relativePath in $cardResourcePaths) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Card or record resource missing: $relativePath"
+}
+$originalCardDirectory = Join-Path $projectRoot 'src/main/resources/assets/liymod/lolicards'
+$addressableCardDirectory = Join-Path $projectRoot 'src/main/resources/assets/liymod/textures/lolicards'
+Assert-True ((Get-ChildItem -LiteralPath $originalCardDirectory -Filter '*.png').Count -eq 10) `
+    'Original Loli card asset set must contain exactly ten PNG files'
+Assert-True ((Get-ChildItem -LiteralPath $addressableCardDirectory -Filter '*.png').Count -eq 10) `
+    'Modern addressable Loli card asset set must contain exactly ten PNG files'
+$jukeboxSong = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/resources/data/liymod/jukebox_song/loli_record.json'
+) -Raw | ConvertFrom-Json
+Assert-True ($jukeboxSong.sound_event -eq 'liymod:lolirecord') `
+    'Loli record jukebox song references the wrong sound event'
+Assert-True ($jukeboxSong.length_in_seconds -gt 62.0 -and $jukeboxSong.length_in_seconds -lt 63.0) `
+    'Loli record duration is outside the measured audio length'
+Assert-True ($jukeboxSong.description.translate -eq 'item.record.lolirecord.desc') `
+    'Legacy Loli record track description key is missing'
+
 $entitiesSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/entity/ModEntities.java'
 ) -Raw
@@ -336,9 +513,34 @@ foreach ($language in $languages) {
         'container.liymod.loli_storage',
         'container.liymod.loli_blacklist',
         'key.liymod.loli_container',
-        'key.liymod.loli_container_blacklist'
+        'key.liymod.loli_container_blacklist',
+        'key.liymod.loli_config',
+        'key.liymod.loli_enchantment',
+        'key.liymod.loli_potion',
+        'key.liymod.loli_space_folding'
     )) {
         Assert-True $lang.ContainsKey($key) "Missing $language utility translation: $key"
+    }
+    $optionIds = [regex]::Matches(
+        $finalOptionSource,
+        '(?m)^\s*[A-Z0-9_]+\("([a-z0-9_]+)",\s*ValueType\.'
+    ) | ForEach-Object { $_.Groups[1].Value }
+    foreach ($optionId in $optionIds) {
+        Assert-True $lang.ContainsKey("config.liymod.loli.$optionId") `
+            "Missing $language Loli option translation: config.liymod.loli.$optionId"
+    }
+    foreach ($key in @(
+        'item.liymod.loli_card_online.hint',
+        'item.liymod.bug_entity_clear.warning',
+        'gui.liymod.card.title',
+        'gui.liymod.card.album_title',
+        'gui.liymod.card.online_title',
+        'gui.liymod.card.online_config_title',
+        'gui.liymod.card.loading',
+        'gui.liymod.card.load_failed',
+        'gui.liymod.card.invalid_url'
+    )) {
+        Assert-True $lang.ContainsKey($key) "Missing $language card translation: $key"
     }
 }
 
@@ -395,7 +597,7 @@ try {
         'com/liymod/client/safe/BlueScreenEffectScreen.class',
         'com/liymod/client/safe/FailRespondEffectScreen.class',
         'assets/liymod/textures/entity/loli.png',
-        'data/liymod/loli_altar_pattern/default.json'
+        'data/liymod/loli_altar_pattern/default.json',
         'com/liymod/block/PasswordWorkbenchBlock.class',
         'com/liymod/menu/PasswordWorkbenchMenu.class',
         'com/liymod/menu/StorageMenu.class',
@@ -409,7 +611,31 @@ try {
         'com/liymod/client/screen/LoliBlacklistScreen.class',
         'assets/liymod/textures/gui/container/password_crafting_table.png',
         'assets/liymod/textures/gui/container/loli_pickaxe_container.png',
-        'assets/liymod/textures/gui/container/loli_pickaxe_container_blacklist.png'
+        'assets/liymod/textures/gui/container/loli_pickaxe_container_blacklist.png',
+        'com/liymod/config/LoliServerConfig.class',
+        'com/liymod/config/LoliItemSettings.class',
+        'com/liymod/item/LoliFinalMiningEvents.class',
+        'com/liymod/item/LoliFinalItemEvents.class',
+        'com/liymod/item/LoliTeleportService.class',
+        'com/liymod/command/LoliCommands.class',
+        'com/liymod/client/screen/FinalConfigScreen.class',
+        'com/liymod/client/screen/FinalEnchantmentScreen.class',
+        'com/liymod/client/screen/FinalEffectScreen.class',
+        'com/liymod/client/screen/FinalTeleportScreen.class',
+        'assets/liymod/textures/gui/loli_pickaxe_config.png',
+        'assets/liymod/textures/gui/loli_pickaxe_space_folding.png',
+        'com/liymod/item/LoliCardItem.class',
+        'com/liymod/item/LoliOnlineCardItem.class',
+        'com/liymod/item/LoliDispersalItem.class',
+        'com/liymod/item/BugEntityClearItem.class',
+        'com/liymod/item/LoliAuxiliaryDropEvents.class',
+        'com/liymod/client/card/CardClient.class',
+        'com/liymod/client/card/CardViewerScreen.class',
+        'com/liymod/client/card/CardOnlineConfigScreen.class',
+        'com/liymod/client/card/OnlineCardImageLoader.class',
+        'assets/liymod/sounds/lolirecord.ogg',
+        'assets/liymod/textures/gui/loli_card_online_config.png',
+        'data/liymod/jukebox_song/loli_record.json'
     )
     foreach ($entryPath in $functionalEntries) {
         Assert-True ($null -ne $archive.GetEntry($entryPath)) `
@@ -419,4 +645,4 @@ try {
     $archive.Dispose()
 }
 
-Write-Host "VERIFY_FULL_PORT_PROGRESS_OK items=$($itemIds.Count) blocks=$($blockIds.Count) recipes=$($recipeIds.Count)"
+Write-Host "VERIFY_FULL_PORT_OK items=$($itemIds.Count) blocks=$($blockIds.Count) recipes=$($recipeIds.Count)"
