@@ -3,6 +3,7 @@ package com.liymod;
 
 import com.liymod.block.ModBlocks;
 import com.liymod.combat.LoliExecutionManager;
+import com.liymod.combat.LoliLegacyExecutionPolicy;
 import com.liymod.damage_type.ModDamageTypes;
 import com.liymod.event.AttackBlockEvents;
 import com.liymod.event.AttackEntityEvents;
@@ -51,6 +52,7 @@ public class LiyMod implements ModInitializer {
 		ModDamageTypes.registerDamageTypes();
 		LoliProtection.registerProtection();
 		LoliExecutionManager.registerEvents();
+		LoliLegacyExecutionPolicy.registerEvents();
 		AttackEntityEvents.registerEvents();
 		AttackBlockEvents.registerEvents();
 		LoliAbilityEvents.registerEvents();

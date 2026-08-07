@@ -130,6 +130,9 @@ represented by a safe placeholder.
   mandatory drops, liquid boundaries, auto-smelting, auto-accept, thorns,
   reach and optional automatic range execution. Legacy kill-capable paths call
   `LoliErasureService`; none reintroduces the old direct kill/hack path.
+- Final-pickaxe `auto_accept` controls both direct mining-drop insertion and
+  nearby `ItemEntity` collection for that exact stack. Ordinary Loli mining-range
+  changes play the restored upstream `lolisuccess.ogg` once from the server.
 - N/M/P/K open server-authoritative configuration, enchantment, effect and
   relative space-folding screens. Space folding refuses unloaded chunks,
   blacklisted dimensions, out-of-border or colliding destinations and
@@ -156,3 +159,22 @@ represented by a safe placeholder.
 经验替换、同持有者免疫和单 tick 去重。原版其余物品、方块、实体、配方、容器、
 GUI、网络、配置和指令应围绕这条基线恢复。原版会执行蓝屏程序、强退 JVM 或
 无限忙循环的三种客户端破坏效果只允许移植安全的游戏内等价表现。
+
+## 旧版细粒度处决选项的现代安全语义
+
+- `target_friendly_entities` 与 `target_all_entities` 只筛选默认关闭的自动范围处决；
+  直接实体攻击、32 格右键处决和 1024 格/6 度挥击解析的冻结强度不受影响。
+- `force_remove` 是默认关闭的旧版强制移除兼容开关。所有终结仍先经过
+  `LoliErasureService.executeAbsolute`，该开关只委托既有 `LoliExecutionManager`
+  提前落实非玩家实体移除，绝不直接调用 `kill`、`discard` 或 `remove`。
+- `clear_inventory`、`drop_equipment` 与 `kick_player` 仅在服务端绝对处决成功后
+  触发；同物品免疫优先。背包和装备不会被永久删除，而会转成目标归属、无敌、
+  无限寿命的可回收掉落；踢出消息限 160 字符并移除换行和格式控制符。
+- 原版“轮回”会阻止玩家数据读取和保存。现代实现改成持久化的一次性待处理名单：
+  玩家重生或重连时仅恢复生命、食物和临时身体状态，保留存档与背包，随后自动
+  移出名单。
+- 原版“灵魂超度”会把名单玩家生命和最大生命永久强制为 0。现代实现改成可撤销
+  名单：重生/重连时施加五分钟虚弱、缓慢和挖掘疲劳；管理员移出名单或加入
+  `soul_redemption_whitelist` 后不再施加。名单最多 24 个逗号分隔、去重的 UUID
+  或 1–16 字符玩家名，并可通过 `/loli playerlist ... list|add|remove` 管理。
+- 上述危险/破坏性单件选项默认均为 `false`；名单默认均为空。

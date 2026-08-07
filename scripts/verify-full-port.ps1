@@ -143,6 +143,11 @@ $smallGameplaySource = Get-Content -LiteralPath (
 $smallMiningSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/item/SmallLoliMiningEvents.java'
 ) -Raw
+$modSoundsSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/sound/ModSounds.java'
+) -Raw
+$soundsJsonPath = Join-Path $projectRoot 'src/main/resources/assets/liymod/sounds.json'
+$successSoundPath = Join-Path $projectRoot 'src/main/resources/assets/liymod/sounds/lolisuccess.ogg'
 Assert-True ($smallPickaxeSource -match 'refreshEnchantments') `
     'Small Loli Fortune/Looting component synchronization is missing'
 Assert-True ($smallPickaxeSource -match 'cycleMiningRadius') `
@@ -155,6 +160,18 @@ Assert-True ($smallMiningSource -match 'LootTableEvents\.MODIFY_DROPS') `
     'Small Loli auto-smelting event is missing'
 Assert-True ($smallGameplaySource -match 'ServerLivingEntityEvents\.ALLOW_DAMAGE') `
     'Small Loli dodge and damage-return event is missing'
+Assert-True ($smallPickaxeSource -match 'ModSounds\.LOLI_SUCCESS') `
+    'Small Loli range switching does not play the restored success sound'
+Assert-True ($modSoundsSource -match 'LOLI_SUCCESS_ID') `
+    'Restored Small Loli success sound event is not registered'
+Assert-True (Test-Path -LiteralPath $successSoundPath -PathType Leaf) `
+    'Restored lolisuccess.ogg is missing'
+Assert-True ((Get-FileHash -LiteralPath $successSoundPath -Algorithm SHA256).Hash -eq `
+        'E8E5D906098AF7DFDAD501A517ECBF56D94369E4463A1355922D1455964D5F41') `
+    'Restored lolisuccess.ogg does not match the upstream asset'
+$soundsJson = Get-Content -LiteralPath $soundsJsonPath -Raw | ConvertFrom-Json
+Assert-True ($null -ne $soundsJson.lolisuccess) `
+    'sounds.json does not expose liymod:lolisuccess'
 
 $enchantmentResources = @(
     'src/main/resources/data/liymod/enchantment/loli_auto_furnace.json',
@@ -266,6 +283,8 @@ Assert-True ($storageSource -match 'isStorageItem\(stack\)') `
     'Loli storage self-nesting rejection is missing'
 Assert-True ($storageEventsSource -match 'COLLECT_RANGE\s*=\s*4\.0D') `
     'Nearby Loli storage collection range is missing'
+Assert-True ($storageEventsSource -match '(?s)allowsNearbyCollection.+AUTO_ACCEPT') `
+    'Nearby final-pickaxe collection does not honor the per-item AUTO_ACCEPT setting'
 Assert-True ($smallMiningSource -match 'storage\.insert') `
     'Small Loli mining drops are not routed through storage'
 Assert-True ($storageMenuSource -match 'StoragePageSyncPayload') `
@@ -284,6 +303,7 @@ $finalUtilitySources = @(
     'src/main/java/com/liymod/item/LoliFinalEnchantments.java',
     'src/main/java/com/liymod/item/LoliFinalEffects.java',
     'src/main/java/com/liymod/item/LoliTeleportService.java',
+    'src/main/java/com/liymod/combat/LoliLegacyExecutionPolicy.java',
     'src/main/java/com/liymod/command/LoliCommands.java',
     'src/main/java/com/liymod/menu/FinalConfigMenu.java',
     'src/main/java/com/liymod/menu/FinalEnchantmentMenu.java',
@@ -322,6 +342,12 @@ $protectionSource = Get-Content -LiteralPath (
 $commandsSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/command/LoliCommands.java'
 ) -Raw
+$legacyPolicySource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliLegacyExecutionPolicy.java'
+) -Raw
+$erasureServiceSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliErasureService.java'
+) -Raw
 Assert-True ($finalMiningSource -match 'SPECIAL_DROPS\s*=') `
     'Final Loli special-drop table is missing'
 Assert-True ([regex]::Matches($finalMiningSource, 'Map\.entry\(').Count -eq 27) `
@@ -338,10 +364,37 @@ Assert-True ($protectionSource -match 'INVENTORY_PROTECTION') `
     'Optional inventory protection integration is missing'
 Assert-True ($commandsSource -match 'SafeTntEffectService\.apply') `
     '/loliattack must call only the safe effect service'
-foreach ($defaultOff in @('SAFE_ATTACK_COMMAND', 'SAFE_BLUE_SCREEN', 'SAFE_EXIT', 'SAFE_FAIL_RESPOND')) {
+foreach ($defaultOff in @(
+    'TARGET_FRIENDLY_ENTITIES',
+    'TARGET_ALL_ENTITIES',
+    'FORCE_REMOVE',
+    'CLEAR_INVENTORY',
+    'DROP_EQUIPMENT',
+    'KICK_PLAYER',
+    'REINCARNATION',
+    'SOUL_REDEMPTION',
+    'SAFE_ATTACK_COMMAND',
+    'SAFE_BLUE_SCREEN',
+    'SAFE_EXIT',
+    'SAFE_FAIL_RESPOND'
+)) {
     Assert-True ($finalOptionSource -match ($defaultOff + '\("[^"]+",\s*ValueType\.BOOLEAN,\s*false')) `
         "Dangerous legacy trigger is not disabled by default: $defaultOff"
 }
+Assert-True ($finalOptionSource -match 'entries\.size\(\)\s*>\s*24') `
+    'Legacy player lists are not bounded to 24 entries'
+Assert-True ($finalOptionSource -match '\[A-Za-z0-9_\]\{1,16\}') `
+    'Legacy player-list name validation is missing'
+Assert-True ($legacyPolicySource -match 'afterSuccessfulAbsolute') `
+    'Legacy execution effects are not isolated behind the successful ABSOLUTE hook'
+Assert-True ($legacyPolicySource -match 'setUnlimitedLifetime\(\)') `
+    'Safe inventory clearing does not create unlimited-lifetime recovery drops'
+Assert-True ($legacyPolicySource -match 'SOUL_REDEMPTION_WHITELIST') `
+    'Safe soul-redemption whitelist consumer is missing'
+Assert-True ($erasureServiceSource -match '(?s)ExecutionAuthority\.ABSOLUTE_EXECUTION.+afterSuccessfulAbsolute') `
+    'Legacy execution policy is not gated by ABSOLUTE_EXECUTION'
+Assert-True ($commandsSource -match 'Commands\.literal\("playerlist"\)') `
+    'Operator player-list recovery command is missing'
 foreach ($keyCode in @('KEY_N', 'KEY_M', 'KEY_P', 'KEY_K')) {
     Assert-True ($storageKeySource -match ('InputConstants\.' + $keyCode)) `
         "Final Loli key binding missing: $keyCode"
@@ -617,6 +670,7 @@ try {
         'com/liymod/item/LoliFinalMiningEvents.class',
         'com/liymod/item/LoliFinalItemEvents.class',
         'com/liymod/item/LoliTeleportService.class',
+        'com/liymod/combat/LoliLegacyExecutionPolicy.class',
         'com/liymod/command/LoliCommands.class',
         'com/liymod/client/screen/FinalConfigScreen.class',
         'com/liymod/client/screen/FinalEnchantmentScreen.class',
@@ -634,6 +688,7 @@ try {
         'com/liymod/client/card/CardOnlineConfigScreen.class',
         'com/liymod/client/card/OnlineCardImageLoader.class',
         'assets/liymod/sounds/lolirecord.ogg',
+        'assets/liymod/sounds/lolisuccess.ogg',
         'assets/liymod/textures/gui/loli_card_online_config.png',
         'data/liymod/jukebox_song/loli_record.json'
     )

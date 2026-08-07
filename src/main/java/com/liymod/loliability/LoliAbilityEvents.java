@@ -3,6 +3,7 @@ package com.liymod.loliability;
 import com.liymod.LiyMod;
 import com.liymod.protection.LoliProtection;
 import com.liymod.combat.LoliErasureService;
+import com.liymod.combat.LoliLegacyExecutionPolicy;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
 import com.liymod.item.LoliFinalEffects;
@@ -20,7 +21,6 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
 import java.util.HashSet;
@@ -162,7 +162,7 @@ public final class LoliAbilityEvents {
         for (Entity target : player.level().getEntities(
                 player,
                 area,
-                target -> !(target instanceof LightningBolt)
+                target -> LoliLegacyExecutionPolicy.permitsAutomaticRangeTarget(stack, target)
         )) {
             LoliErasureService.executeAbsolute(player, target);
         }

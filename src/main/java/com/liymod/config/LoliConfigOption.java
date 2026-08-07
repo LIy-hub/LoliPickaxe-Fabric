@@ -1,8 +1,11 @@
 package com.liymod.config;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /** Server-authoritative options shared by commands and per-pickaxe settings. */
 public enum LoliConfigOption {
@@ -16,6 +19,18 @@ public enum LoliConfigOption {
     BLOCK_REACH_DISTANCE("block_reach_distance", ValueType.DOUBLE, 0.0D, 0.0D, 20.0D, true),
     AUTO_KILL_RANGE_ENTITY("auto_kill_range_entity", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
     AUTO_KILL_RANGE("auto_kill_range", ValueType.INTEGER, 5, 0.0D, 10.0D, true),
+    TARGET_FRIENDLY_ENTITIES("target_friendly_entities", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    TARGET_ALL_ENTITIES("target_all_entities", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    FORCE_REMOVE("force_remove", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    CLEAR_INVENTORY("clear_inventory", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    DROP_EQUIPMENT("drop_equipment", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    KICK_PLAYER("kick_player", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    KICK_MESSAGE("kick_message", ValueType.STRING, "你被氪金萝莉踢出了服务器", 0.0D, 160.0D, true),
+    REINCARNATION("reincarnation", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    REINCARNATION_LIST("reincarnation_list", ValueType.STRING, "", 0.0D, 1024.0D, false),
+    SOUL_REDEMPTION("soul_redemption", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
+    SOUL_REDEMPTION_LIST("soul_redemption_list", ValueType.STRING, "", 0.0D, 1024.0D, false),
+    SOUL_REDEMPTION_WHITELIST("soul_redemption_whitelist", ValueType.STRING, "", 0.0D, 1024.0D, false),
     OWNER_PROTECTION("owner_protection", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
     FIND_OWNER_RANGE("find_owner_range", ValueType.INTEGER, 50, 0.0D, 128.0D, false),
     DROP_PROTECT_TICKS("drop_protect_ticks", ValueType.INTEGER, 4, 0.0D, 1200.0D, false),
@@ -93,7 +108,10 @@ public enum LoliConfigOption {
     }
 
     public Object parse(String encoded) {
-        if (encoded == null || encoded.length() > 256) {
+        int maximumLength = type == ValueType.STRING
+                ? Math.clamp((int) maximum, 1, 2048)
+                : 256;
+        if (encoded == null || encoded.length() > maximumLength) {
             throw new IllegalArgumentException("Invalid value length");
         }
         return switch (type) {
@@ -106,11 +124,11 @@ public enum LoliConfigOption {
                 }
                 yield Math.clamp(value, minimum, maximum);
             }
-            case STRING -> encoded.codePoints().limit(128).collect(
+            case STRING -> normalizeString(encoded.codePoints().limit(maximumLength).collect(
                     StringBuilder::new,
                     StringBuilder::appendCodePoint,
                     StringBuilder::append
-            ).toString();
+            ).toString());
         };
     }
 
@@ -143,5 +161,41 @@ public enum LoliConfigOption {
             case "false" -> false;
             default -> throw new IllegalArgumentException("Expected true or false");
         };
+    }
+
+    private String normalizeString(String value) {
+        if (this != REINCARNATION_LIST
+                && this != SOUL_REDEMPTION_LIST
+                && this != SOUL_REDEMPTION_WHITELIST) {
+            return value;
+        }
+
+        Map<String, String> entries = new LinkedHashMap<>();
+        if (!value.isBlank()) {
+            for (String rawEntry : value.split(",", -1)) {
+                String entry = rawEntry.trim();
+                if (entry.isEmpty() || !isPlayerIdentifier(entry)) {
+                    throw new IllegalArgumentException(
+                            "Player lists accept comma-separated UUIDs or 1-16 character player names"
+                    );
+                }
+                entries.putIfAbsent(entry.toLowerCase(Locale.ROOT), entry);
+                if (entries.size() > 24) {
+                    throw new IllegalArgumentException("Player lists are limited to 24 entries");
+                }
+            }
+        }
+        return String.join(",", entries.values());
+    }
+
+    private static boolean isPlayerIdentifier(String value) {
+        if (value.matches("[A-Za-z0-9_]{1,16}")) {
+            return true;
+        }
+        try {
+            return UUID.fromString(value).toString().equalsIgnoreCase(value);
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
     }
 }

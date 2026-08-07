@@ -111,6 +111,9 @@ public final class LoliErasureService {
             return immune(serverWorld, attacker, target);
         }
         LoliExecutionManager.lock(target);
+        if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION && attacker != null) {
+            LoliLegacyExecutionPolicy.afterSuccessfulAbsolute(attacker, target);
+        }
         return Result.EXECUTED;
     }
 

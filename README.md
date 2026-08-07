@@ -23,7 +23,8 @@ and survival implementation.
   original formulas for mining, attack, range, fortune, storage and defensive
   stats. Mining/attack attributes, Fortune/Looting, adjustable range mining,
   hostile-area attacks, auto-smelting, flight, status effects, dodge and
-  damage-return upgrades are active. Its tier-sized internal storage, blacklist,
+  damage-return upgrades are active; changing its mining range plays the restored
+  upstream `lolisuccess.ogg`. Its tier-sized internal storage, blacklist,
   nearby item collection and direct mining-drop insertion are also active.
 - Press B while holding either pickaxe to open its paged 9x9 storage, Shift+B
   to drop all stored stacks, and U to edit its 9x9 ghost-slot blacklist. The
@@ -34,7 +35,8 @@ and survival implementation.
   space folding. The server validates every id, level, setting, dimension,
   distance, loaded chunk and landing position.
 - The final pickaxe now restores configurable radius mining, Fortune 32,
-  auto-smelting, automatic storage acceptance, reach, thorns, optional automatic
+  auto-smelting, per-item automatic storage acceptance for both mining drops and
+  nearby item entities, reach, thorns, optional automatic
   range execution, status effects and owner-bound dropped-item recall. Its
   existing 32-block right-click execution and 1024-block/six-degree attack
   resolver remain unchanged. Inventory-wide holder protection is available as
@@ -46,7 +48,16 @@ and survival implementation.
   jukebox disc. Legacy card, album, creeper-record and entity-soul drop chances
   are restored and configurable.
 - Operators can inspect and change the persisted server whitelist with
-  `/loli list|get|set|reload`. `/loliattack` exposes only the bounded in-game
+  `/loli list|get|set|reload`. The restored fine-grained final-pickaxe options
+  include automatic-range friendly/non-living filters, eager removal, safe
+  inventory clearing, disarming, disconnect messages, reincarnation and soul
+  redemption. Every destructive toggle defaults to `false`, applies only after
+  a successful server-side `ABSOLUTE_EXECUTION`, and never bypasses same-item
+  immunity. Inventory clearing/disarming creates owner-targeted, invulnerable,
+  unlimited-lifetime drops instead of deleting stacks. `/loli playerlist
+  <reincarnation|soul_redemption|soul_whitelist> <list|add|remove>` manages the
+  three persisted, deduplicated lists (at most 24 UUIDs or player names).
+  `/loliattack` exposes only the bounded in-game
   replacements for the legacy destructive effects and is disabled by default.
 - The Password Workbench restores the original 3x3/password interface and
   server-authoritative password matching. As in the released legacy build, its
@@ -106,13 +117,14 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   普通萝莉转化为氪金萝莉的三种动态配方。
 - 普通萝莉独立保存各类升级并采用原版数值公式；采掘/攻击属性、飞行与状态
   升级、时运/抢夺、可调范围采掘、范围攻击、自动熔炼、闪避与反伤均已实际
-  接入；分级内部储存、黑名单、附近掉落物自动收纳及采掘掉落直入储存也已接入。
+  接入，切换采掘范围会播放恢复的原版 `lolisuccess.ogg`；分级内部储存、黑名单、
+  附近掉落物自动收纳及采掘掉落直入储存也已接入。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   储存遵守现代正常堆叠上限与有界 NBT 安全限制。
 - 手持氪金萝莉时，N 打开单件配置，M 编辑附魔，P 编辑状态效果，K 打开空间折叠。
   选项、注册表 ID、等级、维度、距离、区块加载状态和落点安全均由服务端校验。
-- 氪金萝莉已融合原版可调范围采掘、时运 32、自动熔炼/收纳、触及距离、反伤、
+- 氪金萝莉已融合原版可调范围采掘、时运 32、自动熔炼/单件自动收纳、触及距离、反伤、
   可选自动范围处决、药水效果和主人绑定掉落物召回；现有 32 格右键处决与
   1024 格/6 度挥击解析保持不变。背包任意位置防护可由管理员开启，但默认关闭，
   因而仍保持当前移植的主手防护规则。
@@ -120,7 +132,13 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   并以异步、超时、大小/MIME/尺寸上限安全加载。萝莉唱片可由唱片机播放；卡片、
   卡册、苦力怕唱片和生物灵魂的原版掉落概率也已恢复并可配置。
 - 管理员可用 `/loli list|get|set|reload` 管理持久化白名单配置；`/loliattack`
-  仅调用安全的游戏内替代表现，且总开关与三个效果默认全部关闭。
+  仅调用安全的游戏内替代表现，且总开关与三个效果默认全部关闭。氪金萝莉单件
+  配置还恢复了自动范围攻击的友好/非生物实体过滤、立即强制移除、清背包、缴械、
+  自定义踢出消息、轮回与灵魂超度；这些危险开关默认均为 `false`，只在服务端
+  `ABSOLUTE_EXECUTION` 成功且目标没有同物免疫后触发。清背包与缴械不会删除物品，
+  而会生成绑定目标、无敌且无限寿命的可回收掉落物。管理员可用 `/loli playerlist
+  <reincarnation|soul_redemption|soul_whitelist> <list|add|remove>` 管理三个持久化
+  名单；名单去重且最多包含 24 个 UUID 或玩家名。
 - 密码工作台已恢复 3×3 合成区、密码输入与服务端判定。与原版发行源码一致，
   内置密码配方注册表默认为空，供后续兼容集成注册配方。
 - 已通过 26.2 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级

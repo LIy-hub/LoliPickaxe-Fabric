@@ -2,6 +2,7 @@ package com.liymod.command;
 
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliServerConfig;
+import com.liymod.combat.LoliLegacyExecutionPolicy;
 import com.liymod.safe.SafeTntEffect;
 import com.liymod.safe.SafeTntEffectService;
 import com.mojang.brigadier.CommandDispatcher;
@@ -51,7 +52,29 @@ public final class LoliCommands {
                                                 context.getSource(),
                                                 StringArgumentType.getString(context, "option"),
                                                 StringArgumentType.getString(context, "value")
-                                        ))))));
+                                        )))))
+                .then(Commands.literal("playerlist")
+                        .then(Commands.argument("list", StringArgumentType.word())
+                                .suggests((context, builder) -> suggestPlayerLists(builder))
+                                .then(Commands.literal("list")
+                                        .executes(context -> listPlayers(
+                                                context.getSource(),
+                                                StringArgumentType.getString(context, "list")
+                                        )))
+                                .then(Commands.literal("add")
+                                        .then(Commands.argument("player", StringArgumentType.word())
+                                                .executes(context -> addPlayer(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "list"),
+                                                        StringArgumentType.getString(context, "player")
+                                                ))))
+                                .then(Commands.literal("remove")
+                                        .then(Commands.argument("player", StringArgumentType.word())
+                                                .executes(context -> removePlayer(
+                                                        context.getSource(),
+                                                        StringArgumentType.getString(context, "list"),
+                                                        StringArgumentType.getString(context, "player")
+                                                )))))));
 
         dispatcher.register(Commands.literal("loliattack")
                 .requires(LoliCommands::isAdministrator)
@@ -132,6 +155,48 @@ public final class LoliCommands {
         return 1;
     }
 
+    private static int listPlayers(CommandSourceStack source, String encodedList) {
+        LoliConfigOption option = playerListOption(encodedList);
+        if (option == null) {
+            source.sendFailure(Component.literal("Unknown Loli player list: " + encodedList));
+            return 0;
+        }
+        String value = String.join(",", LoliLegacyExecutionPolicy.entries(option));
+        source.sendSuccess(() -> Component.literal(option.id() + "=" + (value.isEmpty() ? "<empty>" : value)), false);
+        return 1;
+    }
+
+    private static int addPlayer(CommandSourceStack source, String encodedList, String player) {
+        LoliConfigOption option = playerListOption(encodedList);
+        if (option == null || !LoliLegacyExecutionPolicy.addEntry(option, player)) {
+            source.sendFailure(Component.literal(
+                    "Could not add entry; use a UUID or 1-16 character player name and keep the list at 24 entries or fewer."
+            ));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Added " + player + " to " + option.id()), true);
+        return 1;
+    }
+
+    private static int removePlayer(CommandSourceStack source, String encodedList, String player) {
+        LoliConfigOption option = playerListOption(encodedList);
+        if (option == null || !LoliLegacyExecutionPolicy.removeEntry(option, player)) {
+            source.sendFailure(Component.literal("That entry is not present in the selected Loli player list."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Removed " + player + " from " + option.id()), true);
+        return 1;
+    }
+
+    private static LoliConfigOption playerListOption(String encoded) {
+        return switch (encoded.toLowerCase(Locale.ROOT)) {
+            case "reincarnation", "reincarnation_list" -> LoliConfigOption.REINCARNATION_LIST;
+            case "soul_redemption", "soul_redemption_list" -> LoliConfigOption.SOUL_REDEMPTION_LIST;
+            case "soul_whitelist", "soul_redemption_whitelist" -> LoliConfigOption.SOUL_REDEMPTION_WHITELIST;
+            default -> null;
+        };
+    }
+
     private static SafeTntEffect parseEffect(String encoded) {
         return switch (encoded) {
             case "blue_screen", "loliPickaxeBlueScreenAttack" -> SafeTntEffect.BLUE_SCREEN;
@@ -153,6 +218,13 @@ public final class LoliCommands {
         builder.suggest("loliPickaxeBlueScreenAttack");
         builder.suggest("loliPickaxeExitAttack");
         builder.suggest("loliPickaxeFailRespondAttack");
+        return builder.buildFuture();
+    }
+
+    private static CompletableFuture<Suggestions> suggestPlayerLists(SuggestionsBuilder builder) {
+        builder.suggest("reincarnation");
+        builder.suggest("soul_redemption");
+        builder.suggest("soul_whitelist");
         return builder.buildFuture();
     }
 
