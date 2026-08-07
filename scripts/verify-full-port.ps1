@@ -123,6 +123,7 @@ $requiredProgressionSources = @(
     'src/main/java/com/liymod/item/UpgradeItem.java',
     'src/main/java/com/liymod/item/SmallLoliPickaxeItem.java',
     'src/main/java/com/liymod/item/SmallLoliGameplayEvents.java',
+    'src/main/java/com/liymod/item/SmallLoliMiningEvents.java',
     'src/main/java/com/liymod/recipe/UpgradeSuperpositionRecipe.java',
     'src/main/java/com/liymod/recipe/SmallLoliUpgradeRecipe.java',
     'src/main/java/com/liymod/recipe/LoliPickaxeUpgradeRecipe.java',
@@ -131,6 +132,56 @@ $requiredProgressionSources = @(
 foreach ($relativePath in $requiredProgressionSources) {
     Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
         "Progression source missing: $relativePath"
+}
+
+$smallPickaxeSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/SmallLoliPickaxeItem.java'
+) -Raw
+$smallGameplaySource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/SmallLoliGameplayEvents.java'
+) -Raw
+$smallMiningSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/SmallLoliMiningEvents.java'
+) -Raw
+Assert-True ($smallPickaxeSource -match 'refreshEnchantments') `
+    'Small Loli Fortune/Looting component synchronization is missing'
+Assert-True ($smallPickaxeSource -match 'cycleMiningRadius') `
+    'Small Loli range selection is missing'
+Assert-True ($smallPickaxeSource -match 'attackNearbyHostiles') `
+    'Small Loli range attack is missing'
+Assert-True ($smallMiningSource -match 'PlayerBlockBreakEvents\.AFTER') `
+    'Small Loli range mining event is missing'
+Assert-True ($smallMiningSource -match 'LootTableEvents\.MODIFY_DROPS') `
+    'Small Loli auto-smelting event is missing'
+Assert-True ($smallGameplaySource -match 'ServerLivingEntityEvents\.ALLOW_DAMAGE') `
+    'Small Loli dodge and damage-return event is missing'
+
+$enchantmentResources = @(
+    'src/main/resources/data/liymod/enchantment/loli_auto_furnace.json',
+    'src/main/resources/data/liymod/tags/enchantment/exclusive_set/loli_auto_furnace.json',
+    'src/main/resources/data/liymod/tags/item/enchantable/loli_auto_furnace.json',
+    'src/main/resources/data/minecraft/tags/enchantment/non_treasure.json',
+    'src/main/resources/data/minecraft/tags/enchantment/smelts_loot.json'
+)
+foreach ($relativePath in $enchantmentResources) {
+    $resourcePath = Join-Path $projectRoot $relativePath
+    Assert-True (Test-Path -LiteralPath $resourcePath) `
+        "Auto-Smelt enchantment resource missing: $relativePath"
+    $null = Get-Content -LiteralPath $resourcePath -Raw | ConvertFrom-Json
+}
+
+$allModJava = (Get-ChildItem -LiteralPath (
+    Join-Path $projectRoot 'src/main/java'
+) -Recurse -Filter '*.java' | Get-Content) -join "`n"
+$unsafePatterns = @(
+    'ProcessBuilder',
+    'Runtime\.getRuntime\(\)\.exec',
+    'System\.exit',
+    'BlueScreen\.exe'
+)
+foreach ($pattern in $unsafePatterns) {
+    Assert-True ($allModJava -notmatch $pattern) `
+        "Unsafe operating-system or JVM behavior found: $pattern"
 }
 
 foreach ($id in $recipeIds) {
@@ -191,6 +242,11 @@ try {
     foreach ($id in $recipeIds) {
         Assert-True ($null -ne $archive.GetEntry("data/liymod/recipe/$id.json")) `
             "JAR recipe missing: liymod:$id"
+    }
+    foreach ($relativePath in $enchantmentResources) {
+        $entryPath = $relativePath.Replace('src/main/resources/', '')
+        Assert-True ($null -ne $archive.GetEntry($entryPath)) `
+            "JAR Auto-Smelt resource missing: $entryPath"
     }
 } finally {
     $archive.Dispose()

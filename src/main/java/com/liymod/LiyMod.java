@@ -9,6 +9,7 @@ import com.liymod.event.AttackEntityEvents;
 import com.liymod.item.ModItemGroup;
 import com.liymod.item.ModItems;
 import com.liymod.item.SmallLoliGameplayEvents;
+import com.liymod.item.SmallLoliMiningEvents;
 import com.liymod.loliability.LoliAbilityEvents;
 import com.liymod.protection.LoliProtection;
 import com.liymod.recipe.ModRecipes;
@@ -30,6 +31,7 @@ public class LiyMod implements ModInitializer {
 		ModRecipes.registerRecipes();
 		ModItemGroup.registerModItemGroup();
 		SmallLoliGameplayEvents.registerEvents();
+		SmallLoliMiningEvents.registerEvents();
 		ModDamageTypes.registerDamageTypes();
 		LoliProtection.registerProtection();
 		LoliExecutionManager.registerEvents();

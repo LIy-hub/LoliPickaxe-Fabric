@@ -21,9 +21,12 @@ and survival implementation.
   upgrade, Ordinary Loli upgrade and final Loli Pickaxe conversion recipes.
 - The Ordinary Loli Pickaxe stores each upgrade independently and applies the
   original formulas for mining, attack, range, fortune, storage and defensive
-  stats. Mining/attack attributes, flight and status upgrades are active; the
-  remaining range, storage and drop automation hooks are tracked in
-  [FULL_PORT_MATRIX.md](FULL_PORT_MATRIX.md).
+  stats. Mining/attack attributes, Fortune/Looting, adjustable range mining,
+  hostile-area attacks, auto-smelting, flight, status effects, dodge and
+  damage-return upgrades are active. Internal storage and its automation remain
+  tracked in [FULL_PORT_MATRIX.md](FULL_PORT_MATRIX.md).
+- Restores the level-one `liymod:loli_auto_furnace` enchantment through the
+  native 26.2 enchantment registry and `minecraft:smelts_loot` contract.
 - The pickaxe is kept unbreakable and has deliberately extreme mining and
   combat attributes.
 - Attacking a block attempts to break it immediately. A fixed set of normally
@@ -72,7 +75,10 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 - 已恢复二十个固定配方，以及升级材料九合一/一拆九、普通萝莉升级和满级
   普通萝莉转化为氪金萝莉的三种动态配方。
 - 普通萝莉独立保存各类升级并采用原版数值公式；采掘/攻击属性、飞行与状态
-  升级已生效，范围、储存与掉落自动化仍按 `FULL_PORT_MATRIX.md` 继续移植。
+  升级、时运/抢夺、可调范围采掘、范围攻击、自动熔炼、闪避与反伤均已实际
+  接入；内部储存与自动收纳仍按 `FULL_PORT_MATRIX.md` 继续移植。
+- 已通过 26.2 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级
+  `liymod:loli_auto_furnace` 自动熔炼附魔。
 - 氪金萝莉保持不可破坏，并拥有刻意设计为超规格的挖掘与战斗属性。
 - 左击方块会尝试立即破坏；固定清单中的管理类方块、不可破坏方块与矿石还会
   产生模组定义的特殊掉落，矿石可额外掉落对应储存方块。

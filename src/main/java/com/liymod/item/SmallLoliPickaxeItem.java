@@ -1,26 +1,43 @@
 package com.liymod.item;
 
 import java.util.function.Consumer;
+import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ambient.AmbientCreature;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 
 /** The original upgradeable pickaxe stage that precedes the final Loli Pickaxe. */
 public final class SmallLoliPickaxeItem extends Item {
+    private static final String CURRENT_MINING_RADIUS_KEY = "LoliCurrentDiggingRange";
+
     public SmallLoliPickaxeItem(Properties properties) {
         super(properties);
     }
@@ -142,6 +159,25 @@ public final class SmallLoliPickaxeItem extends Item {
         return getUpgradeTier(stack, UpgradeItem.Type.FLY) == 0;
     }
 
+    public static int getCurrentMiningRadius(ItemStack stack) {
+        int maximumRadius = Math.max(0, (getMiningRange(stack) - 1) / 2);
+        int stored = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY)
+                .copyTag()
+                .getIntOr(CURRENT_MINING_RADIUS_KEY, 0);
+        return Math.clamp(stored, 0, maximumRadius);
+    }
+
+    public static int cycleMiningRadius(ItemStack stack) {
+        int maximumRadius = Math.max(0, (getMiningRange(stack) - 1) / 2);
+        int next = (getCurrentMiningRadius(stack) + 1) % (maximumRadius + 1);
+        CustomData.update(
+                DataComponents.CUSTOM_DATA,
+                stack,
+                tag -> tag.putInt(CURRENT_MINING_RADIUS_KEY, next)
+        );
+        return next;
+    }
+
     public static void refreshDerivedComponents(ItemStack stack) {
         if (!(stack.getItem() instanceof SmallLoliPickaxeItem)) {
             return;
@@ -171,6 +207,23 @@ public final class SmallLoliPickaxeItem extends Item {
         }
     }
 
+    public static void refreshEnchantments(ItemStack stack, ServerLevel level) {
+        if (!(stack.getItem() instanceof SmallLoliPickaxeItem)) {
+            return;
+        }
+        Registry<Enchantment> registry = level.registryAccess().lookupOrThrow(Registries.ENCHANTMENT);
+        Holder<Enchantment> fortune = registry.getOrThrow(Enchantments.FORTUNE);
+        Holder<Enchantment> looting = registry.getOrThrow(Enchantments.LOOTING);
+        int targetLevel = getFortuneLevel(stack);
+        if (EnchantmentHelper.getItemEnchantmentLevel(fortune, stack) != targetLevel
+                || EnchantmentHelper.getItemEnchantmentLevel(looting, stack) != targetLevel) {
+            EnchantmentHelper.updateEnchantments(stack, mutable -> {
+                mutable.set(fortune, targetLevel);
+                mutable.set(looting, targetLevel);
+            });
+        }
+    }
+
     @Override
     public ItemStack getDefaultInstance() {
         ItemStack stack = super.getDefaultInstance();
@@ -181,7 +234,53 @@ public final class SmallLoliPickaxeItem extends Item {
     @Override
     public void inventoryTick(ItemStack stack, ServerLevel level, Entity entity, EquipmentSlot slot) {
         refreshDerivedComponents(stack);
+        refreshEnchantments(stack, level);
         super.inventoryTick(stack, level, entity, slot);
+    }
+
+    @Override
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (level.isClientSide()) {
+            return InteractionResult.SUCCESS;
+        }
+
+        if (player.isShiftKeyDown() && getHitRange(stack) > 0) {
+            attackNearbyHostiles((ServerLevel) level, player, stack);
+            player.resetAttackStrengthTicker();
+            return InteractionResult.SUCCESS_SERVER;
+        }
+        if (!player.isShiftKeyDown() && getMiningRange(stack) > 0) {
+            int radius = cycleMiningRadius(stack);
+            int sideLength = radius * 2 + 1;
+            player.sendSystemMessage(Component.translatableWithFallback(
+                    "loliPickaxe.range",
+                    "Mining range changed to %s x %s x %s",
+                    sideLength,
+                    sideLength,
+                    sideLength
+            ));
+            return InteractionResult.SUCCESS_SERVER;
+        }
+        return InteractionResult.PASS;
+    }
+
+    private static void attackNearbyHostiles(ServerLevel level, Player player, ItemStack stack) {
+        double radius = getHitRange(stack) / 2.0D;
+        AABB area = player.getBoundingBox().inflate(radius + 0.7D, radius + 0.1D, radius + 0.7D);
+        for (Entity target : level.getEntities(player, area, SmallLoliPickaxeItem::isRangeAttackTarget)) {
+            player.attack(target);
+        }
+    }
+
+    private static boolean isRangeAttackTarget(Entity entity) {
+        if (!entity.isAttackable()
+                || entity instanceof Player
+                || entity instanceof ArmorStand
+                || entity instanceof AmbientCreature) {
+            return false;
+        }
+        return !(entity instanceof PathfinderMob) || entity instanceof Enemy;
     }
 
     @Override

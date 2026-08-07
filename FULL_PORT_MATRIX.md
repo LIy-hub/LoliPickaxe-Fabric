@@ -17,11 +17,11 @@
 |---|---:|---|---|
 | Stable Fabric Loli core | 10 | Existing pickaxe, execution tickets, holder defense, special drops, same-item immunity | Preserved; regression checks pending |
 | Static content and assets | 10 | 21 fixed items, one default record, five block items, textures/models/translations | Complete |
-| Small Loli progression | 13 | Small pickaxe, 14 add-ons, ten-tier superposition, transformed mining/combat stats | Tier data, formulas, mining, attack, flight and buffs complete; range/drop/defense/storage hooks pending |
-| Recipes and enchantment | 8 | 20 legacy JSON recipes, dynamic upgrade recipes, Auto Furnace enchantment | 20 static and 3 dynamic recipes complete; enchantment pending |
+| Small Loli progression | 13 | Small pickaxe, 14 add-ons, ten-tier superposition, transformed mining/combat stats | Tier data, formulas, Fortune/Looting, range mining/attack, auto-smelt, flight, buffs, dodge and damage return complete; storage hook pending |
+| Recipes and enchantment | 8 | 20 legacy JSON recipes, dynamic upgrade recipes, Auto Furnace enchantment | Complete: 20 static recipes, 3 dynamic recipes and native 26.2 Auto-Smelt enchantment |
 | Functional blocks | 9 | Three effect TNT blocks, Loli Altar, Password Workbench | Not started |
 | Entities and altar summoning | 10 | Loli entity, target/attack/swim AI, effect TNT entity, rendering and spawn egg | Not started |
-| Storage and automation | 12 | Internal inventories, blacklist, auto-accept, drop-all, auto-smelt and range mining | Not started |
+| Storage and automation | 12 | Internal inventories, blacklist, auto-accept, drop-all, auto-smelt and range mining | Auto-smelt and range mining complete; internal inventory, blacklist, auto-accept and drop-all pending |
 | Configuration and commands | 6 | Per-item settings, server config, `/loli`, `/loliattack` | Not started |
 | Client screens and networking | 12 | Config, enchantment, potion, folding, storage, blacklist and password screens plus payloads | Not started |
 | Cards, record and auxiliary tools | 6 | Card, album, bounded online card, dispersal, client-ghost cleanup and music disc | Not started |
