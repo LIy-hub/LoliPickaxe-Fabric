@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "group": "liymod:loli_exit_tnt",
+  "pattern": [
+    "X X",
+    " X ",
+    "X X"
+  ],
+  "key": {
+    "X": "minecraft:tnt"
+  },
+  "result": {
+    "id": "liymod:loli_exit_tnt"
+  }
+}

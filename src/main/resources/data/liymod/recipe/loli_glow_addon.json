@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_glow_addon",
+  "pattern": [
+    "XYX",
+    "YXY",
+    "XYX"
+  ],
+  "key": {
+    "X": "minecraft:glowstone_dust",
+    "Y": "minecraft:glowstone"
+  },
+  "result": {
+    "id": "liymod:loli_glow_addon"
+  }
+}

@@ -1,6 +1,15 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "liymod:item/loli_entity_soul_addon"
+    "type": "minecraft:condition",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "liymod:item/loli_entity_soul_addon_end"
+    },
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "liymod:item/loli_entity_soul_addon"
+    }
   }
 }

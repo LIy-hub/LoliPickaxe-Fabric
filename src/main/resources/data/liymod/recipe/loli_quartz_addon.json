@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_quartz_addon",
+  "pattern": [
+    "XYX",
+    "YXY",
+    "XYX"
+  ],
+  "key": {
+    "X": "minecraft:quartz",
+    "Y": "minecraft:quartz_block"
+  },
+  "result": {
+    "id": "liymod:loli_quartz_addon"
+  }
+}

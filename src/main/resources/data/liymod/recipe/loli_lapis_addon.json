@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_lapis_addon",
+  "pattern": [
+    "XYX",
+    "YXY",
+    "XYX"
+  ],
+  "key": {
+    "X": "minecraft:lapis_lazuli",
+    "Y": "minecraft:lapis_block"
+  },
+  "result": {
+    "id": "liymod:loli_lapis_addon"
+  }
+}

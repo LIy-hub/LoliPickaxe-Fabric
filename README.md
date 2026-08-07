@@ -8,17 +8,22 @@ reimplementing it for modern Fabric. It is distributed under GPL-3.0 in
 accordance with the original project's license. See [CREDITS.md](CREDITS.md)
 for attribution and third-party asset notes.
 
-LoliPickaxe is a Fabric mod for Minecraft 26.2. It adds the Loli Pickaxe, an
-intentionally overpowered item with special combat, mining, flight, and survival
-abilities. The gameplay contract is frozen across supported Minecraft branches;
-version branches contain compatibility changes only.
+LoliPickaxe is a Fabric mod for Minecraft 26.2. The high-version branch is
+restoring the complete item, block, entity and utility catalog from the classic
+1.12.2 release while preserving the Fabric port's stronger Loli Pickaxe combat
+and survival implementation.
 
 ## Gameplay and acquisition
 
-- Adds the fireproof `liymod:loli_pickaxe` and `liymod:loli` items to the
-  LoliPickaxe creative tab.
-- There is no crafting recipe in the current implementation. Use the creative
-  inventory or commands to obtain the items.
+- Restores the Ordinary Loli Pickaxe, fourteen tiered upgrades, cards, record,
+  utility items, five blocks and their original artwork in the LoliPickaxe tab.
+- Restores twenty classic shaped/shapeless recipes plus the dynamic 9-to-1
+  upgrade, Ordinary Loli upgrade and final Loli Pickaxe conversion recipes.
+- The Ordinary Loli Pickaxe stores each upgrade independently and applies the
+  original formulas for mining, attack, range, fortune, storage and defensive
+  stats. Mining/attack attributes, flight and status upgrades are active; the
+  remaining range, storage and drop automation hooks are tracked in
+  [FULL_PORT_MATRIX.md](FULL_PORT_MATRIX.md).
 - The pickaxe is kept unbreakable and has deliberately extreme mining and
   combat attributes.
 - Attacking a block attempts to break it immediately. A fixed set of normally
@@ -50,8 +55,9 @@ should test compatibility with their protection and administration mods. This
 project does not claim universal compatibility with every third-party combat or
 protection implementation.
 
-The normative compatibility contract and immutable asset hashes are documented
-in [PORTING_BASELINE.md](PORTING_BASELINE.md).
+The preserved Fabric behavior and full-restoration boundaries are documented in
+[PORTING_BASELINE.md](PORTING_BASELINE.md). Build verification also includes
+`scripts/verify-full-port.ps1`.
 
 ## 中文说明
 
@@ -61,10 +67,12 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 
 ### 主要内容
 
-- 加入防火的 `liymod:loli_pickaxe`（氪金萝莉）与
-  `liymod:loli`（萝莉碎片），并放入独立创造物品栏。
-- 当前实现没有合成配方，只能通过创造物品栏或命令获取；项目介绍不会凭空
-  捏造配方。
+- 已恢复普通萝莉、十四类分级升级材料、卡片、唱片、辅助工具、五种方块及
+  原版素材，并放入独立创造物品栏。
+- 已恢复二十个固定配方，以及升级材料九合一/一拆九、普通萝莉升级和满级
+  普通萝莉转化为氪金萝莉的三种动态配方。
+- 普通萝莉独立保存各类升级并采用原版数值公式；采掘/攻击属性、飞行与状态
+  升级已生效，范围、储存与掉落自动化仍按 `FULL_PORT_MATRIX.md` 继续移植。
 - 氪金萝莉保持不可破坏，并拥有刻意设计为超规格的挖掘与战斗属性。
 - 左击方块会尝试立即破坏；固定清单中的管理类方块、不可破坏方块与矿石还会
   产生模组定义的特殊掉落，矿石可额外掉落对应储存方块。

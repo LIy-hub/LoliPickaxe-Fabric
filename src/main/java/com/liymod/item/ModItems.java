@@ -14,6 +14,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Unit;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
@@ -44,22 +45,26 @@ public final class ModItems {
                     .pickaxe(ModToolMaterials.LOLI, Integer.MAX_VALUE, Float.POSITIVE_INFINITY)
                     .component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
     );
-    public static final Item SMALL_LOLI_PICKAXE = registerItem("small_loli_pickaxe", Item::new, new Item.Properties());
+    public static final Item SMALL_LOLI_PICKAXE = registerItem(
+            "small_loli_pickaxe",
+            SmallLoliPickaxeItem::new,
+            new Item.Properties().fireResistant().stacksTo(1).component(DataComponents.UNBREAKABLE, Unit.INSTANCE)
+    );
 
-    public static final Item LOLI_COAL_ADDON = registerItem("loli_coal_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_IRON_ADDON = registerItem("loli_iron_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_GOLD_ADDON = registerItem("loli_gold_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_REDSTONE_ADDON = registerItem("loli_redstone_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_LAPIS_ADDON = registerItem("loli_lapis_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_DIAMOND_ADDON = registerItem("loli_diamond_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_EMERALD_ADDON = registerItem("loli_emerald_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_OBSIDIAN_ADDON = registerItem("loli_obsidian_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_GLOW_ADDON = registerItem("loli_glow_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_QUARTZ_ADDON = registerItem("loli_quartz_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_NETHER_STAR_ADDON = registerItem("loli_nether_star_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_AUTO_FURNACE_ADDON = registerItem("loli_auto_furnace_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_FLY_ADDON = registerItem("loli_fly_addon", Item::new, new Item.Properties());
-    public static final Item LOLI_ENTITY_SOUL_ADDON = registerItem("loli_entity_soul_addon", Item::new, new Item.Properties());
+    public static final Item LOLI_COAL_ADDON = registerUpgrade("loli_coal_addon", UpgradeItem.Type.COAL);
+    public static final Item LOLI_IRON_ADDON = registerUpgrade("loli_iron_addon", UpgradeItem.Type.IRON);
+    public static final Item LOLI_GOLD_ADDON = registerUpgrade("loli_gold_addon", UpgradeItem.Type.GOLD);
+    public static final Item LOLI_REDSTONE_ADDON = registerUpgrade("loli_redstone_addon", UpgradeItem.Type.REDSTONE);
+    public static final Item LOLI_LAPIS_ADDON = registerUpgrade("loli_lapis_addon", UpgradeItem.Type.LAPIS);
+    public static final Item LOLI_DIAMOND_ADDON = registerUpgrade("loli_diamond_addon", UpgradeItem.Type.DIAMOND);
+    public static final Item LOLI_EMERALD_ADDON = registerUpgrade("loli_emerald_addon", UpgradeItem.Type.EMERALD);
+    public static final Item LOLI_OBSIDIAN_ADDON = registerUpgrade("loli_obsidian_addon", UpgradeItem.Type.OBSIDIAN);
+    public static final Item LOLI_GLOW_ADDON = registerUpgrade("loli_glow_addon", UpgradeItem.Type.GLOW);
+    public static final Item LOLI_QUARTZ_ADDON = registerUpgrade("loli_quartz_addon", UpgradeItem.Type.QUARTZ);
+    public static final Item LOLI_NETHER_STAR_ADDON = registerUpgrade("loli_nether_star_addon", UpgradeItem.Type.NETHER_STAR);
+    public static final Item LOLI_AUTO_FURNACE_ADDON = registerUpgrade("loli_auto_furnace_addon", UpgradeItem.Type.AUTO_FURNACE);
+    public static final Item LOLI_FLY_ADDON = registerUpgrade("loli_fly_addon", UpgradeItem.Type.FLY);
+    public static final Item LOLI_ENTITY_SOUL_ADDON = registerUpgrade("loli_entity_soul_addon", UpgradeItem.Type.ENTITY_SOUL);
 
     public static final Item LOLI_DISPERSAL = registerItem("loli_dispersal", Item::new, new Item.Properties());
     public static final Item BUG_ENTITY_CLEAR = registerItem("bug_entity_clear", Item::new, new Item.Properties());
@@ -111,6 +116,25 @@ public final class ModItems {
                 properties -> new BlockItem(block, properties.useBlockDescriptionPrefix()),
                 new Item.Properties()
         );
+    }
+
+    private static Item registerUpgrade(String name, UpgradeItem.Type type) {
+        return registerItem(name, properties -> new UpgradeItem(type, properties), new Item.Properties());
+    }
+
+    public static void addCreativeTabItems(CreativeModeTab.Output entries) {
+        for (Item item : CREATIVE_TAB_ITEMS) {
+            if (item instanceof UpgradeItem upgrade) {
+                for (int tier = 0; tier < upgrade.tierCount(); tier++) {
+                    entries.accept(upgrade.createStack(tier));
+                }
+            } else {
+                entries.accept(item);
+                if (item instanceof SmallLoliPickaxeItem) {
+                    entries.accept(SmallLoliPickaxeItem.createFullyUpgraded(item));
+                }
+            }
+        }
     }
 
     public static void registerModItems() {

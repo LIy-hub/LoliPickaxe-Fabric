@@ -76,6 +76,32 @@ $blockIds = @(
     'password_work_bench'
 )
 
+$recipeIds = @(
+    'loli_altar',
+    'loli_auto_furnace_addon',
+    'loli_blue_screen_tnt',
+    'loli_card_online',
+    'loli_coal_addon',
+    'loli_diamond_addon',
+    'loli_emerald_addon',
+    'loli_exit_tnt',
+    'loli_fail_respond_tnt',
+    'loli_fly_addon',
+    'loli_glow_addon',
+    'loli_gold_addon',
+    'loli_iron_addon',
+    'loli_lapis_addon',
+    'loli_nether_star_addon',
+    'loli_obsidian_addon',
+    'loli_quartz_addon',
+    'loli_redstone_addon',
+    'password_work_bench',
+    'small_loli_pickaxe',
+    'upgrade_superposition',
+    'small_loli_upgrade',
+    'loli_pickaxe_upgrade'
+)
+
 $itemSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/item/ModItems.java'
 ) -Raw
@@ -91,6 +117,26 @@ foreach ($id in $itemIds) {
 foreach ($id in $blockIds) {
     Assert-True ($blockSource -match [regex]::Escape('"' + $id + '"')) `
         "Registered block id missing from Java sources: liymod:$id"
+}
+
+$requiredProgressionSources = @(
+    'src/main/java/com/liymod/item/UpgradeItem.java',
+    'src/main/java/com/liymod/item/SmallLoliPickaxeItem.java',
+    'src/main/java/com/liymod/item/SmallLoliGameplayEvents.java',
+    'src/main/java/com/liymod/recipe/UpgradeSuperpositionRecipe.java',
+    'src/main/java/com/liymod/recipe/SmallLoliUpgradeRecipe.java',
+    'src/main/java/com/liymod/recipe/LoliPickaxeUpgradeRecipe.java',
+    'src/main/java/com/liymod/recipe/ModRecipes.java'
+)
+foreach ($relativePath in $requiredProgressionSources) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Progression source missing: $relativePath"
+}
+
+foreach ($id in $recipeIds) {
+    $recipePath = Join-Path $projectRoot "src/main/resources/data/liymod/recipe/$id.json"
+    Assert-True (Test-Path -LiteralPath $recipePath) "Recipe JSON missing: liymod:$id"
+    $null = Get-Content -LiteralPath $recipePath -Raw | ConvertFrom-Json
 }
 
 $languages = @('en_us', 'zh_cn')
@@ -139,11 +185,15 @@ try {
             "JAR blockstate missing: $id"
         if ($id -ne 'password_work_bench') {
             Assert-True ($null -ne $archive.GetEntry("assets/liymod/models/block/$id.json")) `
-                "JAR block model missing: $id"
+            "JAR block model missing: $id"
         }
+    }
+    foreach ($id in $recipeIds) {
+        Assert-True ($null -ne $archive.GetEntry("data/liymod/recipe/$id.json")) `
+            "JAR recipe missing: liymod:$id"
     }
 } finally {
     $archive.Dispose()
 }
 
-Write-Host "VERIFY_FULL_PORT_STATIC_OK items=$($itemIds.Count) blocks=$($blockIds.Count)"
+Write-Host "VERIFY_FULL_PORT_PROGRESS_OK items=$($itemIds.Count) blocks=$($blockIds.Count) recipes=$($recipeIds.Count)"
