@@ -16,6 +16,7 @@ import net.minecraft.util.Unit;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.JukeboxSong;
 import net.minecraft.world.level.block.Block;
 
 import static com.liymod.LiyMod.MOD_ID;
@@ -66,12 +67,40 @@ public final class ModItems {
     public static final Item LOLI_FLY_ADDON = registerUpgrade("loli_fly_addon", UpgradeItem.Type.FLY);
     public static final Item LOLI_ENTITY_SOUL_ADDON = registerUpgrade("loli_entity_soul_addon", UpgradeItem.Type.ENTITY_SOUL);
 
-    public static final Item LOLI_DISPERSAL = registerItem("loli_dispersal", Item::new, new Item.Properties());
-    public static final Item BUG_ENTITY_CLEAR = registerItem("bug_entity_clear", Item::new, new Item.Properties());
-    public static final Item LOLI_CARD = registerItem("loli_card", Item::new, new Item.Properties());
-    public static final Item LOLI_CARD_ALBUM = registerItem("loli_card_album", Item::new, new Item.Properties());
-    public static final Item LOLI_CARD_ONLINE = registerItem("loli_card_online", Item::new, new Item.Properties());
-    public static final Item LOLI_RECORD = registerItem("loli_record", Item::new, new Item.Properties());
+    public static final Item LOLI_DISPERSAL = registerItem(
+            "loli_dispersal",
+            LoliDispersalItem::new,
+            new Item.Properties().stacksTo(1)
+    );
+    public static final Item BUG_ENTITY_CLEAR = registerItem(
+            "bug_entity_clear",
+            BugEntityClearItem::new,
+            new Item.Properties().stacksTo(1)
+    );
+    public static final Item LOLI_CARD = registerItem(
+            "loli_card",
+            properties -> new LoliCardItem(LoliCardItem.Kind.CARD, properties),
+            new Item.Properties().stacksTo(1)
+    );
+    public static final Item LOLI_CARD_ALBUM = registerItem(
+            "loli_card_album",
+            properties -> new LoliCardItem(LoliCardItem.Kind.ALBUM, properties),
+            new Item.Properties().stacksTo(1)
+    );
+    public static final Item LOLI_CARD_ONLINE = registerItem(
+            "loli_card_online",
+            LoliOnlineCardItem::new,
+            new Item.Properties()
+    );
+    private static final ResourceKey<JukeboxSong> LOLI_RECORD_SONG = ResourceKey.create(
+            Registries.JUKEBOX_SONG,
+            Identifier.fromNamespaceAndPath(MOD_ID, "loli_record")
+    );
+    public static final Item LOLI_RECORD = registerItem(
+            "loli_record",
+            Item::new,
+            new Item.Properties().stacksTo(1).jukeboxPlayable(LOLI_RECORD_SONG)
+    );
 
     public static final Item LOLI_BLUE_SCREEN_TNT = registerBlockItem("loli_blue_screen_tnt", ModBlocks.LOLI_BLUE_SCREEN_TNT);
     public static final Item LOLI_EXIT_TNT = registerBlockItem("loli_exit_tnt", ModBlocks.LOLI_EXIT_TNT);
@@ -132,6 +161,21 @@ public final class ModItems {
                 entries.accept(item);
                 if (item instanceof SmallLoliPickaxeItem) {
                     entries.accept(SmallLoliPickaxeItem.createFullyUpgraded(item));
+                } else if (item == LOLI_CARD) {
+                    LoliCardItem card = (LoliCardItem) item;
+                    for (LoliCardCatalog.Art art : LoliCardCatalog.STANDALONE) {
+                        entries.accept(card.createArtStack(art.id()));
+                    }
+                } else if (item == LOLI_CARD_ALBUM) {
+                    LoliCardItem album = (LoliCardItem) item;
+                    for (String group : LoliCardCatalog.GROUPS) {
+                        entries.accept(album.createAlbumStack(group));
+                    }
+                } else if (item == LOLI_CARD_ONLINE) {
+                    LoliOnlineCardItem online = (LoliOnlineCardItem) item;
+                    for (String url : LoliOnlineCardItem.DEFAULT_URLS) {
+                        entries.accept(online.createUrlStack(url));
+                    }
                 }
             }
         }

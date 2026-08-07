@@ -20,6 +20,7 @@ import com.liymod.sound.ModSounds;
 import com.liymod.storage.LoliStorageEvents;
 import com.liymod.config.LoliServerConfig;
 import com.liymod.item.LoliFinalItemEvents;
+import com.liymod.item.LoliAuxiliaryDropEvents;
 import com.liymod.command.LoliCommands;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
@@ -46,6 +47,7 @@ public class LiyMod implements ModInitializer {
 		SmallLoliMiningEvents.registerEvents();
 		LoliStorageEvents.registerEvents();
 		LoliFinalItemEvents.registerEvents();
+		LoliAuxiliaryDropEvents.registerEvents();
 		ModDamageTypes.registerDamageTypes();
 		LoliProtection.registerProtection();
 		LoliExecutionManager.registerEvents();

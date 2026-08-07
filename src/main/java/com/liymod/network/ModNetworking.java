@@ -15,6 +15,8 @@ import com.liymod.item.LoliFinalEnchantments;
 import com.liymod.item.LoliFinalEffects;
 import com.liymod.menu.FinalTeleportMenu;
 import com.liymod.item.LoliTeleportService;
+import com.liymod.item.LoliCardData;
+import com.liymod.item.ModItems;
 import net.minecraft.world.InteractionHand;
 
 /** Common payload registration. Called once from the main mod initializer. */
@@ -40,6 +42,11 @@ public final class ModNetworking {
         PayloadTypeRegistry.serverboundPlay().register(LoliEnchantmentUpdatePayload.TYPE, LoliEnchantmentUpdatePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(LoliEffectUpdatePayload.TYPE, LoliEffectUpdatePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(LoliTeleportPayload.TYPE, LoliTeleportPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(LoliCardOpenPayload.TYPE, LoliCardOpenPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(
+                LoliCardOnlineUpdatePayload.TYPE,
+                LoliCardOnlineUpdatePayload.CODEC
+        );
         ServerPlayNetworking.registerGlobalReceiver(PasswordUpdatePayload.TYPE, (payload, context) ->
                 context.server().execute(() -> {
                     if (context.player().containerMenu instanceof PasswordWorkbenchMenu menu
@@ -124,6 +131,13 @@ public final class ModNetworking {
                                 payload.offsetY(),
                                 payload.offsetZ()
                         );
+                    }
+                }));
+        ServerPlayNetworking.registerGlobalReceiver(LoliCardOnlineUpdatePayload.TYPE, (payload, context) ->
+                context.server().execute(() -> {
+                    var stack = context.player().getItemInHand(payload.hand());
+                    if (stack.is(ModItems.LOLI_CARD_ONLINE)) {
+                        LoliCardData.setUrl(stack, payload.url());
                     }
                 }));
         registered = true;

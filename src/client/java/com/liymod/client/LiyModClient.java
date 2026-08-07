@@ -1,5 +1,6 @@
 package com.liymod.client;
 
+import com.liymod.client.card.CardClient;
 import com.liymod.client.safe.SafeTntEffectClient;
 import com.liymod.client.render.LoliEntityModel;
 import com.liymod.client.render.LoliEntityRenderer;
@@ -26,6 +27,7 @@ public final class LiyModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         SafeTntEffectClient.register();
+        CardClient.register();
         MenuScreens.register(ModMenus.PASSWORD_WORKBENCH, PasswordWorkbenchScreen::new);
         MenuScreens.register(ModMenus.STORAGE, LoliStorageScreen::new);
         MenuScreens.register(ModMenus.BLACKLIST, LoliBlacklistScreen::new);

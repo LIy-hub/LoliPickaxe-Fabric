@@ -15,6 +15,10 @@ public final class ModSounds {
             LiyMod.MOD_ID,
             "loli_immunity_second"
     );
+    public static final Identifier LOLI_RECORD_ID = Identifier.fromNamespaceAndPath(
+            LiyMod.MOD_ID,
+            "lolirecord"
+    );
 
     public static final SoundEvent LOLI_IMMUNITY_FIRST = SoundEvent.createVariableRangeEvent(
             LOLI_IMMUNITY_FIRST_ID
@@ -22,6 +26,7 @@ public final class ModSounds {
     public static final SoundEvent LOLI_IMMUNITY_SECOND = SoundEvent.createVariableRangeEvent(
             LOLI_IMMUNITY_SECOND_ID
     );
+    public static final SoundEvent LOLI_RECORD = SoundEvent.createVariableRangeEvent(LOLI_RECORD_ID);
 
     private ModSounds() {
     }
@@ -37,6 +42,7 @@ public final class ModSounds {
                 LOLI_IMMUNITY_SECOND_ID,
                 LOLI_IMMUNITY_SECOND
         );
+        Registry.register(BuiltInRegistries.SOUND_EVENT, LOLI_RECORD_ID, LOLI_RECORD);
         LiyMod.LOGGER.info("Registered alternating Loli immunity sounds");
     }
 }
