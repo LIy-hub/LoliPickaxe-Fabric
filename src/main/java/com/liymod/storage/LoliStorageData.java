@@ -74,6 +74,10 @@ public final class LoliStorageData implements Container {
         return pageCount;
     }
 
+    public ItemStack getOwnerStack() {
+        return ownerStack;
+    }
+
     public int getCurrentPage() {
         return currentPage;
     }

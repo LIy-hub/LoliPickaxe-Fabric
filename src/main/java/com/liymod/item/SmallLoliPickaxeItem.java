@@ -1,5 +1,6 @@
 package com.liymod.item;
 
+import com.liymod.sound.ModSounds;
 import java.util.function.Consumer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -8,6 +9,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -260,6 +262,14 @@ public final class SmallLoliPickaxeItem extends Item {
                     sideLength,
                     sideLength
             ));
+            level.playSound(
+                    null,
+                    player.blockPosition(),
+                    ModSounds.LOLI_SUCCESS,
+                    SoundSource.BLOCKS,
+                    1.0F,
+                    1.0F
+            );
             return InteractionResult.SUCCESS_SERVER;
         }
         return InteractionResult.PASS;

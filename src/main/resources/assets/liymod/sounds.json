@@ -14,5 +14,11 @@
     "sounds": [
       "liymod:lolirecord"
     ]
+  },
+  "lolisuccess": {
+    "category": "block",
+    "sounds": [
+      "liymod:lolisuccess"
+    ]
   }
 }

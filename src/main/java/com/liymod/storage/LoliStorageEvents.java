@@ -1,6 +1,8 @@
 package com.liymod.storage;
 
 import com.liymod.LiyMod;
+import com.liymod.config.LoliConfigOption;
+import com.liymod.config.LoliItemSettings;
 import com.liymod.menu.BlacklistMenu;
 import com.liymod.menu.StorageMenu;
 import java.util.List;
@@ -58,26 +60,40 @@ public final class LoliStorageEvents {
 
     private static LoliStorageData findStorage(ServerPlayer player) {
         if (player.containerMenu instanceof StorageMenu menu && menu.stillValid(player)) {
-            return menu.getStorage();
+            LoliStorageData storage = menu.getStorage();
+            if (allowsNearbyCollection(storage.getOwnerStack())) {
+                return storage;
+            }
         }
         if (player.containerMenu instanceof BlacklistMenu menu && menu.stillValid(player)) {
-            return menu.getStorage();
+            LoliStorageData storage = menu.getStorage();
+            if (allowsNearbyCollection(storage.getOwnerStack())) {
+                return storage;
+            }
         }
 
         ItemStack mainHand = player.getMainHandItem();
-        if (LoliStorageData.hasStorage(mainHand)) {
+        if (allowsNearbyCollection(mainHand)) {
             return LoliStorageData.open(mainHand);
         }
         ItemStack offHand = player.getOffhandItem();
-        if (LoliStorageData.hasStorage(offHand)) {
+        if (allowsNearbyCollection(offHand)) {
             return LoliStorageData.open(offHand);
         }
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
-            if (LoliStorageData.hasStorage(stack)) {
+            if (allowsNearbyCollection(stack)) {
                 return LoliStorageData.open(stack);
             }
         }
         return null;
+    }
+
+    private static boolean allowsNearbyCollection(ItemStack stack) {
+        if (!LoliStorageData.hasStorage(stack)) {
+            return false;
+        }
+        return !LoliItemSettings.isFinalPickaxe(stack)
+                || LoliItemSettings.getBoolean(stack, LoliConfigOption.AUTO_ACCEPT);
     }
 }
