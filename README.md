@@ -23,8 +23,15 @@ and survival implementation.
   original formulas for mining, attack, range, fortune, storage and defensive
   stats. Mining/attack attributes, Fortune/Looting, adjustable range mining,
   hostile-area attacks, auto-smelting, flight, status effects, dodge and
-  damage-return upgrades are active. Internal storage and its automation remain
-  tracked in [FULL_PORT_MATRIX.md](FULL_PORT_MATRIX.md).
+  damage-return upgrades are active. Its tier-sized internal storage, blacklist,
+  nearby item collection and direct mining-drop insertion are also active.
+- Press B while holding either pickaxe to open its paged 9x9 storage, Shift+B
+  to drop all stored stacks, and U to edit its 9x9 ghost-slot blacklist. The
+  final Loli Pickaxe has 100 pages; Ordinary Loli page count follows its storage
+  upgrade tier. Stored stacks use normal modern stack limits and bounded NBT.
+- The Password Workbench restores the original 3x3/password interface and
+  server-authoritative password matching. As in the released legacy build, its
+  built-in password recipe registry is empty until integrations register recipes.
 - Restores the level-one `liymod:loli_auto_furnace` enchantment through the
   native 26.2 enchantment registry and `minecraft:smelts_loot` contract.
 - Restores the exact 63 by 63 Loli Altar ritual, the persistent Loli entity and
@@ -80,7 +87,12 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   普通萝莉转化为氪金萝莉的三种动态配方。
 - 普通萝莉独立保存各类升级并采用原版数值公式；采掘/攻击属性、飞行与状态
   升级、时运/抢夺、可调范围采掘、范围攻击、自动熔炼、闪避与反伤均已实际
-  接入；内部储存与自动收纳仍按 `FULL_PORT_MATRIX.md` 继续移植。
+  接入；分级内部储存、黑名单、附近掉落物自动收纳及采掘掉落直入储存也已接入。
+- 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
+  9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
+  储存遵守现代正常堆叠上限与有界 NBT 安全限制。
+- 密码工作台已恢复 3×3 合成区、密码输入与服务端判定。与原版发行源码一致，
+  内置密码配方注册表默认为空，供后续兼容集成注册配方。
 - 已通过 26.2 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级
   `liymod:loli_auto_furnace` 自动熔炼附魔。
 - 已恢复精确 63×63 萝莉祭坛仪式、持久且只能被退散物品移除的萝莉实体，以及

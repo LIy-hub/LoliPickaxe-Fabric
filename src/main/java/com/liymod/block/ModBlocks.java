@@ -38,7 +38,7 @@ public final class ModBlocks {
     );
     public static final Block PASSWORD_WORK_BENCH = registerBlock(
             "password_work_bench",
-            Block::new,
+            PasswordWorkbenchBlock::new,
             BlockBehaviour.Properties.of().strength(2.5F).sound(SoundType.WOOD)
     );
 

@@ -211,6 +211,70 @@ foreach ($relativePath in $functionalSources) {
         "Functional block/entity source missing: $relativePath"
 }
 
+$storageAndPasswordSources = @(
+    'src/main/java/com/liymod/block/PasswordWorkbenchBlock.java',
+    'src/main/java/com/liymod/password/PasswordRecipe.java',
+    'src/main/java/com/liymod/password/PasswordRecipeRegistry.java',
+    'src/main/java/com/liymod/menu/PasswordWorkbenchMenu.java',
+    'src/main/java/com/liymod/menu/StorageMenu.java',
+    'src/main/java/com/liymod/menu/BlacklistMenu.java',
+    'src/main/java/com/liymod/storage/LoliStorageData.java',
+    'src/main/java/com/liymod/storage/LoliStorageEvents.java',
+    'src/main/java/com/liymod/network/PasswordUpdatePayload.java',
+    'src/main/java/com/liymod/network/StorageOpenPayload.java',
+    'src/main/java/com/liymod/network/StoragePagePayload.java',
+    'src/main/java/com/liymod/network/StoragePageSyncPayload.java',
+    'src/main/java/com/liymod/network/StorageDropAllPayload.java',
+    'src/main/java/com/liymod/network/BlacklistUpdatePayload.java',
+    'src/client/java/com/liymod/client/input/LoliKeyMappings.java',
+    'src/client/java/com/liymod/client/storage/LoliStorageClient.java',
+    'src/client/java/com/liymod/client/screen/PasswordWorkbenchScreen.java',
+    'src/client/java/com/liymod/client/screen/LoliStorageScreen.java',
+    'src/client/java/com/liymod/client/screen/LoliBlacklistScreen.java'
+)
+foreach ($relativePath in $storageAndPasswordSources) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot $relativePath)) `
+        "Storage/password source missing: $relativePath"
+}
+
+$passwordPayloadSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/network/PasswordUpdatePayload.java'
+) -Raw
+$storageSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/storage/LoliStorageData.java'
+) -Raw
+$storageEventsSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/storage/LoliStorageEvents.java'
+) -Raw
+$storageMenuSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/menu/StorageMenu.java'
+) -Raw
+$storageKeySource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/client/java/com/liymod/client/input/LoliKeyMappings.java'
+) -Raw
+Assert-True ($passwordPayloadSource -match 'MAX_CODE_POINTS\s*=\s*64') `
+    'Password payload must remain bounded to 64 Unicode code points'
+Assert-True ($passwordPayloadSource -match 'MAX_UTF8_BYTES\s*=\s*256') `
+    'Password payload must remain bounded to 256 UTF-8 bytes'
+Assert-True ($storageSource -match 'SLOTS_PER_PAGE\s*=\s*81') `
+    'Loli storage page size must remain 81 slots'
+Assert-True ($storageSource -match 'FINAL_PAGE_COUNT\s*=\s*100') `
+    'Final Loli storage must retain 100 pages'
+Assert-True ($storageSource -match 'MAX_TOTAL_NBT_BYTES\s*=\s*4\s*\*\s*1024\s*\*\s*1024') `
+    'Loli storage total NBT safety bound is missing'
+Assert-True ($storageSource -match 'isStorageItem\(stack\)') `
+    'Loli storage self-nesting rejection is missing'
+Assert-True ($storageEventsSource -match 'COLLECT_RANGE\s*=\s*4\.0D') `
+    'Nearby Loli storage collection range is missing'
+Assert-True ($smallMiningSource -match 'storage\.insert') `
+    'Small Loli mining drops are not routed through storage'
+Assert-True ($storageMenuSource -match 'StoragePageSyncPayload') `
+    'Ordered storage page synchronization is missing'
+Assert-True ($storageKeySource -match 'InputConstants\.KEY_B') `
+    'Loli storage B/Shift+B key binding is missing'
+Assert-True ($storageKeySource -match 'InputConstants\.KEY_U') `
+    'Loli blacklist U key binding is missing'
+
 $entitiesSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/entity/ModEntities.java'
 ) -Raw
@@ -266,6 +330,15 @@ foreach ($language in $languages) {
     foreach ($id in $blockIds) {
         Assert-True $lang.ContainsKey("block.liymod.$id") `
             "Missing $language block translation: block.liymod.$id"
+    }
+    foreach ($key in @(
+        'container.liymod.password_workbench',
+        'container.liymod.loli_storage',
+        'container.liymod.loli_blacklist',
+        'key.liymod.loli_container',
+        'key.liymod.loli_container_blacklist'
+    )) {
+        Assert-True $lang.ContainsKey($key) "Missing $language utility translation: $key"
     }
 }
 
@@ -323,6 +396,20 @@ try {
         'com/liymod/client/safe/FailRespondEffectScreen.class',
         'assets/liymod/textures/entity/loli.png',
         'data/liymod/loli_altar_pattern/default.json'
+        'com/liymod/block/PasswordWorkbenchBlock.class',
+        'com/liymod/menu/PasswordWorkbenchMenu.class',
+        'com/liymod/menu/StorageMenu.class',
+        'com/liymod/menu/BlacklistMenu.class',
+        'com/liymod/storage/LoliStorageData.class',
+        'com/liymod/storage/LoliStorageEvents.class',
+        'com/liymod/client/input/LoliKeyMappings.class',
+        'com/liymod/client/storage/LoliStorageClient.class',
+        'com/liymod/client/screen/PasswordWorkbenchScreen.class',
+        'com/liymod/client/screen/LoliStorageScreen.class',
+        'com/liymod/client/screen/LoliBlacklistScreen.class',
+        'assets/liymod/textures/gui/container/password_crafting_table.png',
+        'assets/liymod/textures/gui/container/loli_pickaxe_container.png',
+        'assets/liymod/textures/gui/container/loli_pickaxe_container_blacklist.png'
     )
     foreach ($entryPath in $functionalEntries) {
         Assert-True ($null -ne $archive.GetEntry($entryPath)) `

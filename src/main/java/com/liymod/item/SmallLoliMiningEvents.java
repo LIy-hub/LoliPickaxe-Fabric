@@ -1,11 +1,13 @@
 package com.liymod.item;
 
 import com.liymod.LiyMod;
+import com.liymod.storage.LoliStorageData;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.ListIterator;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.core.BlockPos;
@@ -13,6 +15,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -93,12 +96,15 @@ public final class SmallLoliMiningEvents {
         }
         ItemInstance toolInstance = context.getOptionalParameter(LootContextParams.TOOL);
         if (!(toolInstance instanceof ItemStack tool)
-                || !(tool.getItem() instanceof SmallLoliPickaxeItem)
-                || !SmallLoliPickaxeItem.hasAutoFurnace(tool)) {
+                || !(tool.getItem() instanceof SmallLoliPickaxeItem)) {
             return;
         }
 
         ServerLevel level = context.getLevel();
+        if (!SmallLoliPickaxeItem.hasAutoFurnace(tool)) {
+            collectDropsIntoStorage(context, drops);
+            return;
+        }
         List<ItemStack> transformed = new ArrayList<>();
         float experience = 0.0F;
         boolean changed = false;
@@ -135,6 +141,7 @@ public final class SmallLoliMiningEvents {
         }
 
         if (!changed) {
+            collectDropsIntoStorage(context, drops);
             return;
         }
         drops.clear();
@@ -144,6 +151,30 @@ public final class SmallLoliMiningEvents {
         int experiencePoints = randomizedExperience(context, experience);
         if (origin != null && experiencePoints > 0) {
             ExperienceOrb.award(level, origin, experiencePoints);
+        }
+        collectDropsIntoStorage(context, drops);
+    }
+
+    private static void collectDropsIntoStorage(LootContext context, List<ItemStack> drops) {
+        Entity source = context.getOptionalParameter(LootContextParams.THIS_ENTITY);
+        if (!(source instanceof ServerPlayer player)) {
+            return;
+        }
+        ItemStack actualTool = player.getMainHandItem();
+        if (!(actualTool.getItem() instanceof SmallLoliPickaxeItem)
+                || !LoliStorageData.hasStorage(actualTool)) {
+            return;
+        }
+        LoliStorageData storage = LoliStorageData.open(actualTool);
+        ListIterator<ItemStack> iterator = drops.listIterator();
+        while (iterator.hasNext()) {
+            ItemStack drop = iterator.next();
+            ItemStack remaining = storage.insert(drop);
+            if (remaining.isEmpty()) {
+                iterator.remove();
+            } else if (remaining.getCount() != drop.getCount()) {
+                iterator.set(remaining);
+            }
         }
     }
 
