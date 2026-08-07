@@ -6,6 +6,7 @@ import com.liymod.config.LoliItemSettings;
 import com.liymod.config.LoliServerConfig;
 import com.liymod.item.ModItems;
 import com.liymod.protection.LoliProtection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -162,8 +163,8 @@ public final class LoliLegacyExecutionPolicy {
             if (!LoliExecutionManager.isDeadLocked(target)) {
                 throw new IllegalStateException("Legacy execution effects require a final DEAD_LOCK");
             }
-            committed = true;
             if (player == null) {
+                committed = true;
                 return;
             }
 
@@ -182,25 +183,38 @@ public final class LoliLegacyExecutionPolicy {
                     LiyMod.LOGGER.warn("Safe legacy disconnect failed for {}", player.getUUID(), exception);
                 }
             }
+            committed = true;
         }
 
         private void commitRecoverableDrops() {
-            inventorySnapshots.forEach((slot, stack) -> {
-                if (!spawnRecoverableDrop(player, stack)) {
-                    player.getInventory().setItem(slot, stack);
-                }
-            });
-            equipmentSnapshots.forEach((slot, stack) -> {
-                if (!spawnRecoverableDrop(player, stack)) {
-                    player.setItemSlot(slot, stack);
-                }
-            });
-            if (!carriedSnapshot.isEmpty() && !spawnRecoverableDrop(player, carriedSnapshot)) {
-                player.containerMenu.setCarried(carriedSnapshot);
-            }
             int recoveredCount = inventorySnapshots.size()
                     + equipmentSnapshots.size()
                     + (carriedSnapshot.isEmpty() ? 0 : 1);
+            Iterator<Map.Entry<Integer, ItemStack>> inventory = inventorySnapshots.entrySet().iterator();
+            while (inventory.hasNext()) {
+                Map.Entry<Integer, ItemStack> entry = inventory.next();
+                int slot = entry.getKey();
+                ItemStack stack = entry.getValue();
+                if (!spawnRecoverableDrop(player, stack)) {
+                    player.getInventory().setItem(slot, stack);
+                }
+                inventory.remove();
+            }
+            Iterator<Map.Entry<EquipmentSlot, ItemStack>> equipment =
+                    equipmentSnapshots.entrySet().iterator();
+            while (equipment.hasNext()) {
+                Map.Entry<EquipmentSlot, ItemStack> entry = equipment.next();
+                EquipmentSlot slot = entry.getKey();
+                ItemStack stack = entry.getValue();
+                if (!spawnRecoverableDrop(player, stack)) {
+                    player.setItemSlot(slot, stack);
+                }
+                equipment.remove();
+            }
+            if (!carriedSnapshot.isEmpty() && !spawnRecoverableDrop(player, carriedSnapshot)) {
+                player.containerMenu.setCarried(carriedSnapshot);
+            }
+            carriedSnapshot = ItemStack.EMPTY;
             if (recoveredCount > 0) {
                 LiyMod.LOGGER.info(
                         "Committed {} protected recoverable drops for {} at {}, {}, {}",
@@ -211,9 +225,6 @@ public final class LoliLegacyExecutionPolicy {
                         player.blockPosition().getZ()
                 );
             }
-            inventorySnapshots.clear();
-            equipmentSnapshots.clear();
-            carriedSnapshot = ItemStack.EMPTY;
             synchronizeMenus();
         }
 

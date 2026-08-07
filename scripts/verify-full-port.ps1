@@ -391,6 +391,8 @@ Assert-True ($legacyPolicySource -match 'removeItemNoUpdate') `
     'Legacy execution transaction does not detach inventory before vanilla death drops'
 Assert-True ($legacyPolicySource -match 'LoliExecutionManager\.isDeadLocked\(target\)') `
     'Legacy execution transaction can commit before DEAD_LOCK'
+Assert-True ($legacyPolicySource -match '(?s)commitRecoverableDrops\(\).+committed\s*=\s*true') `
+    'Legacy execution transaction marks itself committed before recoverable items are resolved'
 Assert-True ($legacyPolicySource -match 'setUnlimitedLifetime\(\)') `
     'Safe inventory clearing does not create unlimited-lifetime recovery drops'
 Assert-True ($legacyPolicySource -match 'SOUL_REDEMPTION_WHITELIST') `
