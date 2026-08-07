@@ -1,6 +1,7 @@
 package com.liymod;
 
 
+import com.liymod.block.ModBlocks;
 import com.liymod.combat.LoliExecutionManager;
 import com.liymod.damage_type.ModDamageTypes;
 import com.liymod.event.AttackBlockEvents;
@@ -22,6 +23,7 @@ public class LiyMod implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("Welcome to LoliPickaxe");
 		ModSounds.registerSoundEvents();
+		ModBlocks.registerModBlocks();
 		ModItems.registerModItems();
 		ModItemGroup.registerModItemGroup();
 		ModDamageTypes.registerDamageTypes();

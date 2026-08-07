@@ -1,9 +1,18 @@
-# LoliPickaxe compatibility contract
+# LoliPickaxe high-version restoration contract
 
-This document is the frozen gameplay and asset contract for compatibility-only
-ports. A Minecraft-version branch may change build configuration, mappings,
-API calls, mixin targets and resource format, but it must not remove, weaken,
-extend or rebalance the behavior below.
+This document freezes the behavior that already exists in the Fabric port while
+the remaining content from upstream LoliPickaxe is restored. Minecraft-version
+adapters may change build configuration, mappings, API calls, mixin targets and
+resource formats. They must not remove or weaken the behavior below. New
+upstream-derived content may extend the mod around this core.
+
+The source-of-truth for restored legacy content is upstream `master` commit
+`c9a01e493cc7c8c265837b2d43f29a28a61d59fa` (Minecraft 1.12.2,
+LoliPickaxe 1.2.16f). The smaller `1.7.10` branch is not the completeness
+baseline. The item id `liymod:loli_pickaxe` keeps the Fabric port's stronger
+execution, defense and same-item-immunity implementation. Legacy attack entry
+points must call that implementation instead of reintroducing the old kill
+path.
 
 ## Stable identities
 
@@ -14,7 +23,9 @@ extend or rebalance the behavior below.
 - Sounds: `liymod:loli_immunity_first`,
   `liymod:loli_immunity_second`
 - Translation keys, texture ids and model ids remain unchanged.
-- The implementation has no crafting recipes.
+- Existing ids remain stable. Restored legacy items, blocks, entities, recipes,
+  screens and commands use the `liymod` namespace so existing worlds keep the
+  current Fabric item ids.
 
 ## Item and mining behavior
 
@@ -87,7 +98,7 @@ extend or rebalance the behavior below.
 - Unique events alternate the first and second sound globally per server and
   play for both participating players.
 
-## Immutable asset hashes
+## Existing core asset hashes
 
 | Asset | SHA-256 |
 |---|---|
@@ -97,11 +108,27 @@ extend or rebalance the behavior below.
 | `assets/liymod/sounds/loli_immunity_first.ogg` | `98A24E9A3BB6DD17FF2C4EDE7D7671FCFDD1F03D3F71DDF54846A43E52B95848` |
 | `assets/liymod/sounds/loli_immunity_second.ogg` | `B207F7C47B14A4CE3988A3F291F3F00B045C44EDAE13476F51B8C977363F0382` |
 
+## Safety substitutions
+
+The upstream blue-screen, exit and non-response attacks extracted and executed
+an embedded Windows executable, terminated the client JVM, or started an
+unbounded busy loop. Those operating-system destructive effects are not part of
+the modern port. Their blocks, triggers, range, presentation and gameplay
+feedback are restored with safe in-game/client visual equivalents. This is a
+deliberate safety substitution, not an omitted content id.
+
+Legacy online-card support must not download arbitrary content on the render
+thread. The card and its configuration flow remain available, while remote
+images are fetched only through a bounded, validated asynchronous path or are
+represented by a safe placeholder.
+
 ## 中文冻结合同
 
-各 Minecraft 版本分支只能修改构建、映射、API、Mixin 目标与资源格式，不得
-删减、增强或重平衡玩法。必须保持上述注册键、无配方状态、工具数值、27 类
-特殊掉落、32 格扩展范围右键处决与闪电、1024 格/6 度挥击解析、两级处决权限
-与单向票据状态、持有者防伤害/死亡/移除/锁定、飞行与恢复、目标隔离、二级
-创造管理员检查、高幸运与经验替换、同持有者免疫、单 tick 去重、双音效交替及
-全部素材哈希。服务端风险属于既有玩法，也不得在“兼容迁移”中暗中改动。
+完整移植以原版 `master` 的 1.12.2 / 1.2.16f 内容为基准，而氪金萝莉本体继续
+采用当前 Fabric 移植已经强化的绝对处决、票据生命周期、主手防护、同物品免疫
+与双音效机制。必须保持上述注册键、工具数值、27 类特殊掉落、32 格扩展范围
+右键处决与闪电、1024 格/6 度挥击解析、两级处决权限与单向票据状态、持有者
+防伤害/死亡/移除/锁定、飞行与恢复、目标隔离、二级创造管理员检查、高幸运与
+经验替换、同持有者免疫和单 tick 去重。原版其余物品、方块、实体、配方、容器、
+GUI、网络、配置和指令应围绕这条基线恢复。原版会执行蓝屏程序、强退 JVM 或
+无限忙循环的三种客户端破坏效果只允许移植安全的游戏内等价表现。

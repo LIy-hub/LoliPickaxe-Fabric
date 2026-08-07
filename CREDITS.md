@@ -9,10 +9,16 @@ GNU General Public License version 3.0. This port is distributed under the
 same license and is not presented as an official continuation by the original
 maintainers.
 
+The full-content restoration uses the original project's `master` branch at
+commit `c9a01e493cc7c8c265837b2d43f29a28a61d59fa` (LoliPickaxe 1.2.16f) as its
+auditable source baseline. Ported item, block, entity, GUI and card artwork is
+copied or mechanically adapted from that GPL-3.0 source tree unless a file is
+called out separately below.
+
 ## Fabric port
 
 - Port and current implementation: LIy
-- Target platform: Minecraft 1.20.1 with Fabric Loader and Fabric API
+- Current high-version target: Minecraft 26.2 with Fabric Loader and Fabric API
 
 ## Audio
 

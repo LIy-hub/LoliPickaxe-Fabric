@@ -17,10 +17,7 @@ public final class ModItemGroup {
             CreativeModeTab.builder(CreativeModeTab.Row.TOP, 0)
                     .title(Component.translatable("itemgroup.liymod"))
                     .icon(() -> new ItemStack(ModItems.LOLI_PICKAXE))
-                    .displayItems((displayContext, entries) -> {
-                        entries.accept(ModItems.LOLI_PICKAXE);
-                        entries.accept(ModItems.LOLI);
-                    })
+                    .displayItems((displayContext, entries) -> ModItems.CREATIVE_TAB_ITEMS.forEach(entries::accept))
                     .build()
     );
 
