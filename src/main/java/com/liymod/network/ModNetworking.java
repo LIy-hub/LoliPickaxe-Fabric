@@ -35,6 +35,10 @@ public final class ModNetworking {
         PayloadTypeRegistry.serverboundPlay().register(StorageOpenPayload.TYPE, StorageOpenPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(StoragePagePayload.TYPE, StoragePagePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(StoragePageSyncPayload.TYPE, StoragePageSyncPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(
+                LoliRangeMiningSyncPayload.TYPE,
+                LoliRangeMiningSyncPayload.CODEC
+        );
         PayloadTypeRegistry.serverboundPlay().register(StorageDropAllPayload.TYPE, StorageDropAllPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(BlacklistUpdatePayload.TYPE, BlacklistUpdatePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(LoliMenuOpenPayload.TYPE, LoliMenuOpenPayload.CODEC);

@@ -96,6 +96,7 @@ public final class LoliFinalMiningEvents {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
             int radius = LoliItemSettings.getMiningRadius(tool);
             boolean brokeAny = false;
+            List<BlockPos> changedPositions = new ArrayList<>();
             for (int x = -radius; x <= radius; x++) {
                 for (int y = -radius; y <= radius; y++) {
                     for (int z = -radius; z <= radius; z++) {
@@ -103,10 +104,14 @@ public final class LoliFinalMiningEvents {
                         if (!serverLevel.hasChunkAt(target)) {
                             continue;
                         }
-                        brokeAny |= breakOne(serverLevel, serverPlayer, tool, target);
+                        if (breakOne(serverLevel, serverPlayer, tool, target)) {
+                            brokeAny = true;
+                            changedPositions.add(target.immutable());
+                        }
                     }
                 }
             }
+            LoliRangeMiningSync.send(serverLevel, origin, changedPositions);
             if (brokeAny) {
                 serverLevel.playSound(
                         null,

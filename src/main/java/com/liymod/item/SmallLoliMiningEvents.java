@@ -62,6 +62,8 @@ public final class SmallLoliMiningEvents {
 
         try {
             SmallLoliPickaxeItem.refreshEnchantments(tool, serverLevel);
+            List<BlockPos> changedPositions = new ArrayList<>();
+            changedPositions.add(origin.immutable());
             for (int x = -radius; x <= radius; x++) {
                 for (int y = -radius; y <= radius; y++) {
                     for (int z = -radius; z <= radius; z++) {
@@ -77,10 +79,13 @@ public final class SmallLoliMiningEvents {
                                 || serverPlayer.blockActionRestricted(serverLevel, target, serverPlayer.gameMode())) {
                             continue;
                         }
-                        serverPlayer.gameMode.destroyBlock(target);
+                        if (serverPlayer.gameMode.destroyBlock(target)) {
+                            changedPositions.add(target.immutable());
+                        }
                     }
                 }
             }
+            LoliRangeMiningSync.send(serverLevel, origin, changedPositions);
         } finally {
             RANGE_MINING.remove(serverPlayer.getUUID());
         }

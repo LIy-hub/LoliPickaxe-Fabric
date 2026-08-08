@@ -284,6 +284,15 @@ $configOptionSource = Get-Content -LiteralPath (
 $storageScreenSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/client/java/com/liymod/client/screen/LoliStorageScreen.java'
 ) -Raw
+$rangeSyncPayloadSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/network/LoliRangeMiningSyncPayload.java'
+) -Raw
+$rangeSyncClientSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/client/java/com/liymod/client/mining/LoliRangeMiningClient.java'
+) -Raw
+$finalMiningSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliFinalMiningEvents.java'
+) -Raw
 Assert-True ($passwordPayloadSource -match 'MAX_CODE_POINTS\s*=\s*64') `
     'Password payload must remain bounded to 64 Unicode code points'
 Assert-True ($passwordPayloadSource -match 'MAX_UTF8_BYTES\s*=\s*256') `
@@ -310,6 +319,14 @@ Assert-True ($smallMiningSource -match 'storage\.insert') `
     'Small Loli mining drops are not routed through storage'
 Assert-True ($smallPickaxeSource -match '(?s)getCurrentMiningRadius\(stack\)\s*>\s*0\s*\?\s*Float\.MAX_VALUE') `
     'Ordinary Loli range mining is not immediate'
+Assert-True ($rangeSyncPayloadSource -match 'MAX_BLOCKS\s*=\s*4096') `
+    'Range-mining client synchronization is not bounded'
+Assert-True ($rangeSyncClientSource -match 'UPDATE_ALL_IMMEDIATE') `
+    'Range-mining results are not applied in one immediate client task'
+Assert-True ($smallMiningSource -match 'LoliRangeMiningSync\.send') `
+    'Ordinary Loli range mining does not send one batch result'
+Assert-True ($finalMiningSource -match 'LoliRangeMiningSync\.send') `
+    'Final Loli range mining does not send one batch result'
 Assert-True ($storageMenuSource -match 'StoragePageSyncPayload') `
     'Ordered storage page synchronization is missing'
 Assert-True ($enchantmentScreenSource -match 'MAX_LEVEL\s*=\s*32768') `

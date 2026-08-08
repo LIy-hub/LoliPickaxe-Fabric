@@ -26,6 +26,8 @@ and survival implementation.
   damage-return upgrades are active; changing its mining range plays the restored
   upstream `lolisuccess.ogg`. Its tier-sized internal storage, blacklist,
   nearby item collection and direct mining-drop insertion are also active.
+  Range mining is completed server-side as one action and synchronized to
+  nearby clients as one bounded batch, avoiding row-by-row visual updates.
 - Press B while holding either pickaxe to open its paged 9x9 storage, Shift+B
   to drop all stored stacks, and U to edit its 9x9 ghost-slot blacklist. The
   final Loli Pickaxe has 100 pages; Ordinary Loli page count follows its storage
@@ -125,6 +127,7 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   升级、时运/抢夺、可调范围采掘、范围攻击、自动熔炼、闪避与反伤均已实际
   接入，切换采掘范围会播放恢复的原版 `lolisuccess.ogg`；分级内部储存、黑名单、
   附近掉落物自动收纳及采掘掉落直入储存也已接入。
+  范围采掘会由服务端一次完成并以单个有界批次同步给附近客户端，不再逐排刷新。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品

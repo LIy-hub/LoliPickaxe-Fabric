@@ -5,6 +5,7 @@ import com.liymod.client.safe.SafeTntEffectClient;
 import com.liymod.client.render.LoliEntityModel;
 import com.liymod.client.render.LoliEntityRenderer;
 import com.liymod.client.input.LoliKeyMappings;
+import com.liymod.client.mining.LoliRangeMiningClient;
 import com.liymod.client.screen.FinalConfigScreen;
 import com.liymod.client.screen.FinalEffectScreen;
 import com.liymod.client.screen.FinalEnchantmentScreen;
@@ -37,6 +38,7 @@ public final class LiyModClient implements ClientModInitializer {
         MenuScreens.register(ModMenus.FINAL_TELEPORT, FinalTeleportScreen::new);
         LoliKeyMappings.register();
         LoliStorageClient.register();
+        LoliRangeMiningClient.register();
         registerRendererBindings(
                 () -> ModelLayerRegistry.registerModelLayer(
                         LoliEntityModel.LAYER,

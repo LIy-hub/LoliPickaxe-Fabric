@@ -135,7 +135,9 @@ represented by a safe placeholder.
   runs for a storage pickaxe in either hand, and an intentional player drop is
   tagged so auto-collection cannot immediately undo it. Ordinary Loli mining-range
   changes play the restored upstream `lolisuccess.ogg` once from the server;
-  non-zero Ordinary Loli range mining completes in one server action.
+  non-zero Ordinary Loli range mining completes in one server action. Both
+  pickaxes send the accepted changed positions in one bounded client payload so
+  the whole result is rendered in one client task instead of section-by-section.
 - N/M/P/K open server-authoritative configuration, enchantment, effect and
   relative space-folding screens. Space folding refuses unloaded chunks,
   blacklisted dimensions, out-of-border or colliding destinations and
