@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_fly_addon",
+  "pattern": [
+    "XYX",
+    "YZY",
+    "XYX"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:nether_star"
+    },
+    "Y": {
+      "item": "liymod:loli_entity_soul_addon"
+    },
+    "Z": {
+      "item": "minecraft:elytra"
+    }
+  },
+  "result": {
+    "item": "liymod:loli_fly_addon"
+  }
+}

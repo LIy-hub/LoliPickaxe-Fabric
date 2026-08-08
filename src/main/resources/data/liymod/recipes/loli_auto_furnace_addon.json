@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_auto_furnace_addon",
+  "pattern": [
+    "XYX",
+    "YXY",
+    "XYX"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:blaze_rod"
+    },
+    "Y": {
+      "item": "minecraft:lava_bucket"
+    }
+  },
+  "result": {
+    "item": "liymod:loli_auto_furnace_addon"
+  }
+}

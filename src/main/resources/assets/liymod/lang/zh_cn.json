@@ -38,6 +38,7 @@
   "gui.liymod.password.done": "完成",
   "gui.liymod.password.no_match": "没有匹配的密码配方",
   "container.liymod.loli_storage": "萝莉存储",
+  "container.liymod.storage": "萝莉存储",
   "container.liymod.loli_blacklist": "萝莉采掘黑名单",
   "container.liymod.loli_config": "氪金萝莉配置",
   "container.liymod.loli_enchantment": "氪金萝莉附魔",
@@ -60,7 +61,7 @@
   "config.liymod.loli.max_mining_range": "最大采掘半径",
   "config.liymod.loli.mining_radius": "当前采掘半径",
   "config.liymod.loli.mandatory_drop": "强制掉落方块",
-  "config.liymod.loli.stop_on_liquid": "显示流体边框",
+  "config.liymod.loli.stop_on_liquid": "遇流体方块停止采掘",
   "config.liymod.loli.auto_furnace": "自动熔炼采掘方块",
   "config.liymod.loli.auto_accept": "自动收纳进储藏室",
   "config.liymod.loli.thorns": "反伤",
@@ -218,5 +219,8 @@
   "recipe.liymod.small_loli_upgrade.hint": "将普通萝莉与恰好高一级的一种或多种升级材料合成，以写入对应属性。",
   "recipe.liymod.loli_pickaxe_upgrade.hint": "将所有属性升满的普通萝莉与终极生物灵魂合成。",
   "liymod.loli_pickaxe.tip": "萝莉之力",
-  "death.attack.damagetypeloli": "Loli's Power Is INFINITY"
+  "death.attack.damagetypeloli": "Loli's Power Is INFINITY",
+  "itemGroup.liymod.main": "萝莉镐",
+  "loliPickaxe.range": "采掘范围：%1$s x %2$s x %3$s",
+  "gui.liymod.enchantment.level_limit": "附魔最高等级：%1$s"
 }

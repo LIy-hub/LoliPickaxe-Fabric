@@ -1,41 +1,39 @@
-# Full content restoration matrix
+# Forge 1.20.1 full-port review matrix
 
 ## Acceptance baseline
 
-- Target branch: `mc/26.2` (Minecraft 26.2, Fabric Loader 0.19.3,
-  Fabric API 0.155.2+26.2, Java 25).
+- Target branch: `forge/1.20.1` (Minecraft 1.20.1, Forge 47.4.22, Java 17).
 - Legacy source: IslenautsGK/LoliPickaxe `master` at
   `c9a01e493cc7c8c265837b2d43f29a28a61d59fa` (1.12.2 / 1.2.16f).
-- Existing Fabric Loli Pickaxe behavior is frozen by `PORTING_BASELINE.md`.
-- Completion requires an independent review result of **Pass** and a measured
-  completeness strictly greater than 90%. Any missing part must be listed
-  separately.
+- The stronger modern final-pickaxe behavior is frozen by `PORTING_BASELINE.md`.
+- Completion requires an independent reviewer to report **Pass** with measured
+  completeness strictly greater than 90%. Missing or deliberately substituted
+  behavior must be listed separately.
 
 ## Weighted review areas
 
-| Area | Weight | Upstream scope | Status |
-|---|---:|---|---|
-| Stable Fabric Loli core | 10 | Existing pickaxe, execution tickets, holder defense, special drops, same-item immunity | Preserved; automated regression checks cover the fixed 27 drops, 32-block use, 1024/6-degree resolver, ABSOLUTE tickets and main-hand immunity |
-| Static content and assets | 10 | 21 fixed items, one default record, five block items, textures/models/translations | Complete |
-| Small Loli progression | 13 | Small pickaxe, 14 add-ons, ten-tier superposition, transformed mining/combat stats | Complete: tier data, formulas, Fortune/Looting, range mining/attack, auto-smelt, flight, buffs, dodge, damage return and storage integration |
-| Recipes and enchantment | 8 | 20 legacy JSON recipes, dynamic upgrade recipes, Auto Furnace enchantment | Complete: 20 static recipes, 3 dynamic recipes and native 26.2 Auto-Smelt enchantment |
-| Functional blocks | 9 | Three effect TNT blocks, Loli Altar, Password Workbench | Complete: three TNT blocks, exact 63x63 altar and server-authoritative password workbench; its released password recipe registry intentionally starts empty like upstream |
-| Entities and altar summoning | 10 | Loli entity, target/attack/swim AI, effect TNT entity and rendering | Complete: both entity ids, persistent/invulnerable Loli AI, safe effect TNT, exact altar ritual and client renderers |
-| Storage and automation | 12 | Internal inventories, blacklist, auto-accept, drop-all, auto-smelt and range mining | Complete: bounded 81-slot paging (100 final-pickaxe pages), tiered Small Loli pages, blacklist, nearby auto-accept, direct mining-drop insertion, drop-all, auto-smelt and range mining |
-| Configuration and commands | 6 | Per-item settings, server config, `/loli`, `/loliattack` | Complete: validated per-stack settings, persisted server properties, operator commands, safe-effect gates and live consumers for every option |
-| Client screens and networking | 12 | Config, enchantment, potion, folding, storage, blacklist and password screens plus payloads | Complete: all seven legacy utility screens, server-authoritative payload validation, ordered storage pages and B/Shift+B/U/N/M/P/K bindings |
-| Cards, record and auxiliary tools | 6 | Card, album, bounded online card, dispersal, client-ghost cleanup and music disc | Complete: ten bundled artworks, card/album viewers, bounded asynchronous HTTPS card, exact drop chances, safe client-only ghost cleanup, Loli dispersal and playable jukebox record |
-| Validation, metadata and documentation | 4 | Build, server smoke test, content contract, attribution and migration notes | Complete: clean build, 131-JSON parse, JAR contract, upstream asset hashes, dedicated-server initialization smoke test, safety scan, attribution and bilingual migration documentation |
-| **Total** | **100** | | |
+| Area | Weight | Forge 1.20.1 evidence |
+|---|---:|---|
+| Preserved final-pickaxe core | 10 | ABSOLUTE execution tickets, one-way `PREPARE -> COMMITTING -> DEAD_LOCK`, 20-tick non-player enforcement, main-hand defense, same-item immunity with per-tick dedup, 1024-block right-click, 1024-block/six-degree swing resolver, and 1024 block/entity reach |
+| Static content and assets | 10 | 28 visible item IDs, five blocks, original models/textures, bilingual names, ten card artworks, GUI textures, sounds and record audio |
+| Small Loli progression | 13 | Small pickaxe, 14 add-ons, ten-tier superposition, dynamic attack attributes, range mining/attack, Fortune/Looting, auto-smelt, flight, buffs, dodge, reflection and tiered storage |
+| Recipes and enchantment | 8 | 20 fixed recipes, three dynamic upgrade recipes and registered `liymod:loli_auto_furnace` enchantment |
+| Functional blocks | 9 | Three safe-effect TNT blocks/entities, exact 63x63/1169-block altar and server-authoritative password workbench; its released password registry is empty as upstream |
+| Entities and altar summoning | 10 | Loli AI/model/renderer, target exclusions, configurable legacy target teleport, absolute attack, persistence/removal defense, water/height behavior and custom primed TNT renderer |
+| Storage and automation | 12 | 81-slot pages, final 100 pages, tiered Small pages, 32 KiB per-stack/4 MiB total encoding limits, blacklist, per-stack AUTO_ACCEPT, mining insertion, nearby pickup only while held, permanent ejection marker and drop-all |
+| Configuration and commands | 6 | Validated per-stack settings, persisted Forge server properties, `/loli`, `/loliattack`, entity filters, transactional clear/disarm/kick, reincarnation and soul lists |
+| Client screens and networking | 12 | Storage, blacklist, password, four-page config, one-payload range-mining refresh, 0..32768 enchantments, effects and safe relative teleport with dimension blacklist; B/Shift+B/U/N/M/P/K bindings and server validation |
+| Cards, record and auxiliary tools | 6 | Card/album viewers, bounded HTTPS online card, original record, dispersal and client-only ghost cleanup |
+| Validation, metadata and documentation | 4 | Native Forge source set, Forge metadata, clean build, strict JSON/JAR/safety verification and isolated four-mod production-client co-load evidence |
+| **Total** | **100** | Independent reviewer assigns the final achieved score. |
 
-The independent reviewer may lower a score when an id exists but its behavior
-is only a stub. The safety substitutions documented in `PORTING_BASELINE.md`
-count as implemented only when the original trigger and a clear safe in-game
-result both work.
+An ID or GUI that exists without its real gameplay consumer is a stub and must
+lose credit. Safe substitutions count as implemented only when the upstream
+trigger still produces an explicit safe in-game result.
 
-## Canonical static ids
+## Canonical static IDs
 
-Items restored around the existing `liymod:loli_pickaxe` and `liymod:loli`:
+Items restored around `liymod:loli_pickaxe` and `liymod:loli`:
 
 `small_loli_pickaxe`, `loli_coal_addon`, `loli_iron_addon`,
 `loli_gold_addon`, `loli_redstone_addon`, `loli_lapis_addon`,
@@ -45,18 +43,18 @@ Items restored around the existing `liymod:loli_pickaxe` and `liymod:loli`:
 `loli_dispersal`, `bug_entity_clear`, `loli_card`, `loli_card_album`,
 `loli_card_online`, and `loli_record`.
 
-Blocks restored as both block and item ids:
+Blocks restored as both block and item IDs:
 
 `loli_blue_screen_tnt`, `loli_exit_tnt`, `loli_fail_respond_tnt`,
 `loli_altar`, and `password_work_bench`.
 
-Entity ids: `loli` and `loli_buff_attack_tnt`. Enchantment id:
+Entity IDs: `loli`, `loli_buff_attack_tnt`. Enchantment ID:
 `loli_auto_furnace`.
 
 ## Compatibility boundaries
 
-Optional 1.12.2 integrations with IC2, Redstone Flux, Touhou Little Maid,
-LLibrary and Ice and Fire are recorded as optional compatibility surfaces.
-Their absence must not prevent the standalone Fabric mod from loading or using
-its native content. Equivalent modern integrations may be added when the
-corresponding dependency is present.
+The historical IC2, Redstone Flux, Touhou Little Maid, LLibrary and Ice and Fire
+hooks remain optional integrations rather than hard dependencies. Their absence
+does not block native Forge content. The explicit confrontation target for this
+branch is the tested Forge 1.20.1 combination documented in `COMPATIBILITY.md`:
+Forever Love Sword, EntityEraser and PIG2.

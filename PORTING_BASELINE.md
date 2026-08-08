@@ -1,7 +1,7 @@
 # LoliPickaxe high-version restoration contract
 
-This document freezes the behavior that already exists in the Fabric port while
-the remaining content from upstream LoliPickaxe is restored. Minecraft-version
+This document freezes the stronger behavior from the modern port while the
+upstream content is restored on the independent Forge 1.20.1 branch. Minecraft-version
 adapters may change build configuration, mappings, API calls, mixin targets and
 resource formats. They must not remove or weaken the behavior below. New
 upstream-derived content may extend the mod around this core.
@@ -9,7 +9,7 @@ upstream-derived content may extend the mod around this core.
 The source-of-truth for restored legacy content is upstream `master` commit
 `c9a01e493cc7c8c265837b2d43f29a28a61d59fa` (Minecraft 1.12.2,
 LoliPickaxe 1.2.16f). The smaller `1.7.10` branch is not the completeness
-baseline. The item id `liymod:loli_pickaxe` keeps the Fabric port's stronger
+baseline. The item id `liymod:loli_pickaxe` keeps the modern port's stronger
 execution, defense and same-item-immunity implementation. Legacy attack entry
 points must call that implementation instead of reintroducing the old kill
 path.
@@ -25,7 +25,7 @@ path.
 - Translation keys, texture ids and model ids remain unchanged.
 - Existing ids remain stable. Restored legacy items, blocks, entities, recipes,
   screens and commands use the `liymod` namespace so existing worlds keep the
-  current Fabric item ids.
+  current modern item ids.
 
 ## Item and mining behavior
 
@@ -158,7 +158,7 @@ represented by a safe placeholder.
 ## 中文冻结合同
 
 完整移植以原版 `master` 的 1.12.2 / 1.2.16f 内容为基准，而氪金萝莉本体继续
-采用当前 Fabric 移植已经强化的绝对处决、票据生命周期、主手防护、同物品免疫
+采用当前现代移植已经强化的绝对处决、票据生命周期、主手防护、同物品免疫
 与双音效机制。必须保持上述注册键、工具数值、27 类特殊掉落、1024 格已加载实体
 右键处决与闪电、1024 格/6 度挥击解析、两级处决权限与单向票据状态、持有者
 防伤害/死亡/移除/锁定、飞行与恢复、目标隔离、二级创造管理员检查、高幸运与

@@ -1,22 +1,21 @@
 {
   "required": true,
+  "minVersion": "0.8.5",
   "package": "com.liymod.mixin",
-  "compatibilityLevel": "JAVA_25",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "liymod.refmap.json",
   "mixins": [
-    "accessor.EntityAccessor",
-    "accessor.LivingEntityAccessor",
-    "accessor.PrimedTntAccessor",
     "EntityMixin",
+    "EnchantmentHelperMixin",
     "LivingEntityMixin",
-    "PlayerManagerMixin",
     "PlayerMixin",
+    "PlayerAccessor",
+    "PrimedTntAccessor",
     "ProjectileUtilMixin",
-    "ServerPlayNetworkHandlerMixin",
-    "ServerPlayerEntityMixin",
-    "ServerPlayerInteractionManagerMixin",
-    "TargetPredicateMixin"
+    "TargetPredicateMixin",
+    "ServerGamePacketListenerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  }
 }

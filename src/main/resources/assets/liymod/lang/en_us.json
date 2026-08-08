@@ -38,6 +38,7 @@
   "gui.liymod.password.done": "Done",
   "gui.liymod.password.no_match": "No matching password recipe",
   "container.liymod.loli_storage": "Loli Storage",
+  "container.liymod.storage": "Loli Storage",
   "container.liymod.loli_blacklist": "Loli Mining Blacklist",
   "container.liymod.loli_config": "Loli Pickaxe Configuration",
   "container.liymod.loli_enchantment": "Loli Pickaxe Enchantments",
@@ -60,7 +61,7 @@
   "config.liymod.loli.max_mining_range": "Maximum mining radius",
   "config.liymod.loli.mining_radius": "Current mining radius",
   "config.liymod.loli.mandatory_drop": "Force block drops",
-  "config.liymod.loli.stop_on_liquid": "Show liquid boundaries",
+  "config.liymod.loli.stop_on_liquid": "Do not mine fluid blocks",
   "config.liymod.loli.auto_furnace": "Auto-smelt mined blocks",
   "config.liymod.loli.auto_accept": "Automatically collect into storage",
   "config.liymod.loli.thorns": "Retaliatory damage",
@@ -218,5 +219,8 @@
   "recipe.liymod.small_loli_upgrade.hint": "Combine an Ordinary Loli with one or more upgrades at exactly its next tier.",
   "recipe.liymod.loli_pickaxe_upgrade.hint": "Combine a fully upgraded Ordinary Loli with an Ultimate Entity Soul.",
   "liymod.loli_pickaxe.tip": "Loli's Power Is INFINITY",
-  "death.attack.damagetypeloli": "Loli's Power Is INFINITY"
+  "death.attack.damagetypeloli": "Loli's Power Is INFINITY",
+  "itemGroup.liymod.main": "LoliPickaxe",
+  "loliPickaxe.range": "Mining range: %1$s x %2$s x %3$s",
+  "gui.liymod.enchantment.level_limit": "Maximum enchantment level: %1$s"
 }

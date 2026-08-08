@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_nether_star_addon",
+  "pattern": [
+    "X"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:nether_star"
+    }
+  },
+  "result": {
+    "item": "liymod:loli_nether_star_addon"
+  }
+}

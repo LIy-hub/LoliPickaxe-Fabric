@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_coal_addon",
+  "pattern": [
+    "XYX",
+    "YXY",
+    "XYX"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:coal"
+    },
+    "Y": {
+      "item": "minecraft:coal_block"
+    }
+  },
+  "result": {
+    "item": "liymod:loli_coal_addon"
+  }
+}

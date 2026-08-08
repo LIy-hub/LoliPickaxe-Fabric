@@ -1,45 +1,36 @@
-# Strength confrontation compatibility
+# Forge 1.20.1 strength-confrontation matrix
 
-This project treats destructive combat mods as optional behavior-level
-compatibility targets. Their classes are never compile-time dependencies and no
-third-party code or assets are redistributed.
+Target: Minecraft 1.20.1, Forge 47.4.22, Java 17.
 
-## Audited builds
+Third-party JARs are test inputs only and are not stored in this repository or bundled in the LoliPickaxe JAR.
 
-The following public artifacts were inspected statically on 2026-08-08. They
-were not executed.
+| Mod | Tested artifact | SHA-256 |
+|---|---|---|
+| Forever Love Sword | `ForeverLoveSword-1.20.1-1.8.1.jar` | `ED3EC2CAD88FDE6A02F534629F4CE6A0D9CF5B0C4224FF15D5342FED94FB46E3` |
+| EntityEraser | `entityeraser-re1.1.0obf.jar` | `9703C4E47B8DE403AC867577B91D3112808728824202D0F94A5B85FEB0560A90` |
+| PIG2 | `pig2mod-1.20.1-2.4.3.ThisIsOldVersion.jar` | `5A248B158B6D1D2FC330D16135FA1967EE88C49DB665686580FC4EBC76EE9D54` |
 
-| Mod | Audited build | Platform | SHA-256 |
-| --- | --- | --- | --- |
-| [Forever Love Sword](https://modrinth.com/mod/forever-love-sword/versions) | `永爱之刃Neo-26.1~26.2.jar` | Minecraft 26.1-26.2 NeoForge | `347B838910F7223213B7D2E501F10BF5C023E695619186C4FF63A05094F2CF37` |
-| [EntityEraser](https://modrinth.com/mod/entityeraser/versions) | `entityeraser-re1.1.0obf.jar` | Minecraft 1.20.1 Forge | `9703C4E47B8DE403AC867577B91D3112808728824202D0F94A5B85FEB0560A90` |
-| [PIG2](https://www.curseforge.com/minecraft/mc-mods/pig2/files/all) | `pig2mod-1.20.1-2.4.3.ThisIsOldVersion.jar` | Minecraft 1.20.1 Forge | `5A248B158B6D1D2FC330D16135FA1967EE88C49DB665686580FC4EBC76EE9D54` |
+## Runtime policy
 
-The current LoliPickaxe branch is Fabric 26.2. The audited EntityEraser and
-PIG2 jars therefore cannot be loaded into this development instance, and the
-Forever Love Sword 26.2 artifact is NeoForge rather than Fabric. Compatibility
-is keyed by stable registry ids and is ready for equivalent Fabric/26.2 ports;
-narrow reflection hooks activate only when the corresponding mod id is loaded.
+- Compatibility is optional and reflection-based; absent mods do not affect standalone loading.
+- The three hooks use stable mod IDs plus verified 1.20.1 class/registry surfaces.
+- Same-item Loli immunity is checked before any external defense is changed.
+- Forever Love Sword handling removes only the target UUID from its private defense set. Protected Loli holders are also removed every tick from FLS's persistent player/class death lists; because FLS records deaths by Java class, clearing `ServerPlayer` necessarily protects every server player of that class while a Loli holder is present. Its own destructive `kill`/`killEntity` functions are never called.
+- EntityEraser handling protects active Loli holders and removes the target profile only for an absolute Loli execution.
+- PIG2 handling calls its public `permitEntity(Entity)` for protected holders and applies a bounded one-minute suppression window after an absolute execution.
+- No third-party class is linked at compile time and no operating-system/JVM attack is implemented.
 
-## Behavior matrix
+## Isolated load evidence
 
-| Opponent behavior found in the audited bytecode | Loli response |
-| --- | --- |
-| Forever Love Sword restores health/abilities and directly sets health to zero, removes, hides or moves targets | Holder health, visibility, death and removal invariants remain guarded. An intentional absolute execution first calls the optional public `ForeverUtils.remove` defense hook, then continues through the existing execution ticket. |
-| EntityEraser records entities in a private dead map and removes them from tick, section and persistent entity indexes | Protected players and Loli entities are removed from the optional dead map each server tick. If a foreign eraser removed them from the server index, the server-authoritative recovery path clears only hostile `KILLED`/`DISCARDED` state and re-adds the same entity and UUID. |
-| EntityEraser keeps a protected-player set | An intentional absolute execution of a holder removes that target from the optional foreign set before the normal `PREPARE -> COMMITTING -> DEAD_LOCK` transaction. Same-Loli immunity is checked first and is never bypassed. |
-| PIG2 writes removal fields, rebuilds entity collections, records killed UUID/type pairs and revives/copies itself | Protected entities use PIG2's optional public `permitEntity` hook plus entity-index recovery. When an absolute execution dead-locks `pig2mod:pig2`, a 60-second quiet window catches loaded revival/copy instances and routes each one back through `LoliErasureService.executeAbsolute`; observing another revival restarts the window. |
+On 2026-08-08, all four JARs were launched together in a formal obfuscated Forge `forgeclient` runtime inside Ubuntu 24.04 WSL2. Host `C:` and `D:` mounts were detached before third-party code started. An earlier source-equivalent candidate reached the main menu, completed resource reload, initialized OpenAL and created all texture atlases without a fatal lifecycle or Mixin error.
 
-The compatibility layer does not launch native code, attach agents, transform
-third-party bytecode or weaken the existing same-item immunity. Reflection
-failure is logged once and falls back to registry-level protection.
+The final-candidate rerun loaded and discovered all four JARs with no fatal lifecycle or Mixin error, but did not reach the main menu inside the bounded test window. A thread dump showed active CPU progress inside EntityEraser's ASM transformer (`EntityEraserTransformer.b2n` / `ClassReader.readCode`), not a deadlock or a LoliPickaxe exception. This is recorded as a timeout, not as a claimed final-hash main-menu pass.
 
-## Registry contract
+The ForgeGradle `forgeclientuserdev` task is not a valid co-load test for Forever Love Sword: its Mixin shadows raw SRG method names and fails only after the development runtime remaps Minecraft to Mojang names. The same artifact loaded in the formal SRG production client.
 
-- `forever_love_sword:forever_love_sword`
-- `entityeraser_re:entity_eraser`
-- `entityeraser_re:kill_self`
-- `pig2mod:pig2`
+The third-party artifacts have two independent limitations:
 
-If a future port changes these ids or its internal public compatibility hook,
-the artifact must be re-audited before updating this matrix.
+- Forever Love Sword logs missing models for `death` and `test_dead`, and missing attributes for its two rainbow-lightning entities. These warnings do not stop the main menu.
+- Forever Love Sword and PIG2 reference client classes from common initialization, so a dedicated-server-only four-mod test fails before normal server startup. Co-load testing must use a client/integrated server.
+
+These are properties of the tested third-party JARs, not LoliPickaxe load failures.

@@ -2,5 +2,13 @@
   "parent": "minecraft:item/generated",
   "textures": {
     "layer0": "liymod:item/loli_entity_soul_addon"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "liymod:item/loli_entity_soul_addon_end"
+    }
+  ]
 }
