@@ -23,6 +23,7 @@ import com.liymod.config.LoliServerConfig;
 import com.liymod.item.LoliFinalItemEvents;
 import com.liymod.item.LoliAuxiliaryDropEvents;
 import com.liymod.command.LoliCommands;
+import com.liymod.compat.StrengthConfrontation;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,6 +53,7 @@ public class LiyMod implements ModInitializer {
 		ModDamageTypes.registerDamageTypes();
 		LoliProtection.registerProtection();
 		LoliExecutionManager.registerEvents();
+		StrengthConfrontation.registerEvents();
 		LoliLegacyExecutionPolicy.registerEvents();
 		AttackEntityEvents.registerEvents();
 		AttackBlockEvents.registerEvents();

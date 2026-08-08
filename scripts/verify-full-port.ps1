@@ -400,6 +400,18 @@ $legacyPolicySource = Get-Content -LiteralPath (
 $erasureServiceSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliErasureService.java'
 ) -Raw
+$strengthCompatSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/compat/StrengthConfrontation.java'
+) -Raw
+$mixinConfigSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/resources/liymod.mixins.json'
+) -Raw
+$entityMixinSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/mixin/EntityMixin.java'
+) -Raw
+$livingMixinSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/mixin/LivingEntityMixin.java'
+) -Raw
 Assert-True ($finalMiningSource -match 'SPECIAL_DROPS\s*=') `
     'Final Loli special-drop table is missing'
 Assert-True ([regex]::Matches($finalMiningSource, 'Map\.entry\(').Count -eq 27) `
@@ -418,6 +430,39 @@ Assert-True ($protectionSource -match 'inventory\.getContainerSize\(\)') `
     'Mandatory full-inventory passive protection scan is missing'
 Assert-True ($protectionSource -notmatch 'INVENTORY_PROTECTION') `
     'Passive inventory protection must not be gated by a configuration switch'
+foreach ($compatibilityId in @(
+    'forever_love_sword",\s*"forever_love_sword',
+    'entityeraser_re",\s*"entity_eraser',
+    'entityeraser_re",\s*"kill_self',
+    'pig2mod",\s*"pig2'
+)) {
+    Assert-True ($strengthCompatSource -match $compatibilityId) `
+        "Audited strength-compatibility id is missing: $compatibilityId"
+}
+Assert-True ($strengthCompatSource -match 'PIG2_QUIET_WINDOW_TICKS\s*=\s*20\s*\*\s*60') `
+    'PIG2 revival suppression no longer preserves the 60-second quiet window'
+Assert-True ($strengthCompatSource -match 'permitEntity') `
+    'PIG2 killed-entity permit hook is missing'
+Assert-True ($strengthCompatSource -match 'eraserDeadEntities') `
+    'EntityEraser dead-map recovery hook is missing'
+Assert-True ($strengthCompatSource -match 'addRespawnedPlayer') `
+    'Protected-player entity-index recovery is missing'
+Assert-True ($strengthCompatSource -match 'addWithUUID') `
+    'Protected Loli entity-index recovery is missing'
+Assert-True ($erasureServiceSource -match '(?s)prepareAbsoluteExecution.+LoliExecutionManager\.begin') `
+    'Foreign defense preparation must happen before the absolute execution ticket begins'
+Assert-True ($erasureServiceSource -match 'onAbsoluteDeadLock') `
+    'Absolute execution no longer arms persistent-target suppression'
+Assert-True ($mixinConfigSource -match 'accessor\.EntityAccessor') `
+    'Hostile removal-state recovery accessor is not registered'
+Assert-True ($entityMixinSource -match 'setPosRaw\(DDD\)V') `
+    'Loli entity no longer rejects direct out-of-world raw position writes'
+Assert-True ($entityMixinSource -match '(?s)preventForcedInvisibility.+isExecutionImmune') `
+    'Loli entity no longer rejects forced invisibility from destructive mods'
+Assert-True ($livingMixinSource -match '(?s)forceMaximumHealth.+isExecutionImmune') `
+    'Loli entity no longer rejects direct health-zero writes'
+Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot 'COMPATIBILITY.md')) `
+    'Strength compatibility audit document is missing'
 Assert-True ($configOptionSource -notmatch 'INVENTORY_PROTECTION') `
     'The retired inventory-protection switch must not remain configurable'
 Assert-True ($commandsSource -match 'SafeTntEffectService\.apply') `

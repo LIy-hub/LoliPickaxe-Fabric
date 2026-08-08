@@ -31,7 +31,7 @@ public abstract class LivingEntityMixin {
         if (LoliExecutionManager.isTerminal(self)) {
             return 0.0F;
         }
-        if (LoliProtection.isProtected(self)) {
+        if (LoliProtection.isExecutionImmune(self)) {
             return lolipickaxe$safeMaximumHealth(self);
         }
         return requestedHealth;
@@ -42,7 +42,7 @@ public abstract class LivingEntityMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (LoliExecutionManager.isTerminal(self)) {
             cir.setReturnValue(0.0F);
-        } else if (LoliProtection.isProtected(self)) {
+        } else if (LoliProtection.isExecutionImmune(self)) {
             cir.setReturnValue(lolipickaxe$safeMaximumHealth(self));
         }
     }
@@ -52,7 +52,7 @@ public abstract class LivingEntityMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (LoliExecutionManager.isTerminal(self)) {
             cir.setReturnValue(true);
-        } else if (LoliProtection.isProtected(self)) {
+        } else if (LoliProtection.isExecutionImmune(self)) {
             cir.setReturnValue(false);
         }
     }
@@ -62,7 +62,7 @@ public abstract class LivingEntityMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (LoliExecutionManager.isTerminal(self)) {
             cir.setReturnValue(false);
-        } else if (LoliProtection.isProtected(self)) {
+        } else if (LoliProtection.isExecutionImmune(self)) {
             cir.setReturnValue(true);
         }
     }
@@ -99,14 +99,14 @@ public abstract class LivingEntityMixin {
 
     @Inject(method = "kill", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventKill(ServerLevel serverLevel, CallbackInfo ci) {
-        if (LoliProtection.isProtected((LivingEntity) (Object) this)) {
+        if (LoliProtection.isExecutionImmune((LivingEntity) (Object) this)) {
             ci.cancel();
         }
     }
 
     @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventLivingDeath(DamageSource source, CallbackInfo ci) {
-        if (LoliProtection.isProtected((LivingEntity) (Object) this)) {
+        if (LoliProtection.isExecutionImmune((LivingEntity) (Object) this)) {
             ci.cancel();
         }
     }

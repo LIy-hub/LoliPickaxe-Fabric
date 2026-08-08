@@ -1,6 +1,7 @@
 package com.liymod.combat;
 
 import com.liymod.LiyMod;
+import com.liymod.compat.StrengthConfrontation;
 import com.liymod.damage_type.ModDamageSources;
 import com.liymod.protection.LoliProtection;
 import net.minecraft.network.chat.Component;
@@ -54,6 +55,10 @@ public final class LoliErasureService {
             return immune(serverWorld, attacker, target);
         }
 
+        if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
+            StrengthConfrontation.prepareAbsoluteExecution(target);
+        }
+
         DamageSource source = ModDamageSources.loli(serverWorld, attacker);
         LoliExecutionTicket ticket = LoliExecutionManager.begin(
                 target,
@@ -67,6 +72,9 @@ public final class LoliErasureService {
 
         if (ticket.state() == LoliExecutionTicket.State.DEAD_LOCK) {
             LoliExecutionManager.lock(target);
+            if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
+                StrengthConfrontation.onAbsoluteDeadLock(target);
+            }
             return Result.EXECUTED;
         }
 
@@ -123,6 +131,9 @@ public final class LoliErasureService {
                 return Result.IGNORED;
             }
             legacyExecution.commit();
+            if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
+                StrengthConfrontation.onAbsoluteDeadLock(target);
+            }
             return Result.EXECUTED;
         }
     }

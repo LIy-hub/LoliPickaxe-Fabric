@@ -106,6 +106,12 @@ should test compatibility with their protection and administration mods. This
 project does not claim universal compatibility with every third-party combat or
 protection implementation.
 
+Audited, optional strength confrontation is implemented for Forever Love Sword,
+EntityEraser and PIG2. It covers their observed direct health/removal,
+entity-index erasure and revival/copy mechanisms without linking their jars or
+bypassing Loli-vs-Loli immunity. Exact artifact hashes, platform limits and the
+behavior matrix are recorded in [COMPATIBILITY.md](COMPATIBILITY.md).
+
 The preserved Fabric behavior and full-restoration boundaries are documented in
 [PORTING_BASELINE.md](PORTING_BASELINE.md). Build verification also includes
 `scripts/verify-full-port.ps1`.

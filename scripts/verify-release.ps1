@@ -114,7 +114,7 @@ foreach ($relativePath in $expectedAssets.Keys) {
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
 $annotationCounts = [ordered]@{
-    '@Inject' = 42
+    '@Inject' = 43
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
     '@Accessor' = 3

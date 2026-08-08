@@ -3,6 +3,7 @@
   "package": "com.liymod.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "accessor.EntityAccessor",
     "accessor.LivingEntityAccessor",
     "accessor.PrimedTntAccessor",
     "EntityMixin",
