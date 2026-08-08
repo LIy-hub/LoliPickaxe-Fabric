@@ -269,6 +269,21 @@ $storageMenuSource = Get-Content -LiteralPath (
 $storageKeySource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/client/java/com/liymod/client/input/LoliKeyMappings.java'
 ) -Raw
+$playerMixinSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/mixin/PlayerMixin.java'
+) -Raw
+$smallPickaxeSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/SmallLoliPickaxeItem.java'
+) -Raw
+$enchantmentScreenSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/client/java/com/liymod/client/screen/FinalEnchantmentScreen.java'
+) -Raw
+$configOptionSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/config/LoliConfigOption.java'
+) -Raw
+$storageScreenSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/client/java/com/liymod/client/screen/LoliStorageScreen.java'
+) -Raw
 Assert-True ($passwordPayloadSource -match 'MAX_CODE_POINTS\s*=\s*64') `
     'Password payload must remain bounded to 64 Unicode code points'
 Assert-True ($passwordPayloadSource -match 'MAX_UTF8_BYTES\s*=\s*256') `
@@ -285,10 +300,24 @@ Assert-True ($storageEventsSource -match 'COLLECT_RANGE\s*=\s*4\.0D') `
     'Nearby Loli storage collection range is missing'
 Assert-True ($storageEventsSource -match '(?s)allowsNearbyCollection.+AUTO_ACCEPT') `
     'Nearby final-pickaxe collection does not honor the per-item AUTO_ACCEPT setting'
+Assert-True ($storageEventsSource -match 'entityTags\(\)\.contains\(MANUAL_EJECTION_TAG\)') `
+    'Nearby storage collection does not exclude intentional player drops'
+Assert-True ($storageEventsSource -notmatch 'getInventory\(\)\.getContainerSize') `
+    'Nearby storage collection must not activate from a pickaxe stored only in inventory'
+Assert-True ($playerMixinSource -match '(?s)method\s*=\s*"drop.+markManualEjection') `
+    'Intentional player drops are not marked for storage ejection'
 Assert-True ($smallMiningSource -match 'storage\.insert') `
     'Small Loli mining drops are not routed through storage'
+Assert-True ($smallPickaxeSource -match '(?s)getCurrentMiningRadius\(stack\)\s*>\s*0\s*\?\s*Float\.MAX_VALUE') `
+    'Ordinary Loli range mining is not immediate'
 Assert-True ($storageMenuSource -match 'StoragePageSyncPayload') `
     'Ordered storage page synchronization is missing'
+Assert-True ($enchantmentScreenSource -match 'MAX_LEVEL\s*=\s*32768') `
+    'Final enchantment editor does not expose level 32768'
+Assert-True ($configOptionSource -match '(?s)ENCHANTMENT_LEVEL_LIMIT.+32768.+32768\.0D') `
+    'Server enchantment level limit is not 32768'
+Assert-True ($storageScreenSource -match 'TEXT_COLOR\s*=\s*0xFFF5F5F5') `
+    'Storage GUI labels are not rendered with high-contrast text'
 Assert-True ($storageKeySource -match 'InputConstants\.KEY_B') `
     'Loli storage B/Shift+B key binding is missing'
 Assert-True ($storageKeySource -match 'InputConstants\.KEY_U') `

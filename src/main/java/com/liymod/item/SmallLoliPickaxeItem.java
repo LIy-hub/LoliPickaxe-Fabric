@@ -295,7 +295,12 @@ public final class SmallLoliPickaxeItem extends Item {
 
     @Override
     public float getDestroySpeed(ItemStack stack, BlockState state) {
-        return isCorrectToolForDrops(stack, state) ? getMiningSpeed(stack) : 1.0F;
+        if (!isCorrectToolForDrops(stack, state)) {
+            return 1.0F;
+        }
+        // Range mode must fire as one action instead of waiting for the origin block's
+        // ordinary progressive mining animation to finish first.
+        return getCurrentMiningRadius(stack) > 0 ? Float.MAX_VALUE : getMiningSpeed(stack);
     }
 
     @Override

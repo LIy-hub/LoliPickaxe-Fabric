@@ -35,7 +35,7 @@ public enum LoliConfigOption {
     FIND_OWNER_RANGE("find_owner_range", ValueType.INTEGER, 50, 0.0D, 128.0D, false),
     DROP_PROTECT_TICKS("drop_protect_ticks", ValueType.INTEGER, 4, 0.0D, 1200.0D, false),
     INVENTORY_PROTECTION("inventory_protection", ValueType.BOOLEAN, false, 0.0D, 1.0D, false),
-    ENCHANTMENT_LEVEL_LIMIT("enchantment_level_limit", ValueType.INTEGER, 32, 0.0D, 32.0D, false),
+    ENCHANTMENT_LEVEL_LIMIT("enchantment_level_limit", ValueType.INTEGER, 32768, 0.0D, 32768.0D, false),
     EFFECT_LEVEL_LIMIT("effect_level_limit", ValueType.INTEGER, 32, 0.0D, 32.0D, false),
     SPACE_FOLDING("space_folding", ValueType.BOOLEAN, true, 0.0D, 1.0D, false),
     DIMENSION_BLACKLIST("dimension_blacklist", ValueType.STRING, "", 0.0D, 128.0D, false),

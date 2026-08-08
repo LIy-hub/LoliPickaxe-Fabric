@@ -18,6 +18,8 @@ import net.fabricmc.loader.api.FabricLoader;
 /** Small, dependency-free, server-authoritative configuration store. */
 public final class LoliServerConfig {
     private static final String FILE_NAME = "liymod-loli.properties";
+    private static final String REVISION_KEY = "config_revision";
+    private static final int CURRENT_REVISION = 2;
     private static final Map<LoliConfigOption, Object> VALUES = new EnumMap<>(LoliConfigOption.class);
 
     private static Path path;
@@ -54,6 +56,7 @@ public final class LoliServerConfig {
                 LiyMod.LOGGER.warn("Ignoring invalid Loli config value {}={}", option.id(), encoded);
             }
         }
+        migrate(properties);
         synchronizeSafeEffects();
         save();
     }
@@ -94,6 +97,7 @@ public final class LoliServerConfig {
             return;
         }
         Properties properties = new Properties();
+        properties.setProperty(REVISION_KEY, Integer.toString(CURRENT_REVISION));
         for (LoliConfigOption option : LoliConfigOption.values()) {
             properties.setProperty(option.id(), option.encode(get(option)));
         }
@@ -122,6 +126,19 @@ public final class LoliServerConfig {
         VALUES.clear();
         for (LoliConfigOption option : LoliConfigOption.values()) {
             VALUES.put(option, option.defaultValue());
+        }
+    }
+
+    private static void migrate(Properties properties) {
+        int revision = 0;
+        try {
+            revision = Integer.parseInt(properties.getProperty(REVISION_KEY, "0"));
+        } catch (NumberFormatException ignored) {
+            // Treat malformed revision metadata as an older configuration.
+        }
+        if (revision < 2
+                && "32".equals(properties.getProperty(LoliConfigOption.ENCHANTMENT_LEVEL_LIMIT.id()))) {
+            VALUES.put(LoliConfigOption.ENCHANTMENT_LEVEL_LIMIT, 32768);
         }
     }
 

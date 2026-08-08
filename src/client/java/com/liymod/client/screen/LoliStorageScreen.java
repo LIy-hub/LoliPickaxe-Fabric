@@ -17,7 +17,7 @@ import net.minecraft.world.entity.player.Inventory;
 public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu> {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("liymod", "textures/gui/container/loli_pickaxe_container.png");
-    private static final int TEXT_COLOR = 0xFF404040;
+    private static final int TEXT_COLOR = 0xFFF5F5F5;
 
     private Button previousButton;
     private Button nextButton;
@@ -77,16 +77,13 @@ public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        super.extractLabels(graphics, mouseX, mouseY);
-        graphics.centeredText(
-                font,
-                Component.translatable(
-                        "gui.liymod.loli_storage.page",
-                        menu.getCurrentPage() + 1,
-                        menu.getPageCount()),
-                203,
-                29,
-                TEXT_COLOR);
+        graphics.text(font, title, titleLabelX, titleLabelY, TEXT_COLOR, true);
+        graphics.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT_COLOR, true);
+        Component page = Component.translatable(
+                "gui.liymod.loli_storage.page",
+                menu.getCurrentPage() + 1,
+                menu.getPageCount());
+        graphics.text(font, page, 203 - font.width(page) / 2, 29, TEXT_COLOR, true);
     }
 
     private void changePage(int delta) {

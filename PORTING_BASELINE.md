@@ -131,12 +131,16 @@ represented by a safe placeholder.
   reach and optional automatic range execution. Legacy kill-capable paths call
   `LoliErasureService`; none reintroduces the old direct kill/hack path.
 - Final-pickaxe `auto_accept` controls both direct mining-drop insertion and
-  nearby `ItemEntity` collection for that exact stack. Ordinary Loli mining-range
-  changes play the restored upstream `lolisuccess.ogg` once from the server.
+  nearby `ItemEntity` collection for that exact stack. Nearby collection only
+  runs for a storage pickaxe in either hand, and an intentional player drop is
+  tagged so auto-collection cannot immediately undo it. Ordinary Loli mining-range
+  changes play the restored upstream `lolisuccess.ogg` once from the server;
+  non-zero Ordinary Loli range mining completes in one server action.
 - N/M/P/K open server-authoritative configuration, enchantment, effect and
   relative space-folding screens. Space folding refuses unloaded chunks,
   blacklisted dimensions, out-of-border or colliding destinations and
-  non-finite/over-limit offsets.
+  non-finite/over-limit offsets. Enchantment levels are validated in the range
+  0 through 32768 on both the client editor and server.
 - Owner metadata protects and recalls dropped final pickaxes without blocking
   administrator entity cleanup. Internal storage remains bounded to normal
   stack limits, 32 KiB per encoded stack and 4 MiB total rather than restoring

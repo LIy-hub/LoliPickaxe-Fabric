@@ -29,11 +29,14 @@ and survival implementation.
 - Press B while holding either pickaxe to open its paged 9x9 storage, Shift+B
   to drop all stored stacks, and U to edit its 9x9 ghost-slot blacklist. The
   final Loli Pickaxe has 100 pages; Ordinary Loli page count follows its storage
-  upgrade tier. Stored stacks use normal modern stack limits and bounded NBT.
+  upgrade tier. Nearby auto-collection runs only while a storage pickaxe is in
+  either hand, and intentional player drops are never immediately collected
+  back. Stored stacks use normal modern stack limits and bounded NBT.
 - While holding the final Loli Pickaxe, press N for per-item mining/combat
   settings, M for enchantments, P for status effects and K for bounded relative
   space folding. The server validates every id, level, setting, dimension,
-  distance, loaded chunk and landing position.
+  distance, loaded chunk and landing position. Enchantment editing supports
+  levels through 32768.
 - The final pickaxe now restores configurable radius mining, Fortune 32,
   auto-smelting, per-item automatic storage acceptance for both mining drops and
   nearby item entities, reach, thorns, optional automatic
@@ -124,9 +127,11 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   附近掉落物自动收纳及采掘掉落直入储存也已接入。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
-  储存遵守现代正常堆叠上限与有界 NBT 安全限制。
+  只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品
+  不会被立即吸回；储存遵守现代正常堆叠上限与有界 NBT 安全限制。
 - 手持氪金萝莉时，N 打开单件配置，M 编辑附魔，P 编辑状态效果，K 打开空间折叠。
-  选项、注册表 ID、等级、维度、距离、区块加载状态和落点安全均由服务端校验。
+  附魔等级上限为 32768；选项、注册表 ID、等级、维度、距离、区块加载状态和
+  落点安全均由服务端校验。
 - 氪金萝莉已融合原版可调范围采掘、时运 32、自动熔炼/单件自动收纳、触及距离、反伤、
   可选自动范围处决、药水效果和主人绑定掉落物召回；现有 32 格右键处决与
   1024 格/6 度挥击解析保持不变。背包任意位置防护可由管理员开启，但默认关闭，

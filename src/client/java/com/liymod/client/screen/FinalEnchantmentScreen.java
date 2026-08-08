@@ -11,6 +11,7 @@ import java.util.Set;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
@@ -26,7 +27,7 @@ public final class FinalEnchantmentScreen extends AbstractContainerScreen<FinalE
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("liymod", "textures/gui/loli_pickaxe_config.png");
     private static final int PANEL_HEIGHT = 165;
-    private static final int MAX_LEVEL = 32;
+    private static final int MAX_LEVEL = 32768;
     private static final int MAX_ENTRIES = 64;
     private static final int TEXT_COLOR = 0xFF404040;
     private static final int ERROR_COLOR = 0xFFB02020;
@@ -45,6 +46,7 @@ public final class FinalEnchantmentScreen extends AbstractContainerScreen<FinalE
     private Button levelUpButton;
     private Button addButton;
     private Button removeButton;
+    private EditBox levelBox;
 
     public FinalEnchantmentScreen(FinalEnchantmentMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 220, PANEL_HEIGHT);
@@ -81,6 +83,17 @@ public final class FinalEnchantmentScreen extends AbstractContainerScreen<FinalE
                         button -> changeLevel(1))
                 .bounds(leftPos + 160, topPos + 57, 20, 20)
                 .build());
+        levelBox = new EditBox(
+                font,
+                leftPos + 65,
+                topPos + 57,
+                90,
+                20,
+                Component.translatable("gui.liymod.enchantment.level"));
+        levelBox.setMaxLength(5);
+        levelBox.setValue(Integer.toString(selectedLevel));
+        levelBox.setResponder(this::readLevelInput);
+        addRenderableWidget(levelBox);
         addButton = addRenderableWidget(Button.builder(
                         Component.translatable("gui.liymod.enchantment.add"),
                         button -> addOrUpdateSelected())
@@ -141,9 +154,9 @@ public final class FinalEnchantmentScreen extends AbstractContainerScreen<FinalE
 
         graphics.centeredText(
                 font,
-                Component.translatable("gui.liymod.enchantment.level").append(": " + selectedLevel),
+                Component.translatable("gui.liymod.enchantment.level"),
                 imageWidth / 2,
-                63,
+                51,
                 TEXT_COLOR);
         graphics.centeredText(
                 font,
@@ -183,6 +196,7 @@ public final class FinalEnchantmentScreen extends AbstractContainerScreen<FinalE
 
     private void changeLevel(int delta) {
         selectedLevel = Math.clamp(selectedLevel + Integer.signum(delta), 0, MAX_LEVEL);
+        levelBox.setValue(Integer.toString(selectedLevel));
         entryLimitReached = false;
         refreshControls();
     }
@@ -230,6 +244,25 @@ public final class FinalEnchantmentScreen extends AbstractContainerScreen<FinalE
     private void loadSelectedLevel() {
         Identifier selected = selectedEnchantment();
         selectedLevel = selected == null ? 0 : draftEnchantments.getOrDefault(selected, 1);
+        if (levelBox != null) {
+            levelBox.setValue(Integer.toString(selectedLevel));
+        }
+    }
+
+    private void readLevelInput(String encoded) {
+        if (encoded.isEmpty()) {
+            return;
+        }
+        try {
+            int parsed = Integer.parseInt(encoded);
+            if (parsed >= 0 && parsed <= MAX_LEVEL) {
+                selectedLevel = parsed;
+                entryLimitReached = false;
+                refreshControls();
+            }
+        } catch (NumberFormatException ignored) {
+            // Keep the last valid level until the field contains a valid integer again.
+        }
     }
 
     private void refreshControls() {

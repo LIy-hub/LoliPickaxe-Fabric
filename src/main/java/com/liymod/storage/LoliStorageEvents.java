@@ -18,6 +18,7 @@ import net.minecraft.world.phys.AABB;
 public final class LoliStorageEvents {
     private static final double COLLECT_RANGE = 4.0D;
     private static final int COLLECT_INTERVAL_TICKS = 5;
+    private static final String MANUAL_EJECTION_TAG = "liymod.storage_manual_ejection";
 
     private LoliStorageEvents() {
     }
@@ -43,6 +44,7 @@ public final class LoliStorageEvents {
                     Entity owner = entity.getOwner();
                     if (!entity.isAlive()
                             || entity.getItem().isEmpty()
+                            || entity.entityTags().contains(MANUAL_EJECTION_TAG)
                             || (owner != null && owner != player)) {
                         continue;
                     }
@@ -80,13 +82,19 @@ public final class LoliStorageEvents {
         if (allowsNearbyCollection(offHand)) {
             return LoliStorageData.open(offHand);
         }
-        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
-            if (allowsNearbyCollection(stack)) {
-                return LoliStorageData.open(stack);
-            }
-        }
         return null;
+    }
+
+    /** Marks an intentional player drop so nearby auto-accept cannot undo that action. */
+    public static void markManualEjection(ItemEntity entity) {
+        if (entity != null) {
+            entity.addTag(MANUAL_EJECTION_TAG);
+        }
+    }
+
+    public static boolean hasHeldStorage(ServerPlayer player) {
+        return LoliStorageData.hasStorage(player.getMainHandItem())
+                || LoliStorageData.hasStorage(player.getOffhandItem());
     }
 
     private static boolean allowsNearbyCollection(ItemStack stack) {
