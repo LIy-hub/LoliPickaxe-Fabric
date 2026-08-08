@@ -11,7 +11,6 @@ import java.util.UUID;
 public enum LoliConfigOption {
     MAX_MINING_RANGE("max_mining_range", ValueType.INTEGER, 5, 0.0D, 5.0D, false),
     MINING_RADIUS("mining_radius", ValueType.INTEGER, 0, 0.0D, 5.0D, true),
-    MANDATORY_DROP("mandatory_drop", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
     STOP_ON_LIQUID("stop_on_liquid", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
     AUTO_FURNACE("auto_furnace", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
     AUTO_ACCEPT("auto_accept", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
@@ -34,7 +33,6 @@ public enum LoliConfigOption {
     OWNER_PROTECTION("owner_protection", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
     FIND_OWNER_RANGE("find_owner_range", ValueType.INTEGER, 50, 0.0D, 128.0D, false),
     DROP_PROTECT_TICKS("drop_protect_ticks", ValueType.INTEGER, 4, 0.0D, 1200.0D, false),
-    INVENTORY_PROTECTION("inventory_protection", ValueType.BOOLEAN, false, 0.0D, 1.0D, false),
     ENCHANTMENT_LEVEL_LIMIT("enchantment_level_limit", ValueType.INTEGER, 32768, 0.0D, 32768.0D, false),
     EFFECT_LEVEL_LIMIT("effect_level_limit", ValueType.INTEGER, 32, 0.0D, 32.0D, false),
     SPACE_FOLDING("space_folding", ValueType.BOOLEAN, true, 0.0D, 1.0D, false),

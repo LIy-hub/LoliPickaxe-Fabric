@@ -6,7 +6,6 @@ import com.liymod.entity.LoliEntity;
 import com.liymod.item.ModItems;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
-import com.liymod.config.LoliServerConfig;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
@@ -19,7 +18,7 @@ public final class LoliProtection {
 
     public static void registerProtection() {
         LiyMod.LOGGER.info(
-                "Loli execution defense is always active while the pickaxe is held"
+                "Loli execution defense is always active while the pickaxe exists anywhere in player inventory"
         );
     }
 
@@ -44,9 +43,6 @@ public final class LoliProtection {
         ItemStack selected = inventory.getSelectedItem();
         if (selected.is(ModItems.LOLI_PICKAXE)) {
             return selected;
-        }
-        if (!LoliServerConfig.getBoolean(LoliConfigOption.INVENTORY_PROTECTION)) {
-            return ItemStack.EMPTY;
         }
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);

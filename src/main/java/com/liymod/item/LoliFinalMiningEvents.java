@@ -156,7 +156,9 @@ public final class LoliFinalMiningEvents {
         if (special != null) {
             drops.add(new ItemStack(special));
         }
-        if (drops.isEmpty() && LoliItemSettings.getBoolean(tool, LoliConfigOption.MANDATORY_DROP)) {
+        // The final pickaxe always claims a block item when vanilla's loot table refuses a drop.
+        // This is an intrinsic ability, not a configurable rule.
+        if (drops.isEmpty()) {
             Item fallback = state.getBlock().asItem();
             if (fallback != Items.AIR && fallback != ModItems.LOLI_PICKAXE) {
                 drops.add(new ItemStack(fallback));
