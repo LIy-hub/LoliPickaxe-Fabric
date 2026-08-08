@@ -379,7 +379,9 @@ public final class ForgeEvents {
         if (canHarvest) {
             Item special = SPECIAL_DROPS.get(state.getBlock());
             if (special != null) drops.add(new ItemStack(special));
-            if (drops.isEmpty() && finalTool && FinalToolSettings.mandatoryDrop(tool) && state.getBlock().asItem() != Items.AIR)
+            // The final pickaxe always claims a block item when vanilla's loot table refuses a drop.
+            // This is an intrinsic ability, not a configurable rule.
+            if (drops.isEmpty() && finalTool && state.getBlock().asItem() != Items.AIR)
                 drops.add(new ItemStack(state.getBlock().asItem()));
         }
         if (!creative) tool.mineBlock(level, state, pos, player);

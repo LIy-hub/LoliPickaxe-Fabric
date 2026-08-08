@@ -69,10 +69,10 @@ path.
 
 ## Holder defense and abilities
 
-- Protection applies while the player's main-hand stack is the Loli Pickaxe by
-  default. An explicit server `inventory_protection=true` option may extend
-  passive protection to inventory stacks, but the 1024-block swing resolver and
-  active execution entry points still require the main-hand pickaxe.
+- Protection applies unconditionally while a Loli Pickaxe exists in any player
+  inventory slot. This passive protection cannot be disabled. The 1024-block
+  swing resolver and active execution entry points still require the main-hand
+  pickaxe.
 - Ordinary damage and death are rejected. A non-holder attacker is retaliated
   against with `STANDARD` authority.
 - Health, death/hurt timers, regeneration delay, fall distance, frozen ticks,
@@ -127,7 +127,7 @@ represented by a safe placeholder.
 ## Restored legacy extensions
 
 - The final pickaxe stores validated per-stack options for mining radius,
-  mandatory drops, liquid boundaries, auto-smelting, auto-accept, thorns,
+  liquid boundaries, auto-smelting, auto-accept, thorns,
   reach and optional automatic range execution. Legacy kill-capable paths call
   `LoliErasureService`; none reintroduces the old direct kill/hack path.
 - Final-pickaxe `auto_accept` controls both direct mining-drop insertion and

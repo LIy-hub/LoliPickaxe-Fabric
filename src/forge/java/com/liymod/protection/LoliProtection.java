@@ -3,7 +3,6 @@ package com.liymod.protection;
 import com.liymod.combat.LoliErasureService;
 import com.liymod.registry.ModContent;
 import com.liymod.config.FinalToolSettings;
-import com.liymod.config.LoliServerConfig;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -30,7 +29,6 @@ public final class LoliProtection {
         // inventory field is initialized. Protection mixins must be safe there.
         if (player.getInventory() == null) return false;
         if (player.getMainHandItem().is(ModContent.LOLI_PICKAXE.get())) return true;
-        if (!LoliServerConfig.bool("inventory_protection")) return false;
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) if (player.getInventory().getItem(slot).is(ModContent.LOLI_PICKAXE.get())) return true;
         return false;
     }
@@ -68,7 +66,6 @@ public final class LoliProtection {
     public static ItemStack protectingStack(Player player) {
         if (player.getInventory() == null) return ItemStack.EMPTY;
         if (player.getMainHandItem().is(ModContent.LOLI_PICKAXE.get())) return player.getMainHandItem();
-        if (!LoliServerConfig.bool("inventory_protection")) return ItemStack.EMPTY;
         for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
             ItemStack stack = player.getInventory().getItem(slot);
             if (stack.is(ModContent.LOLI_PICKAXE.get())) return stack;

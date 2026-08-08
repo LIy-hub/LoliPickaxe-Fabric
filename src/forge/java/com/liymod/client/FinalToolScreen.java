@@ -51,8 +51,7 @@ public final class FinalToolScreen extends AbstractContainerScreen<FinalToolMenu
             y += 24;
             y = toggle(x, y, w, "stop_on_liquid", FinalToolSettings.stopOnLiquid(menu.tool()));
             y = toggle(x, y, w, "auto_accept", FinalToolSettings.autoAccept(menu.tool()));
-            y = toggle(x, y, w, "auto_furnace", FinalToolSettings.autoFurnace(menu.tool()));
-            toggle(x, y, w, "mandatory_drop", FinalToolSettings.mandatoryDrop(menu.tool()));
+            toggle(x, y, w, "auto_furnace", FinalToolSettings.autoFurnace(menu.tool()));
         } else if (configPage == 1) {
             y = toggle(x, y, w, "thorns", FinalToolSettings.thorns(menu.tool()));
             y = toggle(x, y, w, "auto_kill_range_entity", FinalToolSettings.autoKill(menu.tool()));

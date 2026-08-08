@@ -12,7 +12,6 @@ import net.minecraft.world.item.ItemStack;
 public final class FinalToolSettings {
     public static final String AUTO_FURNACE = "LoliAutoFurnace";
     public static final String STOP_ON_LIQUID = "LoliStopOnLiquid";
-    public static final String MANDATORY_DROP = "LoliMandatoryDrop";
     public static final String THORNS = "LoliThorns";
     public static final String AUTO_KILL = "LoliAutoKill";
     public static final String AUTO_KILL_RANGE = "LoliAutoKillRange";
@@ -37,7 +36,6 @@ public final class FinalToolSettings {
     public static void autoAccept(ItemStack stack, boolean value) { LoliStorageData.setAutoAccept(stack, value); }
     public static boolean autoFurnace(ItemStack stack) { return bool(stack, AUTO_FURNACE, true); }
     public static boolean stopOnLiquid(ItemStack stack) { return bool(stack, STOP_ON_LIQUID, false); }
-    public static boolean mandatoryDrop(ItemStack stack) { return bool(stack, MANDATORY_DROP, false); }
     public static boolean thorns(ItemStack stack) { return bool(stack, THORNS, true); }
     public static boolean autoKill(ItemStack stack) { return bool(stack, AUTO_KILL, false); }
     public static boolean targetFriendly(ItemStack stack) { return bool(stack, TARGET_FRIENDLY, false); }
@@ -65,7 +63,6 @@ public final class FinalToolSettings {
                 case "auto_accept" -> { autoAccept(stack, parseBoolean(encoded)); yield true; }
                 case "auto_furnace" -> { stack.getOrCreateTag().putBoolean(AUTO_FURNACE, parseBoolean(encoded)); yield true; }
                 case "stop_on_liquid" -> { stack.getOrCreateTag().putBoolean(STOP_ON_LIQUID, parseBoolean(encoded)); yield true; }
-                case "mandatory_drop" -> { stack.getOrCreateTag().putBoolean(MANDATORY_DROP, parseBoolean(encoded)); yield true; }
                 case "thorns" -> { stack.getOrCreateTag().putBoolean(THORNS, parseBoolean(encoded)); yield true; }
                 case "auto_kill_range_entity" -> { stack.getOrCreateTag().putBoolean(AUTO_KILL, parseBoolean(encoded)); yield true; }
                 case "auto_kill_range" -> { stack.getOrCreateTag().putInt(AUTO_KILL_RANGE, clamp(Integer.parseInt(encoded), 1, 10)); yield true; }

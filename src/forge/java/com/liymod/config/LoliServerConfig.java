@@ -21,7 +21,7 @@ public final class LoliServerConfig {
     private static final Map<String, String> DEFAULTS = new LinkedHashMap<>();
     private static final Properties VALUES = new Properties();
     static {
-        DEFAULTS.put("inventory_protection", "false"); DEFAULTS.put("max_teleport_distance", "512");
+        DEFAULTS.put("max_teleport_distance", "512");
         DEFAULTS.put("loli_card_drop_chance", "0.1"); DEFAULTS.put("loli_card_album_drop_chance", "0.01");
         DEFAULTS.put("loli_record_drop_chance", "0.001"); DEFAULTS.put("entity_soul_drop_chance", "0.01");
         DEFAULTS.put("safe_attack_command", "false"); DEFAULTS.put("safe_blue_screen", "false");
@@ -53,7 +53,7 @@ public final class LoliServerConfig {
             normalized = normalizeDimensionList(value);
         } else if (key.endsWith("_list") || key.endsWith("_whitelist")) {
             normalized = normalizePlayerList(value);
-        } else if (key.startsWith("safe_") || key.equals("inventory_protection") || key.equals("loli_attack") || key.equals("loli_teleport")) {
+        } else if (key.startsWith("safe_") || key.equals("loli_attack") || key.equals("loli_teleport")) {
             if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) throw new IllegalArgumentException(); normalized = value.toLowerCase(java.util.Locale.ROOT);
         } else {
             double parsed = Double.parseDouble(value); if (!Double.isFinite(parsed)) throw new IllegalArgumentException();
