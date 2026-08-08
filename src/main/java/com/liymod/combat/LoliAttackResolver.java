@@ -6,6 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -23,7 +25,7 @@ public final class LoliAttackResolver {
             return false;
         }
 
-        ServerPlayer target = findTarget(attacker);
+        Entity target = findTarget(attacker);
         if (target == null) {
             return false;
         }
@@ -36,7 +38,7 @@ public final class LoliAttackResolver {
             LiyMod.LOGGER.debug(
                     "Absolute Loli swing from {} resolved to {}",
                     attacker.getGameProfile().name(),
-                    target.getGameProfile().name()
+                    target.getName().getString()
             );
             return true;
         }
@@ -44,22 +46,24 @@ public final class LoliAttackResolver {
     }
 
     @Nullable
-    private static ServerPlayer findTarget(ServerPlayer attacker) {
+    private static Entity findTarget(ServerPlayer attacker) {
         Vec3 origin = attacker.getEyePosition();
         Vec3 look = attacker.getViewVector(1.0F).normalize();
         Vec3 rayEnd = origin.add(look.scale(MAX_RANGE));
         double maximumDistanceSquared = MAX_RANGE * MAX_RANGE;
 
-        ServerPlayer directTarget = null;
+        Entity directTarget = null;
         double directDistanceSquared = Double.POSITIVE_INFINITY;
-        ServerPlayer assistedTarget = null;
+        Entity assistedTarget = null;
         double assistedDot = MIN_AIM_DOT;
         double assistedDistanceSquared = Double.POSITIVE_INFINITY;
 
-        for (ServerPlayer candidate : attacker.level().players()) {
+        for (Entity candidate : attacker.level().getAllEntities()) {
             if (candidate == attacker
                     || candidate.isRemoved()
-                    || LoliExecutionManager.isDeadLocked(candidate)) {
+                    || candidate instanceof LightningBolt
+                    || (candidate instanceof ServerPlayer player
+                    && LoliExecutionManager.isDeadLocked(player))) {
                 continue;
             }
 

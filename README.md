@@ -43,8 +43,8 @@ and survival implementation.
   auto-smelting, per-item automatic storage acceptance for both mining drops and
   nearby item entities, reach, thorns, optional automatic
   range execution, status effects and owner-bound dropped-item recall. Its
-  existing 32-block right-click execution and 1024-block/six-degree attack
-  resolver remain unchanged. Inventory-wide holder protection is available as
+  direct right-click execution and six-degree attack resolver now cover all
+  loaded entities within 1024 blocks. Inventory-wide holder protection is available as
   an operator option but is disabled by default, preserving the port's original
   main-hand rule.
 - Bundled cards and the album display all ten original artworks. The online card
@@ -81,12 +81,11 @@ and survival implementation.
 - Attacking a block attempts to break it immediately. A fixed set of normally
   restricted blocks and ores also produces the special drops defined by the
   mod, including storage-block drops for ores.
-- A deliberate main-hand attack uses the mod's absolute execution path. If
-  normal targeting filters out a protected player, the server resolves the
-  swing from the attacker's view up to 1024 blocks with a six-degree aim
-  fallback.
-- Using the pickaxe processes non-lightning entities in the user's
-  32-block-expanded bounding box. Each successful execution creates a
+- A deliberate main-hand attack uses the mod's absolute execution path. The
+  server resolves every loaded entity type from the attacker's view up to 1024
+  blocks with a six-degree aim fallback, even beyond vanilla interaction reach.
+- Using the pickaxe processes loaded non-lightning entities within 1024 blocks
+  of the user. Each successful execution creates a
   lightning bolt at the target's previous position.
 - A main-hand holder rejects ordinary damage, death, forced removal and
   standard execution attempts; the holder is also excluded from ordinary
@@ -136,8 +135,8 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   附魔等级上限为 32768；选项、注册表 ID、等级、维度、距离、区块加载状态和
   落点安全均由服务端校验。
 - 氪金萝莉已融合原版可调范围采掘、时运 32、自动熔炼/单件自动收纳、触及距离、反伤、
-  可选自动范围处决、药水效果和主人绑定掉落物召回；现有 32 格右键处决与
-  1024 格/6 度挥击解析保持不变。背包任意位置防护可由管理员开启，但默认关闭，
+  可选自动范围处决、药水效果和主人绑定掉落物召回；直接右键处决与 6 度挥击解析
+  均覆盖 1024 格内所有已加载实体。背包任意位置防护可由管理员开启，但默认关闭，
   因而仍保持当前移植的主手防护规则。
 - 卡片与卡片册可浏览原版全部十张图片；网络卡片通过潜行右键配置 HTTPS 地址，
   并以异步、超时、大小/MIME/尺寸上限安全加载。萝莉唱片可由唱片机播放；卡片、
@@ -166,7 +165,7 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 - 使用氪金萝莉主动攻击时，可通过独立的绝对处决机制命中其他目标。
 - 普通命中被保护层过滤时，服务端会根据玩家视线在最远 1024 格内解析目标，
   并提供 6 度辅助瞄准。
-- 右键会处理玩家碰撞箱向外扩展 32 格范围内除闪电外的实体；每个成功处决的
+- 右键会处理玩家 1024 格内所有已加载且非闪电的实体；每个成功处决的
   目标原位置都会生成闪电。
 - 当攻击者与玩家目标都主手持有氪金萝莉时，同类武器免疫优先，不会创建处决请求，并会交替播放两段免疫提示音。
 - 持有者会从常规近战选取、射线检测、弹射物碰撞与生物目标判定中排除，但移动、背包、区块加载和网络同步仍保持正常。

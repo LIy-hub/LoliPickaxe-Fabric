@@ -2,6 +2,7 @@ package com.liymod.item;
 
 import com.liymod.combat.LoliErasureService;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
@@ -28,11 +29,10 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 
 public final class LoliPickaxeItem extends Item {
     public static final int FORTUNE_LEVEL = 32;
-    private static final double ABILITY_RANGE = 32.0;
+    private static final double ABILITY_RANGE = 1024.0;
 
     public LoliPickaxeItem(Properties settings) {
         super(settings);
@@ -74,12 +74,16 @@ public final class LoliPickaxeItem extends Item {
             return InteractionResult.PASS;
         }
 
-        AABB area = user.getBoundingBox().inflate(ABILITY_RANGE);
-        List<Entity> targets = world.getEntities(
-                user,
-                area,
-                entity -> !(entity instanceof LightningBolt)
-        );
+        ServerLevel serverLevel = (ServerLevel) world;
+        double maximumDistanceSquared = ABILITY_RANGE * ABILITY_RANGE;
+        List<Entity> targets = new ArrayList<>();
+        for (Entity entity : serverLevel.getAllEntities()) {
+            if (entity != user
+                    && !(entity instanceof LightningBolt)
+                    && user.distanceToSqr(entity) <= maximumDistanceSquared) {
+                targets.add(entity);
+            }
+        }
 
         for (Entity target : targets) {
             double x = target.getX();

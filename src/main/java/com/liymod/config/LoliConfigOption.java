@@ -16,7 +16,7 @@ public enum LoliConfigOption {
     AUTO_FURNACE("auto_furnace", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
     AUTO_ACCEPT("auto_accept", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
     THORNS("thorns", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
-    BLOCK_REACH_DISTANCE("block_reach_distance", ValueType.DOUBLE, 0.0D, 0.0D, 20.0D, true),
+    BLOCK_REACH_DISTANCE("block_reach_distance", ValueType.DOUBLE, 1024.0D, 0.0D, 1024.0D, true),
     AUTO_KILL_RANGE_ENTITY("auto_kill_range_entity", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
     AUTO_KILL_RANGE("auto_kill_range", ValueType.INTEGER, 5, 0.0D, 10.0D, true),
     TARGET_FRIENDLY_ENTITIES("target_friendly_entities", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),

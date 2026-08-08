@@ -64,7 +64,7 @@
   "config.liymod.loli.auto_furnace": "Auto-smelt mined blocks",
   "config.liymod.loli.auto_accept": "Automatically collect into storage",
   "config.liymod.loli.thorns": "Retaliatory damage",
-  "config.liymod.loli.block_reach_distance": "Mining reach distance",
+  "config.liymod.loli.block_reach_distance": "Block/entity interaction reach",
   "config.liymod.loli.auto_kill_range_entity": "Automatic area attack",
   "config.liymod.loli.auto_kill_range": "Automatic attack range",
   "config.liymod.loli.target_friendly_entities": "Automatic attack targets friendly living entities",

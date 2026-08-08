@@ -35,6 +35,10 @@ public final class LoliAbilityEvents {
             LiyMod.MOD_ID,
             "loli_block_reach"
     );
+    private static final Identifier ENTITY_REACH_ID = Identifier.fromNamespaceAndPath(
+            LiyMod.MOD_ID,
+            "loli_entity_reach"
+    );
     private static final Set<UUID> FLIGHT_GRANTED = new HashSet<>();
     private static final Set<UUID> INVULNERABILITY_GRANTED = new HashSet<>();
     private static int tick;
@@ -109,23 +113,47 @@ public final class LoliAbilityEvents {
             removeReach(player);
             return;
         }
-        AttributeInstance reach = player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
-        if (reach == null) {
+        double configured = LoliItemSettings.getDouble(stack, LoliConfigOption.BLOCK_REACH_DISTANCE);
+        synchronizeReachAttribute(
+                player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE),
+                BLOCK_REACH_ID,
+                configured
+        );
+        synchronizeReachAttribute(
+                player.getAttribute(Attributes.ENTITY_INTERACTION_RANGE),
+                ENTITY_REACH_ID,
+                configured
+        );
+    }
+
+    private static void removeReach(ServerPlayer player) {
+        removeReachModifier(player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE), BLOCK_REACH_ID);
+        removeReachModifier(player.getAttribute(Attributes.ENTITY_INTERACTION_RANGE), ENTITY_REACH_ID);
+    }
+
+    private static void synchronizeReachAttribute(
+            AttributeInstance attribute,
+            Identifier modifierId,
+            double configured
+    ) {
+        if (attribute == null) {
             return;
         }
-        double configured = LoliItemSettings.getDouble(stack, LoliConfigOption.BLOCK_REACH_DISTANCE);
-        double target = configured > 0.0D ? configured : 5.0D;
-        reach.addOrUpdateTransientModifier(new AttributeModifier(
-                BLOCK_REACH_ID,
-                target - reach.getBaseValue(),
+        if (configured <= 0.0D) {
+            attribute.removeModifier(modifierId);
+            return;
+        }
+        double target = attribute.getAttribute().value().sanitizeValue(configured);
+        attribute.addOrUpdateTransientModifier(new AttributeModifier(
+                modifierId,
+                target - attribute.getBaseValue(),
                 AttributeModifier.Operation.ADD_VALUE
         ));
     }
 
-    private static void removeReach(ServerPlayer player) {
-        AttributeInstance reach = player.getAttribute(Attributes.BLOCK_INTERACTION_RANGE);
-        if (reach != null) {
-            reach.removeModifier(BLOCK_REACH_ID);
+    private static void removeReachModifier(AttributeInstance attribute, Identifier modifierId) {
+        if (attribute != null) {
+            attribute.removeModifier(modifierId);
         }
     }
 

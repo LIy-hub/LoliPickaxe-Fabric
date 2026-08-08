@@ -333,6 +333,12 @@ Assert-True ($enchantmentScreenSource -match 'MAX_LEVEL\s*=\s*32768') `
     'Final enchantment editor does not expose level 32768'
 Assert-True ($configOptionSource -match '(?s)ENCHANTMENT_LEVEL_LIMIT.+32768.+32768\.0D') `
     'Server enchantment level limit is not 32768'
+Assert-True ($configOptionSource -match '(?s)BLOCK_REACH_DISTANCE.+1024\.0D.+1024\.0D') `
+    'Final-pickaxe interaction reach is still capped below 1024 blocks'
+Assert-True ($playerMixinSource -match '(?s)blockInteractionRange.+extendLoliBlockReach') `
+    'Final-pickaxe block reach does not bypass the vanilla 64-block attribute ceiling'
+Assert-True ($playerMixinSource -match '(?s)entityInteractionRange.+extendLoliEntityReach') `
+    'Final-pickaxe entity reach does not bypass the vanilla 64-block attribute ceiling'
 Assert-True ($storageScreenSource -match 'TEXT_COLOR\s*=\s*0xFFF5F5F5') `
     'Storage GUI labels are not rendered with high-contrast text'
 Assert-True ($storageKeySource -match 'InputConstants\.KEY_B') `
@@ -398,16 +404,22 @@ Assert-True ($finalMiningSource -match 'SPECIAL_DROPS\s*=') `
     'Final Loli special-drop table is missing'
 Assert-True ([regex]::Matches($finalMiningSource, 'Map\.entry\(').Count -eq 27) `
     'Final Loli special-drop table must contain exactly 27 entries'
-Assert-True ($pickaxeSource -match 'ABILITY_RANGE\s*=\s*32\.0') `
-    'Existing 32-block right-click execution range changed'
+Assert-True ($pickaxeSource -match 'ABILITY_RANGE\s*=\s*1024\.0') `
+    'Final-pickaxe right-click execution range must remain 1024 blocks'
+Assert-True ($pickaxeSource -match 'getAllEntities\(\)') `
+    'Final-pickaxe right-click execution must cover all loaded entity types'
 Assert-True ($attackResolverSource -match 'MAX_RANGE\s*=\s*1024\.0D') `
     'Existing 1024-block swing resolver range changed'
 Assert-True ($attackResolverSource -match 'Math\.toRadians\(6\.0D\)') `
     'Existing six-degree swing resolver changed'
 Assert-True ($attackResolverSource -match 'isMainHandProtected') `
     'Active execution resolver no longer requires the main-hand pickaxe'
-Assert-True ($protectionSource -match 'INVENTORY_PROTECTION') `
-    'Optional inventory protection integration is missing'
+Assert-True ($protectionSource -match 'inventory\.getContainerSize\(\)') `
+    'Mandatory full-inventory passive protection scan is missing'
+Assert-True ($protectionSource -notmatch 'INVENTORY_PROTECTION') `
+    'Passive inventory protection must not be gated by a configuration switch'
+Assert-True ($configOptionSource -notmatch 'INVENTORY_PROTECTION') `
+    'The retired inventory-protection switch must not remain configurable'
 Assert-True ($commandsSource -match 'SafeTntEffectService\.apply') `
     '/loliattack must call only the safe effect service'
 foreach ($defaultOff in @(

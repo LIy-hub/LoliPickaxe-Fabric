@@ -1,6 +1,8 @@
 package com.liymod.mixin;
 
 import com.liymod.combat.LoliExecutionManager;
+import com.liymod.config.LoliConfigOption;
+import com.liymod.config.LoliItemSettings;
 import com.liymod.protection.LoliProtection;
 import com.liymod.storage.LoliStorageEvents;
 import net.minecraft.world.damagesource.DamageSource;
@@ -106,6 +108,30 @@ public abstract class PlayerMixin extends LivingEntity {
         if (self instanceof ServerPlayer serverPlayer
                 && LoliStorageEvents.hasHeldStorage(serverPlayer)) {
             LoliStorageEvents.markManualEjection(cir.getReturnValue());
+        }
+    }
+
+    @Inject(method = "blockInteractionRange", at = @At("HEAD"), cancellable = true)
+    private void liymod$extendLoliBlockReach(CallbackInfoReturnable<Double> cir) {
+        Player self = (Player) (Object) this;
+        ItemStack stack = self.getMainHandItem();
+        if (LoliItemSettings.isFinalPickaxe(stack)) {
+            double configured = LoliItemSettings.getDouble(stack, LoliConfigOption.BLOCK_REACH_DISTANCE);
+            if (configured > 0.0D) {
+                cir.setReturnValue(configured);
+            }
+        }
+    }
+
+    @Inject(method = "entityInteractionRange", at = @At("HEAD"), cancellable = true)
+    private void liymod$extendLoliEntityReach(CallbackInfoReturnable<Double> cir) {
+        Player self = (Player) (Object) this;
+        ItemStack stack = self.getMainHandItem();
+        if (LoliItemSettings.isFinalPickaxe(stack)) {
+            double configured = LoliItemSettings.getDouble(stack, LoliConfigOption.BLOCK_REACH_DISTANCE);
+            if (configured > 0.0D) {
+                cir.setReturnValue(configured);
+            }
         }
     }
 

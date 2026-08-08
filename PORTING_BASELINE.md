@@ -50,11 +50,11 @@ path.
 
 - An entity attack with the main-hand pickaxe requests
   `ABSOLUTE_EXECUTION`.
-- A main-hand swing also resolves a server-side player target by view geometry:
+- A main-hand swing also resolves any loaded server-side entity by view geometry:
   exact expanded-box ray intersection first, then a six-degree aim fallback,
   with a maximum range of 1024 blocks.
-- Using the pickaxe processes all non-lightning entities returned from the
-  user's bounding box expanded by 32 blocks. A successful execution creates
+- Using the pickaxe processes all loaded non-lightning entities within 1024
+  blocks of the user. A successful execution creates
   lightning at the saved target position.
 - Authority ordering remains `STANDARD(0)` below
   `ABSOLUTE_EXECUTION(Integer.MAX_VALUE)`.
@@ -159,7 +159,7 @@ represented by a safe placeholder.
 
 完整移植以原版 `master` 的 1.12.2 / 1.2.16f 内容为基准，而氪金萝莉本体继续
 采用当前 Fabric 移植已经强化的绝对处决、票据生命周期、主手防护、同物品免疫
-与双音效机制。必须保持上述注册键、工具数值、27 类特殊掉落、32 格扩展范围
+与双音效机制。必须保持上述注册键、工具数值、27 类特殊掉落、1024 格已加载实体
 右键处决与闪电、1024 格/6 度挥击解析、两级处决权限与单向票据状态、持有者
 防伤害/死亡/移除/锁定、飞行与恢复、目标隔离、二级创造管理员检查、高幸运与
 经验替换、同持有者免疫和单 tick 去重。原版其余物品、方块、实体、配方、容器、
@@ -169,7 +169,7 @@ GUI、网络、配置和指令应围绕这条基线恢复。原版会执行蓝�
 ## 旧版细粒度处决选项的现代安全语义
 
 - `target_friendly_entities` 与 `target_all_entities` 只筛选默认关闭的自动范围处决；
-  直接实体攻击、32 格右键处决和 1024 格/6 度挥击解析的冻结强度不受影响。
+  直接实体攻击、1024 格右键处决和 1024 格/6 度挥击解析的冻结强度不受影响。
 - `force_remove` 是默认关闭的旧版强制移除兼容开关。冻结的主动绝对处决本就会
   强制移除非玩家实体，因此该开关用于把反伤从标准处决提升为绝对处决；两条路径
   均只调用 `LoliErasureService`，同物品免疫仍优先，绝不直接调用 `kill`、

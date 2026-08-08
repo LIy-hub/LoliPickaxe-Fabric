@@ -15,6 +15,8 @@ public final class LoliItemSettings {
     private static final String SETTINGS_KEY = "Settings";
     private static final String OWNER_UUID_KEY = "OwnerUuid";
     private static final String OWNER_NAME_KEY = "OwnerName";
+    private static final String SETTINGS_REVISION_KEY = "SettingsRevision";
+    private static final int CURRENT_SETTINGS_REVISION = 2;
 
     private LoliItemSettings() {
     }
@@ -75,7 +77,9 @@ public final class LoliItemSettings {
         if (!isFinalPickaxe(stack)) {
             return;
         }
-        CompoundTag existing = root(stack).getCompoundOrEmpty(SETTINGS_KEY);
+        CompoundTag currentRoot = root(stack);
+        CompoundTag existing = currentRoot.getCompoundOrEmpty(SETTINGS_KEY);
+        int revision = currentRoot.getIntOr(SETTINGS_REVISION_KEY, 0);
         boolean missing = false;
         for (LoliConfigOption option : LoliConfigOption.values()) {
             if (option.itemOverride() && !existing.contains(option.id())) {
@@ -83,7 +87,10 @@ public final class LoliItemSettings {
                 break;
             }
         }
-        if (!missing) {
+        boolean migrateReach = revision < 2
+                && existing.contains(LoliConfigOption.BLOCK_REACH_DISTANCE.id())
+                && existing.getDoubleOr(LoliConfigOption.BLOCK_REACH_DISTANCE.id(), 0.0D) == 0.0D;
+        if (!missing && !migrateReach && revision >= CURRENT_SETTINGS_REVISION) {
             return;
         }
         CustomData.update(DataComponents.CUSTOM_DATA, stack, root -> {
@@ -94,7 +101,11 @@ public final class LoliItemSettings {
                     put(settings, option, LoliServerConfig.get(option));
                 }
             }
+            if (migrateReach) {
+                put(settings, LoliConfigOption.BLOCK_REACH_DISTANCE, 1024.0D);
+            }
             loli.put(SETTINGS_KEY, settings);
+            loli.putInt(SETTINGS_REVISION_KEY, CURRENT_SETTINGS_REVISION);
             root.put(ROOT_KEY, loli);
         });
     }

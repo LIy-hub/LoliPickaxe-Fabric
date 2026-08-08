@@ -19,7 +19,7 @@ import net.fabricmc.loader.api.FabricLoader;
 public final class LoliServerConfig {
     private static final String FILE_NAME = "liymod-loli.properties";
     private static final String REVISION_KEY = "config_revision";
-    private static final int CURRENT_REVISION = 2;
+    private static final int CURRENT_REVISION = 3;
     private static final Map<LoliConfigOption, Object> VALUES = new EnumMap<>(LoliConfigOption.class);
 
     private static Path path;
@@ -139,6 +139,16 @@ public final class LoliServerConfig {
         if (revision < 2
                 && "32".equals(properties.getProperty(LoliConfigOption.ENCHANTMENT_LEVEL_LIMIT.id()))) {
             VALUES.put(LoliConfigOption.ENCHANTMENT_LEVEL_LIMIT, 32768);
+        }
+        if (revision < 3) {
+            String encodedReach = properties.getProperty(LoliConfigOption.BLOCK_REACH_DISTANCE.id());
+            try {
+                if (encodedReach != null && Double.parseDouble(encodedReach) == 0.0D) {
+                    VALUES.put(LoliConfigOption.BLOCK_REACH_DISTANCE, 1024.0D);
+                }
+            } catch (NumberFormatException ignored) {
+                // Invalid values were already rejected by the normal option parser.
+            }
         }
     }
 

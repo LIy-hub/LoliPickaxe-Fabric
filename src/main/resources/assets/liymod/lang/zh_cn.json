@@ -64,7 +64,7 @@
   "config.liymod.loli.auto_furnace": "自动熔炼采掘方块",
   "config.liymod.loli.auto_accept": "自动收纳进储藏室",
   "config.liymod.loli.thorns": "反伤",
-  "config.liymod.loli.block_reach_distance": "挖掘距离",
+  "config.liymod.loli.block_reach_distance": "方块/实体可接触距离",
   "config.liymod.loli.auto_kill_range_entity": "自动范围攻击",
   "config.liymod.loli.auto_kill_range": "自动攻击范围",
   "config.liymod.loli.target_friendly_entities": "自动攻击可选中友好生物",
