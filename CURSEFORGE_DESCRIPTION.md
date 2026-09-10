@@ -1,7 +1,5 @@
 # LoliPickaxe Fabric
 
-[Download](https://www.curseforge.com/minecraft/mc-mods/lolipickaxe-fabric/files) · [Original project](https://github.com/IslenautsGK/LoliPickaxe) · [中文](#中文)
-
 An unbreakable pickaxe with extreme mining power, flight, and attacks that wipe out nearby entities. This Fabric port brings the deliberately overpowered gameplay of [IslenautsGK's LoliPickaxe](https://github.com/IslenautsGK/LoliPickaxe) to newer Minecraft versions. It is maintained by Liy and is not an official continuation by the original authors.
 
 ### Getting the pickaxe
@@ -68,12 +66,8 @@ Use files built for the same Minecraft version. Compatibility with third-party c
 
 ## Credits and license / 署名与许可
 
-Original project: **IslenautsGK and contributors**. Fabric port: **Liy**. Licensed under [GPL-3.0-only](LICENSE). See [CREDITS.md](CREDITS.md) for contributor and asset notices.
+Original project: **IslenautsGK and contributors**. Fabric port: **Liy**. Licensed under [GPL-3.0-only](https://github.com/LIy-hub/LoliPickaxe-Fabric/blob/main/LICENSE). See [CREDITS.md](https://github.com/LIy-hub/LoliPickaxe-Fabric/blob/main/CREDITS.md) for contributor and asset notices.
 
 原作由 **IslenautsGK 及其贡献者**开发，Fabric 移植由 **Liy** 维护。项目采用 GPL-3.0-only，作者与素材署名见上述文件。
 
-## Development / 开发
-
-Choose the `mc/<Minecraft version>` branch for your target release; `main` retains the original 1.20.1 development source. 构建时请选择对应的 `mc/<Minecraft 版本>` 分支，`main` 保留最初的 1.20.1 开发源码。
-
-[Source branches, builds, and technical notes / 源码分支、构建与技术说明](docs/development.md)
+[Source code and issue tracker / 源码与问题反馈](https://github.com/LIy-hub/LoliPickaxe-Fabric)

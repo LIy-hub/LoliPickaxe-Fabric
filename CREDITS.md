@@ -12,7 +12,7 @@ maintainers.
 ## Fabric port
 
 - Port and current implementation: LIy
-- Target platform: Minecraft 1.20.1 with Fabric Loader and Fabric API
+- Target platform: Minecraft with Fabric Loader and Fabric API; see [README.md](README.md) for supported releases
 
 ## Audio
 
