@@ -51,7 +51,7 @@ public abstract class EntityMixin {
         }
     }
 
-    @Inject(method = "setInvulnerable", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "setPermanentlyInvulnerable", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventInvulnerabilityRemoval(boolean invulnerable, CallbackInfo ci) {
         if (!invulnerable && LoliProtection.isExecutionImmune((Entity) (Object) this)) {
             ci.cancel();

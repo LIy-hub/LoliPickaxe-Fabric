@@ -99,7 +99,7 @@ public final class SmallLoliMiningEvents {
         if (!context.hasParameter(LootContextParams.BLOCK_STATE)) {
             return;
         }
-        ItemInstance toolInstance = context.getOptionalParameter(LootContextParams.TOOL);
+        ItemInstance toolInstance = context.getOptional(LootContextParams.TOOL);
         if (!(toolInstance instanceof ItemStack tool)
                 || !(tool.getItem() instanceof SmallLoliPickaxeItem)) {
             return;
@@ -152,7 +152,7 @@ public final class SmallLoliMiningEvents {
         drops.clear();
         drops.addAll(transformed);
 
-        Vec3 origin = context.getOptionalParameter(LootContextParams.ORIGIN);
+        Vec3 origin = context.getOptional(LootContextParams.ORIGIN);
         int experiencePoints = randomizedExperience(context, experience);
         if (origin != null && experiencePoints > 0) {
             ExperienceOrb.award(level, origin, experiencePoints);
@@ -161,7 +161,7 @@ public final class SmallLoliMiningEvents {
     }
 
     private static void collectDropsIntoStorage(LootContext context, List<ItemStack> drops) {
-        Entity source = context.getOptionalParameter(LootContextParams.THIS_ENTITY);
+        Entity source = context.getOptional(LootContextParams.THIS_ENTITY);
         if (!(source instanceof ServerPlayer player)) {
             return;
         }

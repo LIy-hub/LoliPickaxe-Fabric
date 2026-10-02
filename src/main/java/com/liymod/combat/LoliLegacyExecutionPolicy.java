@@ -376,7 +376,7 @@ public final class LoliLegacyExecutionPolicy {
             );
             drop.setTarget(owner.getUUID());
             drop.setUnlimitedLifetime();
-            drop.setInvulnerable(true);
+            drop.setPermanentlyInvulnerable(true);
             drop.setPickUpDelay(20);
             return level.addFreshEntity(drop);
         } catch (RuntimeException exception) {

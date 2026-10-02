@@ -5,6 +5,7 @@ import com.liymod.storage.LoliStorageData;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -35,7 +36,7 @@ public final class LoliStorageMenus {
         }
         LoliStorageData storage = LoliStorageData.open(stack);
         for (ItemStack stored : storage.removeAllStoredItems()) {
-            player.drop(stored, false);
+            player.drop(stored, false, Prediction.SERVER_ONLY);
         }
         return true;
     }

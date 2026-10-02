@@ -66,7 +66,7 @@ public final class LoliAbilityEvents {
         player.setHealth(player.getMaxHealth());
         player.deathTime = 0;
         player.hurtTime = 0;
-        player.invulnerableTime = 0;
+        player.setInvulnerableTime(0);
         player.fallDistance = 0.0F;
         player.setTicksFrozen(0);
         player.setAirSupply(player.getMaxAirSupply());

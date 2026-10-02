@@ -4,6 +4,7 @@ import com.liymod.storage.LoliStorageData;
 import com.liymod.network.StoragePageSyncPayload;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Prediction;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -100,7 +101,7 @@ public final class StorageMenu extends AbstractContainerMenu {
 
     public void dropAll(ServerPlayer player) {
         for (ItemStack stack : storage.removeAllStoredItems()) {
-            player.drop(stack, false);
+            player.drop(stack, false, Prediction.SERVER_ONLY);
         }
         broadcastFullState();
     }

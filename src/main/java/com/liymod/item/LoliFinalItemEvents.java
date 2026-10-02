@@ -49,7 +49,7 @@ public final class LoliFinalItemEvents {
         if (ownerId == null) {
             return;
         }
-        entity.setInvulnerable(true);
+        entity.setPermanentlyInvulnerable(true);
         entity.setUnlimitedLifetime();
         entity.setTarget(ownerId);
 

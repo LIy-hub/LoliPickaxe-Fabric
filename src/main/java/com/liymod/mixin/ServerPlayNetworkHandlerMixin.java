@@ -3,10 +3,9 @@ package com.liymod.mixin;
 import com.liymod.combat.LoliAttackResolver;
 import com.liymod.protection.LoliProtection;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import net.minecraft.network.protocol.game.ServerboundSwingPacket;
+import net.minecraft.network.protocol.game.ServerboundPunchPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -30,13 +29,12 @@ public abstract class ServerPlayNetworkHandlerMixin {
         return LoliProtection.isUntargetable(target) ? null : target;
     }
 
-    @Inject(method = "handleAnimate", at = @At("TAIL"))
+    @Inject(method = "handlePunch", at = @At("TAIL"))
     private void lolipickaxe$executeAbsoluteSwing(
-            ServerboundSwingPacket packet,
+            ServerboundPunchPacket packet,
             CallbackInfo ci
     ) {
-        if (packet.getHand() == InteractionHand.MAIN_HAND) {
-            LoliAttackResolver.executeFromLook(player);
-        }
+        // 26.3 punch packets always represent a main-hand attack.
+        LoliAttackResolver.executeFromLook(player);
     }
 }
