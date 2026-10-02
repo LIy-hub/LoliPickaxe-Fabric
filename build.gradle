@@ -85,3 +85,16 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+// Input-validation checks need no Minecraft instance or third-party test engine.
+tasks.register('regressionTest', JavaExec) {
+	group = 'verification'
+	description = 'Checks bounded server configuration and safe-effect contracts.'
+	dependsOn testClasses
+	classpath = sourceSets.test.runtimeClasspath
+	mainClass = 'com.liymod.ConfigurationRegressionTest'
+}
+
+tasks.named('check') {
+	dependsOn tasks.named('regressionTest')
+}

@@ -61,14 +61,14 @@ function Get-ZipEntryText {
 $properties = Read-Properties (Join-Path $projectRoot 'gradle.properties')
 Assert-True ($properties.minecraft_version -eq $ExpectedMinecraftVersion) `
     "minecraft_version is $($properties.minecraft_version), expected $ExpectedMinecraftVersion"
-Assert-True ($properties.loader_version -eq '0.19.3') `
-    "loader_version must remain pinned to 0.19.3"
-Assert-True ($properties.loom_version -eq '1.17.17') `
-    "loom_version must remain pinned to stable 1.17.17"
+Assert-True ($properties.loader_version -eq '0.19.5') `
+    "loader_version must remain pinned to 0.19.5"
+Assert-True ($properties.loom_version -eq '1.17.21') `
+    "loom_version must remain pinned to stable 1.17.21"
 Assert-True (-not $properties.ContainsKey('yarn_mappings')) `
     "26.x builds must use Minecraft's unobfuscated official names"
-Assert-True ($properties.fabric_api_version -notmatch 'SNAPSHOT') `
-    "Fabric API must be an exact release"
+Assert-True ($properties.fabric_api_version -eq '0.161.0+26.3') `
+    "Fabric API must remain pinned to 0.161.0+26.3"
 
 $buildScript = Get-Content -LiteralPath (Join-Path $projectRoot 'build.gradle') -Raw
 Assert-True ($buildScript -match "options\.release\s*=\s*$ExpectedJavaRelease") `
@@ -141,8 +141,8 @@ try {
         "JAR Minecraft dependency is $($metadata.depends.minecraft)"
     Assert-True ($metadata.depends.java -eq ">=$ExpectedJavaRelease") `
         "JAR Java dependency is $($metadata.depends.java)"
-    Assert-True ($metadata.depends.fabricloader -eq '>=0.19.3') `
-        "JAR Fabric Loader dependency is not >=0.19.3"
+    Assert-True ($metadata.depends.fabricloader -eq '>=0.19.5') `
+        "JAR Fabric Loader dependency is not >=0.19.5"
 
     $requiredEntries = @(
         "LICENSE_LoliPickaxe-$ExpectedMinecraftVersion",

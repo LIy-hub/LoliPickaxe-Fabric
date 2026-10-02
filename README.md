@@ -1,6 +1,6 @@
 # LoliPickaxe
 
-> A Fabric 26.2 memorial port of the classic LoliPickaxe mod.
+> A Fabric 26.3 memorial port of the classic LoliPickaxe mod.
 
 This project preserves the concept and gameplay identity of the original
 [IslenautsGK/LoliPickaxe](https://github.com/IslenautsGK/LoliPickaxe) while
@@ -8,7 +8,7 @@ reimplementing it for modern Fabric. It is distributed under GPL-3.0 in
 accordance with the original project's license. See [CREDITS.md](CREDITS.md)
 for attribution and third-party asset notes.
 
-LoliPickaxe is a Fabric mod for Minecraft 26.2. The high-version branch is
+LoliPickaxe is a Fabric mod for Minecraft 26.3. The high-version branch is
 restoring the complete item, block, entity and utility catalog from the classic
 1.12.2 release while preserving the Fabric port's stronger Loli Pickaxe combat
 and survival implementation.
@@ -71,7 +71,7 @@ and survival implementation.
   server-authoritative password matching. As in the released legacy build, its
   built-in password recipe registry is empty until integrations register recipes.
 - Restores the level-one `liymod:loli_auto_furnace` enchantment through the
-  native 26.2 enchantment registry and `minecraft:smelts_loot` contract.
+  native 26.3 enchantment registry and `minecraft:smelts_loot` contract.
 - Restores the exact 63 by 63 Loli Altar ritual, the persistent Loli entity and
   the three special TNT blocks. The legacy operating-system attacks are replaced
   by bounded, responsive in-game effects or a single-player disconnect; they
@@ -118,7 +118,7 @@ The preserved Fabric behavior and full-restoration boundaries are documented in
 
 ## 中文说明
 
-LoliPickaxe（氪金萝莉）是经典 LoliPickaxe 模组的 Minecraft 26.2
+LoliPickaxe（氪金萝莉）是经典 LoliPickaxe 模组的 Minecraft 26.3
 Fabric 纪念复刻版。本项目保留原模组的核心概念与玩法特色，并针对现代
 Fabric 环境重新实现；它并非原作者发布的官方续作。
 
@@ -159,7 +159,7 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   名单；名单去重且最多包含 24 个 UUID 或玩家名。
 - 密码工作台已恢复 3×3 合成区、密码输入与服务端判定。与原版发行源码一致，
   内置密码配方注册表默认为空，供后续兼容集成注册配方。
-- 已通过 26.2 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级
+- 已通过 26.3 原生附魔注册表与 `minecraft:smelts_loot` 标签恢复一级
   `liymod:loli_auto_furnace` 自动熔炼附魔。
 - 已恢复精确 63×63 萝莉祭坛仪式、持久且只能被退散物品移除的萝莉实体，以及
   三种特殊 TNT。原版操作系统级破坏行为已替换为有时限、可响应的游戏内效果
@@ -190,8 +190,8 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 ### 运行要求
 
 - Java 25
-- Minecraft 26.2
-- Fabric Loader 0.19.3 或更高版本
+- Minecraft 26.3
+- Fabric Loader 0.19.5 或更高版本
 - Fabric API
 
 ### 原版与许可
@@ -204,19 +204,27 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 ## Requirements
 
 - Java 25
-- Minecraft 26.2
-- Fabric Loader 0.19.3 or newer
+- Minecraft 26.3
+- Fabric Loader 0.19.5 or newer
 - Fabric API
 
 ## Development
 
-Build the mod on Windows:
+Build and run the configuration regression checks with Java 25:
 
 ```powershell
 .\gradlew.bat build
 ```
 
-The remapped mod JAR is written to `build/libs`.
+On Linux/macOS, use `./gradlew build`. The mod JAR is written to `build/libs`.
+Run the release/content contracts with PowerShell 7:
+
+```powershell
+./scripts/verify-release.ps1 -ExpectedMinecraftVersion 26.3 -ExpectedJavaRelease 25
+./scripts/verify-full-port.ps1
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for the 26.3 port and verification scope.
 
 Launch a development client:
 
@@ -224,7 +232,8 @@ Launch a development client:
 .\gradlew.bat runClient
 ```
 
-The project uses Mojang's official mappings and Fabric Loom. Mod metadata is
+The project uses Minecraft's official unobfuscated names and Fabric Loom;
+there is no Yarn or mappings dependency. Mod metadata is
 in `src/main/resources/fabric.mod.json`.
 
 ## License

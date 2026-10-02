@@ -18,7 +18,7 @@ called out separately below.
 ## Fabric port
 
 - Port and current implementation: LIy
-- Current high-version target: Minecraft 26.2 with Fabric Loader and Fabric API
+- Current high-version target: Minecraft 26.3 with Fabric Loader and Fabric API
 
 ## Audio
 

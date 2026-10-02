@@ -2,14 +2,18 @@
 
 ## Acceptance baseline
 
-- Target branch: `mc/26.2` (Minecraft 26.2, Fabric Loader 0.19.3,
-  Fabric API 0.155.2+26.2, Java 25).
+- Target branch: `mc/26.3` (Minecraft 26.3, Fabric Loader 0.19.5,
+  Fabric API 0.161.0+26.3, Java 25).
 - Legacy source: IslenautsGK/LoliPickaxe `master` at
   `c9a01e493cc7c8c265837b2d43f29a28a61d59fa` (1.12.2 / 1.2.16f).
 - Existing Fabric Loli Pickaxe behavior is frozen by `PORTING_BASELINE.md`.
 - Completion requires an independent review result of **Pass** and a measured
   completeness strictly greater than 90%. Any missing part must be listed
   separately.
+
+The detailed statuses below are inherited from the 26.2 restoration audit.
+They are not evidence of new 26.3 runtime testing; see [CHANGELOG.md](CHANGELOG.md)
+for the current port validation status.
 
 ## Weighted review areas
 
@@ -18,7 +22,7 @@
 | Stable Fabric Loli core | 10 | Existing pickaxe, execution tickets, holder defense, special drops, same-item immunity | Preserved; automated regression checks cover the fixed 27 drops, 32-block use, 1024/6-degree resolver, ABSOLUTE tickets and main-hand immunity |
 | Static content and assets | 10 | 21 fixed items, one default record, five block items, textures/models/translations | Complete |
 | Small Loli progression | 13 | Small pickaxe, 14 add-ons, ten-tier superposition, transformed mining/combat stats | Complete: tier data, formulas, Fortune/Looting, range mining/attack, auto-smelt, flight, buffs, dodge, damage return and storage integration |
-| Recipes and enchantment | 8 | 20 legacy JSON recipes, dynamic upgrade recipes, Auto Furnace enchantment | Complete: 20 static recipes, 3 dynamic recipes and native 26.2 Auto-Smelt enchantment |
+| Recipes and enchantment | 8 | 20 legacy JSON recipes, dynamic upgrade recipes, Auto Furnace enchantment | Complete: 20 static recipes, 3 dynamic recipes and native 26.3 Auto-Smelt enchantment |
 | Functional blocks | 9 | Three effect TNT blocks, Loli Altar, Password Workbench | Complete: three TNT blocks, exact 63x63 altar and server-authoritative password workbench; its released password recipe registry intentionally starts empty like upstream |
 | Entities and altar summoning | 10 | Loli entity, target/attack/swim AI, effect TNT entity and rendering | Complete: both entity ids, persistent/invulnerable Loli AI, safe effect TNT, exact altar ritual and client renderers |
 | Storage and automation | 12 | Internal inventories, blacklist, auto-accept, drop-all, auto-smelt and range mining | Complete: bounded 81-slot paging (100 final-pickaxe pages), tiered Small Loli pages, blacklist, nearby auto-accept, direct mining-drop insertion, drop-all, auto-smelt and range mining |

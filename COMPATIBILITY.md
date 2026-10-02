@@ -15,10 +15,10 @@ were not executed.
 | [EntityEraser](https://modrinth.com/mod/entityeraser/versions) | `entityeraser-re1.1.0obf.jar` | Minecraft 1.20.1 Forge | `9703C4E47B8DE403AC867577B91D3112808728824202D0F94A5B85FEB0560A90` |
 | [PIG2](https://www.curseforge.com/minecraft/mc-mods/pig2/files/all) | `pig2mod-1.20.1-2.4.3.ThisIsOldVersion.jar` | Minecraft 1.20.1 Forge | `5A248B158B6D1D2FC330D16135FA1967EE88C49DB665686580FC4EBC76EE9D54` |
 
-The current LoliPickaxe branch is Fabric 26.2. The audited EntityEraser and
+The current LoliPickaxe branch is Fabric 26.3. The audited EntityEraser and
 PIG2 jars therefore cannot be loaded into this development instance, and the
 Forever Love Sword 26.2 artifact is NeoForge rather than Fabric. Compatibility
-is keyed by stable registry ids and is ready for equivalent Fabric/26.2 ports;
+is keyed by stable registry ids and is ready for equivalent Fabric/26.3 ports;
 narrow reflection hooks activate only when the corresponding mod id is loaded.
 
 ## Behavior matrix
