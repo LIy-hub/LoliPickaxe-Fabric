@@ -1,6 +1,10 @@
 package com.liymod.mixin;
 
 import com.liymod.protection.LoliProtection;
+import com.liymod.storage.LoliStorageEvents;
+import net.minecraft.util.Prediction;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.item.ItemEntity;
 import com.liymod.protection.TrustedPlayerLifecycle;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -99,4 +103,21 @@ public abstract class ServerPlayerEntityMixin {
     ) {
         TrustedPlayerLifecycle.end((ServerPlayer) (Object) this);
     }
+
+    @Inject(
+            method = "drop(Lnet/minecraft/world/item/ItemStack;ZLnet/minecraft/util/Prediction;)Lnet/minecraft/world/entity/item/ItemEntity;",
+            at = @At("RETURN")
+    )
+    private void liymod$keepManualDropsOutsideStorage(
+            ItemStack stack,
+            boolean throwRandomly,
+            Prediction prediction,
+            CallbackInfoReturnable<ItemEntity> cir
+    ) {
+        ServerPlayer self = (ServerPlayer) (Object) this;
+        if (LoliStorageEvents.hasHeldStorage(self)) {
+            LoliStorageEvents.markManualEjection(cir.getReturnValue());
+        }
+    }
+
 }

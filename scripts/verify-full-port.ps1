@@ -272,6 +272,9 @@ $storageKeySource = Get-Content -LiteralPath (
 $playerMixinSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/mixin/PlayerMixin.java'
 ) -Raw
+$playerMixinSource += Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/main/java/com/liymod/mixin/ServerPlayerEntityMixin.java'
+) -Raw
 $smallPickaxeSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/item/SmallLoliPickaxeItem.java'
 ) -Raw

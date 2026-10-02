@@ -4,15 +4,12 @@ import com.liymod.combat.LoliExecutionManager;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
 import com.liymod.protection.LoliProtection;
-import com.liymod.storage.LoliStorageEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
@@ -92,22 +89,6 @@ public abstract class PlayerMixin extends LivingEntity {
             experienceLevel = 142857;
             onUpdateAbilities();
             ci.cancel();
-        }
-    }
-
-    @Inject(
-            method = "drop(Lnet/minecraft/world/item/ItemStack;Z)Lnet/minecraft/world/entity/item/ItemEntity;",
-            at = @At("RETURN")
-    )
-    private void liymod$keepManualDropsOutsideStorage(
-            ItemStack stack,
-            boolean throwRandomly,
-            CallbackInfoReturnable<ItemEntity> cir
-    ) {
-        Player self = (Player) (Object) this;
-        if (self instanceof ServerPlayer serverPlayer
-                && LoliStorageEvents.hasHeldStorage(serverPlayer)) {
-            LoliStorageEvents.markManualEjection(cir.getReturnValue());
         }
     }
 

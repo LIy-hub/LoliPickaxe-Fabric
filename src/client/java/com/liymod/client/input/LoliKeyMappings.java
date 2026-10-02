@@ -19,32 +19,32 @@ public final class LoliKeyMappings {
             Identifier.fromNamespaceAndPath("liymod", "general"));
     private static final KeyMapping STORAGE = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.liymod.loli_container",
-            InputConstants.Type.KEYSYM,
+            InputConstants.Type.KEYBOARD,
             InputConstants.KEY_B,
             CATEGORY));
     private static final KeyMapping BLACKLIST = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.liymod.loli_container_blacklist",
-            InputConstants.Type.KEYSYM,
+            InputConstants.Type.KEYBOARD,
             InputConstants.KEY_U,
             CATEGORY));
     private static final KeyMapping FINAL_CONFIG = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.liymod.loli_config",
-            InputConstants.Type.KEYSYM,
+            InputConstants.Type.KEYBOARD,
             InputConstants.KEY_N,
             CATEGORY));
     private static final KeyMapping FINAL_ENCHANTMENT = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.liymod.loli_enchantment",
-            InputConstants.Type.KEYSYM,
+            InputConstants.Type.KEYBOARD,
             InputConstants.KEY_M,
             CATEGORY));
     private static final KeyMapping FINAL_EFFECT = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.liymod.loli_potion",
-            InputConstants.Type.KEYSYM,
+            InputConstants.Type.KEYBOARD,
             InputConstants.KEY_P,
             CATEGORY));
     private static final KeyMapping FINAL_TELEPORT = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.liymod.loli_space_folding",
-            InputConstants.Type.KEYSYM,
+            InputConstants.Type.KEYBOARD,
             InputConstants.KEY_K,
             CATEGORY));
 

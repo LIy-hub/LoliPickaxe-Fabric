@@ -3,6 +3,7 @@ package com.liymod.client.card;
 import com.liymod.item.LoliCardCatalog;
 import com.liymod.item.LoliCardData;
 import com.mojang.blaze3d.platform.NativeImage;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -214,7 +215,7 @@ final class CardViewerScreen extends Screen {
                     && image != null
                     && image.link() != null
                     && imageBounds(image).contains(event.x(), event.y())) {
-                ConfirmLinkScreen.confirmLinkNow(this, image.link());
+                ConfirmLinkScreen.confirmLinkNow(this, URI.create(image.link()));
             }
             return true;
         }
