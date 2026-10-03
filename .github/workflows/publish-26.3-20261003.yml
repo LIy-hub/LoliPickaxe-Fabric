@@ -1,0 +1,39 @@
+name: Publish verified Minecraft 26.3 artifacts
+on:
+  push:
+    branches: ["codex/publish-26.3-20261003"]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: LIy-hub/LoliPickaxe-Fabric
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve immutable successful CI artifacts
+        run: |
+          mkdir -p .github/release-26.3/LoliPickaxe-Fabric
+          gh run download 37045152836 --dir .github/release-26.3/LoliPickaxe-Fabric/ci-artifacts
+          gh api repos/LIy-hub/LoliPickaxe-Fabric/actions/runs/37045152836 > .github/release-26.3/LoliPickaxe-Fabric/ci-run.json
+          gh api repos/LIy-hub/LoliPickaxe-Fabric/actions/runs/37045152836/artifacts > .github/release-26.3/LoliPickaxe-Fabric/ci-artifact-metadata.json
+          gh run view 37045152836 --log > .github/release-26.3/LoliPickaxe-Fabric/ci.log
+      - name: Validate original JAR bytes, metadata and test evidence
+        run: python3 .github/release-26.3/stage_releases.py LoliPickaxe-Fabric
+      - name: Create verified prerelease draft
+        run: |
+          gh release create 'v1.0.0+26.3' .github/release-26.3/LoliPickaxe-Fabric/release/* --target '63fa0103440a30fd13a302e9a9fe2dfc59336680' --title 'LoliPickaxe Fabric 1.0.0 — Minecraft 26.3' --notes-file .github/release-26.3/LoliPickaxe-Fabric/release-notes.md --draft --prerelease
+      - name: Preserve publication verification records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-evidence-26.3
+          path: |
+            .github/release-26.3/LoliPickaxe-Fabric/release/verification-manifest.json
+            .github/release-26.3/LoliPickaxe-Fabric/release/SHA256SUMS.txt
+            .github/release-26.3/LoliPickaxe-Fabric/release-notes.md
+            .github/release-26.3/LoliPickaxe-Fabric/ci-run.json
+          if-no-files-found: warn
