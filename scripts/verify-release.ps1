@@ -112,9 +112,9 @@ foreach ($relativePath in $expectedAssets.Keys) {
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 45
     '@ModifyVariable' = 3
-    '@ModifyExpressionValue' = 1
+    '@ModifyExpressionValue' = 2
     '@Accessor' = 4
 }
 $javaSources = Get-ChildItem -LiteralPath $mixinSourceRoot -Recurse -Filter '*.java'

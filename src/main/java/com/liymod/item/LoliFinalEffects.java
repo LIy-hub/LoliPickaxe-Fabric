@@ -27,7 +27,7 @@ public final class LoliFinalEffects {
     }
 
     public static void ensureDefaults(ItemStack stack) {
-        CompoundTag custom = com.liymod.compat.LegacyComponents.getOrDefault(stack, DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        CompoundTag custom = com.liymod.nbt.LoliCustomData.view(stack);
         CompoundTag root = custom.getCompound(ROOT_KEY);
         if (root.contains(EFFECTS_KEY)) {
             return;
@@ -40,8 +40,8 @@ public final class LoliFinalEffects {
 
     public static Map<ResourceLocation, Integer> get(ItemStack stack) {
         Map<ResourceLocation, Integer> values = new LinkedHashMap<>();
-        CompoundTag custom = com.liymod.compat.LegacyComponents.getOrDefault(stack, DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        if (custom.sizeInBytes() > 64 * 1024) {
+        CompoundTag custom = com.liymod.nbt.LoliCustomData.view(stack);
+        if (custom.getCompound(ROOT_KEY).getList(EFFECTS_KEY, net.minecraft.nbt.Tag.TAG_COMPOUND).sizeInBytes() > 64 * 1024) {
             return Map.of();
         }
         ListTag list = custom.getCompound(ROOT_KEY).getList(EFFECTS_KEY, net.minecraft.nbt.Tag.TAG_COMPOUND);

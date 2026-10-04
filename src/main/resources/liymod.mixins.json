@@ -16,13 +16,20 @@
     "ServerPlayerInteractionManagerMixin",
     "TargetPredicateMixin",
     "LootTableMixin",
-    "LegacyItemStackMixin"
+    "LegacyItemStackMixin",
+    "accessor.ExperienceOrbAccessor",
+    "ExperienceOrbMiningMixin",
+    "ItemStackStorageMixin",
+    "LegacyStorageNetworkMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
     "client.LegacyPickRangeMixin",
-    "client.LegacyGameRendererMixin"
+    "client.LegacyGameRendererMixin",
+    "client.ChatComponentDivineMixin",
+    "client.LegacyFluidSelectionMixin",
+    "client.LevelRendererMiningMixin"
   ]
 }
