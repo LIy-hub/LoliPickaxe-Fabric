@@ -90,6 +90,12 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
     }
 
     @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float deltaTicks) {
+        super.render(graphics, mouseX, mouseY, deltaTicks);
+        renderTooltip(graphics, mouseX, mouseY);
+    }
+
+    @Override
     protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
         titleText.draw(graphics, font, 28, titleLabelY, TEXT_COLOR, mouseX, mouseY, leftPos, topPos);
         graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT_COLOR, false);
