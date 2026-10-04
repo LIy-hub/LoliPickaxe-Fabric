@@ -20,9 +20,10 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
         super(menu, inventory, title); imageWidth = 176; imageHeight = 196; titleLabelX = 28; titleLabelY = 6; inventoryLabelY = 102;
     }
     @Override protected void init() {
+        String draft=password==null?menu.password():password.getValue();
         super.init();
         password = new EditBox(font, leftPos + 29, topPos + 18, 75, 16, Component.translatable("gui.liymod.password"));
-        password.setMaxLength(64); password.setTextColor(0xFFFFFFFF); password.setValue(menu.password()); addRenderableWidget(password);
+        password.setMaxLength(64); password.setTextColor(0xFFFFFFFF); password.setValue(draft); addRenderableWidget(password);
         addRenderableWidget(Button.builder(Component.translatable("gui.liymod.password.done"), b -> submit()).bounds(leftPos + 114, topPos + 16, 30, 20).build());
         setInitialFocus(password);
     }
@@ -39,9 +40,11 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
     }
     @Override protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) { graphics.blit(TEXTURE, leftPos, topPos, 0, 0, imageWidth, imageHeight, 256, 256); }
     @Override protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, title, titleLabelX, titleLabelY, 0xFFF5F5F5, true);
-        graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, 0xFFF5F5F5, true);
-        graphics.drawString(font, Component.translatable("container.crafting"), 28, 36, 0xFFF5F5F5, true);
-        if (submitted && menu.result().getItem(0).isEmpty()) graphics.drawString(font, Component.translatable("gui.liymod.password.no_match"), 84, 89, 0xFFFF7070, true);
+        com.liymod.client.gui.LoliGui.text(font,title,imageWidth-titleLabelX-6,1)
+                .draw(graphics,font,titleLabelX,titleLabelY,com.liymod.client.gui.LoliGui.TEXT_COLOR,mouseX,mouseY,leftPos,topPos);
+        graphics.drawString(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, com.liymod.client.gui.LoliGui.TEXT_COLOR, false);
+        graphics.drawString(font, Component.translatable("container.crafting"), 28, 36, com.liymod.client.gui.LoliGui.TEXT_COLOR, false);
+        if (submitted && menu.result().getItem(0).isEmpty()) com.liymod.client.gui.LoliGui.text(font,Component.translatable("gui.liymod.password.no_match"),76,2)
+                .draw(graphics,font,90,84,com.liymod.client.gui.LoliGui.ERROR_COLOR,mouseX,mouseY,leftPos,topPos);
     }
 }

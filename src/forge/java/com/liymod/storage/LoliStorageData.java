@@ -96,7 +96,8 @@ public final class LoliStorageData {
     public static ItemStack insert(ItemStack tool, ItemStack incoming) {
         if (!supports(tool) || incoming.isEmpty() || isStorageTool(incoming) || isBlacklisted(tool, incoming)) return incoming;
         if (!isSafeStack(incoming)) return incoming;
-        List<ItemStack> items = load(tool);
+        LoliStorageContainer active = LoliStorageContainer.active(tool);
+        List<ItemStack> items = active == null ? load(tool) : active.allItems();
         ItemStack remainder = incoming.copy();
         long storedBytes = totalSize(items);
         boolean changed = false;
@@ -123,7 +124,7 @@ public final class LoliStorageData {
             if (storedBytes + size > MAX_TOTAL_NBT_BYTES) break;
             items.set(i, stored); storedBytes += size; remainder.shrink(moved); changed = true;
         }
-        if (changed) save(tool, items);
+        if (changed) { save(tool, items); if (active != null) active.externalMutation(); }
         return remainder;
     }
 

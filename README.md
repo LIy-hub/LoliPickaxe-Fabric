@@ -9,8 +9,8 @@
 - 28 个可见物品、5 个方块、2 个实体、1 个附魔、20 个固定配方和 3 个动态升级配方。
 - 普通萝莉镐与 14 类升级材料：原版等级公式、范围采掘/攻击、时运/抢夺、自动熔炼、飞行、状态效果、闪避、反伤和分级储存。切换范围会播放原版 `lolisuccess.ogg`。
 - 氪金萝莉镐：单次服务端事件内完成范围采掘；27 类特殊掉落；默认自动熔炼与单件 `AUTO_ACCEPT`；1024 格内全部已加载实体右键处决；1024 格方块/实体接触距离和 6 度挥击解析；主手防护、同物免疫、反伤、主人绑定掉落物保护与召回。
-- B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑黑名单。最终镐 100 页，普通镐页数随升级变化。主动丢出的物品带永久排除标记，不会被自动收纳重新吸回；附近吸取与采掘掉落都读取当前单件镐的 `AUTO_ACCEPT`。
-- N 打开四页单件设置，M 编辑最高 32768 级附魔，P 编辑状态效果，K 使用服务端校验的相对空间折叠。界面文本使用高对比亮色。
+- B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑黑名单。最终镐容量上限为 100 页，普通镐容量随升级变化；实际显示页数按已存内容动态增减，末页存满后开放下一页。主动丢出的物品带永久排除标记，不会被自动收纳重新吸回；附近吸取与采掘掉落都读取当前单件镐的 `AUTO_ACCEPT`。
+- N 打开四页单件设置，M 编辑最高 32768 级附魔，P 编辑状态效果，K 使用服务端校验的相对空间折叠。灰色面板使用原版深色无阴影文字，长文字按当前字体测量。
 - 已恢复清背包、缴械、踢出、自动攻击实体过滤、强制处决、轮回名单、灵魂超度名单和豁免名单。危险选项默认全部关闭；物品转移在处决失败时按原槽回滚，成功时只生成绑定目标、无敌、无限寿命且不会被储存吸回的可回收掉落物。
 - 63×63 精确祭坛、萝莉实体、退散与异常实体清理物品、密码工作台、三种安全 TNT、十张卡图/卡册、HTTPS 网络卡片和萝莉唱片。
 - 萝莉实体默认恢复旧版锁敌攻击、合法目标位置瞬移与移动速度；服务端可通过 `/loli set loli_attack|loli_teleport|loli_speed <值>` 分别调整。
@@ -69,3 +69,9 @@ $env:JAVA_OPTS = '-Dnet.minecraftforge.gradle.check.certs=false'
 ## 许可与致谢
 
 本项目按原项目的 GPL-3.0 继续发布。作者、素材来源与许可说明见 [CREDITS.md](CREDITS.md)，完整移植边界见 [PORTING_BASELINE.md](PORTING_BASELINE.md)。
+
+## GUI synchronization / 界面同步
+
+Runtime panel measurement, local storage fitting, dynamic visible pages and draft preservation follow the accepted Fabric GUI behavior. Forge retains its auto-accept switch and ID-list blacklist. See [GUI behavior and validation](docs/gui-validation.md). Build, headless checks and client startup do not establish in-game or visual acceptance.
+
+界面已同步运行时布局、储藏室局部适配、动态显示页数和输入保留；Forge 保留自动收纳开关及 ID 列表黑名单。验证范围和游戏内检查步骤见上述文档。

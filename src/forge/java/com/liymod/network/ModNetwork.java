@@ -48,7 +48,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ModNetwork {
-    private static final String VERSION = "1";
+    private static final String VERSION = "2";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(LiyMod.MOD_ID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 
@@ -66,6 +66,24 @@ public final class ModNetwork {
         CHANNEL.registerMessage(8, CardUpdatePacket.class, CardUpdatePacket::encode, CardUpdatePacket::decode, CardUpdatePacket::handle);
         CHANNEL.registerMessage(9, BlacklistPacket.class, BlacklistPacket::encode, BlacklistPacket::decode, BlacklistPacket::handle);
         CHANNEL.registerMessage(10, RangeMiningPacket.class, RangeMiningPacket::encode, RangeMiningPacket::decode, RangeMiningPacket::handle);
+        CHANNEL.registerMessage(11, StoragePageSyncPacket.class, StoragePageSyncPacket::encode, StoragePageSyncPacket::decode,
+                StoragePageSyncPacket::handle, java.util.Optional.of(net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT));
+    }
+
+    /** Sent before vanilla contents, so slot updates use the intended page immediately. */
+    public record StoragePageSyncPacket(int containerId,int page,int pageCount) {
+        static void encode(StoragePageSyncPacket packet,FriendlyByteBuf buffer) {
+            buffer.writeVarInt(packet.containerId);buffer.writeVarInt(packet.page);buffer.writeVarInt(packet.pageCount);
+        }
+        static StoragePageSyncPacket decode(FriendlyByteBuf buffer) {
+            return new StoragePageSyncPacket(buffer.readVarInt(),buffer.readVarInt(),buffer.readVarInt());
+        }
+        static void handle(StoragePageSyncPacket packet,Supplier<NetworkEvent.Context> supplier) {
+            NetworkEvent.Context context=supplier.get();
+            context.enqueueWork(()->DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                    ()->()->com.liymod.client.ClientBootstrap.applyStoragePage(packet.containerId,packet.page,packet.pageCount)));
+            context.setPacketHandled(true);
+        }
     }
 
     public static String sanitizePassword(String input) {
@@ -320,7 +338,8 @@ public final class ModNetwork {
     }
 
     private static void dropAll(ServerPlayer player, ItemStack tool) {
-        var items = LoliStorageData.load(tool);
+        com.liymod.storage.LoliStorageContainer active=com.liymod.storage.LoliStorageContainer.active(tool);
+        var items = active==null?LoliStorageData.load(tool):active.allItems();
         for (ItemStack stack : items) {
             if (stack.isEmpty()) continue;
             ItemEntity entity = new ItemEntity(player.level(), player.getX(), player.getY() + 0.5D, player.getZ(), stack.copy());
@@ -331,5 +350,6 @@ public final class ModNetwork {
             stack.setCount(0);
         }
         LoliStorageData.save(tool, items);
+        if(active!=null) active.externalMutation();
     }
 }

@@ -50,6 +50,11 @@ public final class ClientBootstrap {
         }
     }
 
+    public static void applyStoragePage(int containerId,int page,int count) {
+        Minecraft client=Minecraft.getInstance();
+        if(client.player!=null && client.player.containerMenu instanceof com.liymod.menu.StorageMenu menu && menu.containerId==containerId) menu.applyPageSync(page,count);
+    }
+
     public static void init() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         modBus.addListener(ClientBootstrap::registerKeys);
