@@ -3,6 +3,7 @@ package com.liymod.loliability;
 import com.liymod.LiyMod;
 import com.liymod.protection.LoliProtection;
 import com.liymod.combat.LoliErasureService;
+import com.liymod.combat.LoliKillSummary;
 import com.liymod.combat.LoliLegacyExecutionPolicy;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
@@ -187,12 +188,14 @@ public final class LoliAbilityEvents {
             return;
         }
         AABB area = player.getBoundingBox().inflate(radius);
-        for (Entity target : player.level().getEntities(
-                player,
-                area,
-                target -> LoliLegacyExecutionPolicy.permitsAutomaticRangeTarget(stack, target)
-        )) {
-            LoliErasureService.executeAbsolute(player, target);
+        try (var summary = LoliKillSummary.begin(player)) {
+            for (Entity target : player.level().getEntities(
+                    player,
+                    area,
+                    target -> LoliLegacyExecutionPolicy.permitsAutomaticRangeTarget(stack, target)
+            )) {
+                LoliErasureService.executeAbsolute(player, target);
+            }
         }
     }
 
