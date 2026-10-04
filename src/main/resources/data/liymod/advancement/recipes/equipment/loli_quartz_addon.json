@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_quartz_addon"
+        "recipes": "liymod:loli_quartz_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

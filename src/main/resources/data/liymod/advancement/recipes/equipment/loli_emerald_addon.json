@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_emerald_addon"
+        "recipes": "liymod:loli_emerald_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

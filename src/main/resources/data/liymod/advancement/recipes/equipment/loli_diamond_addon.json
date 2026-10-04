@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_diamond_addon"
+        "recipes": "liymod:loli_diamond_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

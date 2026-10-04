@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_fail_respond_tnt"
+        "recipes": "liymod:loli_fail_respond_tnt"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

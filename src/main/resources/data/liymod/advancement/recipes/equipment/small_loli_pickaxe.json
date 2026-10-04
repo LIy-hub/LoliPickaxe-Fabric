@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:small_loli_pickaxe"
+        "recipes": "liymod:small_loli_pickaxe"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
