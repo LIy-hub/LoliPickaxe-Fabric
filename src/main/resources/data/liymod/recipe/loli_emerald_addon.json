@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:loli_emerald_addon",
+  "pattern": [
+    "X",
+    "Y"
+  ],
+  "key": {
+    "X": "minecraft:emerald",
+    "Y": "minecraft:emerald_block"
+  },
+  "result": {
+    "id": "liymod:loli_emerald_addon"
+  }
+}
