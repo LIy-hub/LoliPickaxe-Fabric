@@ -22,7 +22,8 @@ public final class BlacklistMenu extends AbstractContainerMenu {
         this.player = inventory.player;
         this.hand = data.hand();
         this.ownerStack = player.getItemInHand(hand);
-        this.storage = LoliStorageData.open(ownerStack);
+        this.storage = player.level().isClientSide()
+                ? LoliStorageData.clientMenu(ownerStack) : LoliStorageData.open(ownerStack);
         this.entries = new LoliBlacklistContainer(storage);
 
         for (int row = 0; row < 9; row++) {

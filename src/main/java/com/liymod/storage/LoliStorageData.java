@@ -2,8 +2,15 @@ package com.liymod.storage;
 
 import com.liymod.item.LoliPickaxeItem;
 import com.liymod.item.SmallLoliPickaxeItem;
+import com.liymod.nbt.LoliCustomData;
+import java.lang.ref.WeakReference;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.WeakHashMap;
 import net.minecraft.core.NonNullList;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +18,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.component.CustomData;
 
 /** Server-authoritative, bounded storage persisted inside the owning pickaxe CUSTOM_DATA. */
@@ -27,22 +35,46 @@ public final class LoliStorageData implements Container {
     private static final String STACK_KEY = "Stack";
     private static final int MAX_STACK_NBT_BYTES = 32 * 1024;
     private static final int MAX_TOTAL_NBT_BYTES = 4 * 1024 * 1024;
+    // Standalone fixtures do not apply Fabric mixins. Both keys and values stay weak here.
+    private static final Map<ItemStack, WeakReference<LoliStorageData>> FALLBACK_CACHE = new WeakHashMap<>();
 
     private final ItemStack ownerStack;
     private final int pageCount;
+    private final boolean clientMenuView;
     private final NonNullList<ItemStack> items;
     private final NonNullList<ItemStack> blacklist;
+    private final int[] itemBytes;
+    private final int[] blacklistBytes;
+    private final CompoundTag[] encodedItems;
+    private final CompoundTag[] encodedBlacklist;
+    private final Item[] indexedItems;
+    private final TreeSet<Integer> emptySlots = new TreeSet<>();
+    private final Map<Item, TreeSet<Integer>> partialSlots = new HashMap<>();
+    private CustomData savedData;
+    private CompoundTag savedStorage;
     private int currentPage;
     private int storedBytes;
     private int visiblePageCount = 1;
     private boolean pagesDirty = true;
+    private int batchDepth;
+    private boolean pendingPersistence;
 
     private LoliStorageData(ItemStack ownerStack, int pageCount) {
+        this(ownerStack, pageCount, false);
+    }
+
+    private LoliStorageData(ItemStack ownerStack, int pageCount, boolean clientMenuView) {
         this.ownerStack = ownerStack;
         this.pageCount = pageCount;
+        this.clientMenuView = clientMenuView;
         this.items = NonNullList.withSize(pageCount * SLOTS_PER_PAGE, ItemStack.EMPTY);
         this.blacklist = NonNullList.withSize(BLACKLIST_SIZE, ItemStack.EMPTY);
-        load();
+        this.itemBytes = new int[items.size()];
+        this.blacklistBytes = new int[BLACKLIST_SIZE];
+        this.encodedItems = new CompoundTag[items.size()];
+        this.encodedBlacklist = new CompoundTag[BLACKLIST_SIZE];
+        this.indexedItems = new Item[items.size()];
+        if (!clientMenuView) load();
     }
 
     public static LoliStorageData open(ItemStack stack) {
@@ -50,7 +82,83 @@ public final class LoliStorageData implements Container {
         if (pages <= 0) {
             throw new IllegalArgumentException("Item does not expose Loli storage");
         }
-        return new LoliStorageData(stack, pages);
+        return cached(stack, pages);
+    }
+
+    /** Client menus receive only authoritative visible slots; never decode/rewrite the owner's full storage. */
+    public static LoliStorageData clientMenu(ItemStack stack) {
+        int pages = pageCount(stack);
+        if (pages <= 0) throw new IllegalArgumentException("Item does not expose Loli storage");
+        return clientMenu(stack, pages);
+    }
+
+    static LoliStorageData clientMenu(ItemStack stack, int pages) {
+        return new LoliStorageData(stack, pages, true);
+    }
+
+    static LoliStorageData cached(ItemStack stack, int pages) {
+        if ((Object) stack instanceof LoliStorageHolder holder) {
+            LoliStorageData storage = holder.liymod$getStorage();
+            if (storage == null || storage.pageCount != pages) {
+                storage = new LoliStorageData(stack, pages);
+                holder.liymod$setStorage(storage);
+            } else {
+                storage.refresh();
+            }
+            return storage;
+        }
+        synchronized (FALLBACK_CACHE) {
+            var reference = FALLBACK_CACHE.get(stack);
+            LoliStorageData storage = reference == null ? null : reference.get();
+            if (storage == null || storage.pageCount != pages) {
+                storage = new LoliStorageData(stack, pages);
+                FALLBACK_CACHE.put(stack, new WeakReference<>(storage));
+            } else {
+                storage.refresh();
+            }
+            return storage;
+        }
+    }
+
+    private void refresh() {
+        CustomData current = ownerStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        if (current == savedData) return;
+        CompoundTag storage = LoliCustomData.view(current).getCompound(ROOT_KEY);
+        if (storage == savedStorage || storage.equals(savedStorage)) {
+            savedData = current;
+            savedStorage = storage;
+            return;
+        }
+        if (batchDepth != 0) throw new IllegalStateException("Storage changed during an active insertion batch");
+        for (int index = 0; index < items.size(); index++) items.set(index, ItemStack.EMPTY);
+        for (int index = 0; index < blacklist.size(); index++) blacklist.set(index, ItemStack.EMPTY);
+        storedBytes = 0;
+        currentPage = 0;
+        pagesDirty = true;
+        load();
+    }
+
+    /** Defers encoding until the complete synchronous operation, including exceptional exits. */
+    public Batch beginBatch() {
+        return new Batch();
+    }
+
+    public final class Batch implements AutoCloseable {
+        private boolean closed;
+
+        private Batch() {
+            batchDepth++;
+        }
+
+        @Override
+        public void close() {
+            if (closed) return;
+            closed = true;
+            if (--batchDepth == 0 && pendingPersistence) {
+                pendingPersistence = false;
+                persist();
+            }
+        }
     }
 
     public static boolean hasStorage(ItemStack stack) {
@@ -154,9 +262,13 @@ public final class LoliStorageData implements Container {
         }
 
         boolean changed = false;
-        for (int index = 0; index < items.size() && !remaining.isEmpty(); index++) {
+        TreeSet<Integer> candidates = partialSlots.get(remaining.getItem());
+        Integer candidate = candidates == null || candidates.isEmpty() ? null : candidates.first();
+        while (candidate != null && !remaining.isEmpty()) {
+            int index = candidate;
+            candidate = candidates.higher(index);
             ItemStack existing = items.get(index);
-            if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, remaining)) {
+            if (!ItemStack.isSameItemSameComponents(existing, remaining)) {
                 continue;
             }
             int room = existing.getMaxStackSize() - existing.getCount();
@@ -172,10 +284,8 @@ public final class LoliStorageData implements Container {
             changed = true;
         }
 
-        for (int index = 0; index < items.size() && !remaining.isEmpty(); index++) {
-            if (!items.get(index).isEmpty()) {
-                continue;
-            }
+        while (!emptySlots.isEmpty() && !remaining.isEmpty()) {
+            int index = emptySlots.first();
             int moved = Math.min(remaining.getCount(), remaining.getMaxStackSize());
             ItemStack inserted = remaining.copyWithCount(moved);
             if (!replaceWithinBudget(items, index, inserted)) {
@@ -197,10 +307,9 @@ public final class LoliStorageData implements Container {
             ItemStack stack = items.get(index);
             if (!stack.isEmpty()) {
                 removed.add(stack);
-                items.set(index, ItemStack.EMPTY);
+                replaceWithinBudget(items, index, ItemStack.EMPTY);
             }
         }
-        recalculateStoredBytes();
         persist();
         return removed;
     }
@@ -236,11 +345,10 @@ public final class LoliStorageData implements Container {
         if (existing.isEmpty()) {
             return ItemStack.EMPTY;
         }
-        ItemStack removed = existing.split(Math.min(amount, existing.getCount()));
-        if (existing.isEmpty()) {
-            items.set(index, ItemStack.EMPTY);
-        }
-        recalculateStoredBytes();
+        int removedCount = Math.min(amount, existing.getCount());
+        ItemStack removed = existing.copyWithCount(removedCount);
+        replaceWithinBudget(items, index, existing.getCount() == removedCount
+                ? ItemStack.EMPTY : existing.copyWithCount(existing.getCount() - removedCount));
         persist();
         return removed;
     }
@@ -252,8 +360,7 @@ public final class LoliStorageData implements Container {
             return ItemStack.EMPTY;
         }
         ItemStack removed = items.get(index);
-        items.set(index, ItemStack.EMPTY);
-        recalculateStoredBytes();
+        replaceWithinBudget(items, index, ItemStack.EMPTY);
         persist();
         return removed;
     }
@@ -270,6 +377,15 @@ public final class LoliStorageData implements Container {
 
     @Override
     public void setChanged() {
+        // Vanilla menu transfers can mutate stacks in place before notifying the container.
+        int start = currentPage * SLOTS_PER_PAGE;
+        for (int index = start; index < start + SLOTS_PER_PAGE; index++) {
+            int size = serializedSize(items.get(index));
+            storedBytes += size - itemBytes[index];
+            itemBytes[index] = size;
+            encodedItems[index] = null;
+            reindex(index);
+        }
         persist();
     }
 
@@ -307,14 +423,17 @@ public final class LoliStorageData implements Container {
     }
 
     private boolean replaceWithinBudget(NonNullList<ItemStack> list, int slot, ItemStack replacement) {
-        ItemStack previous = list.get(slot);
-        int previousBytes = serializedSize(previous);
+        int[] sizes = list == items ? itemBytes : blacklistBytes;
+        int previousBytes = sizes[slot];
         int replacementBytes = serializedSize(replacement);
         long projected = (long) storedBytes - previousBytes + replacementBytes;
         if (projected > MAX_TOTAL_NBT_BYTES) {
             return false;
         }
         list.set(slot, replacement);
+        sizes[slot] = replacementBytes;
+        (list == items ? encodedItems : encodedBlacklist)[slot] = null;
+        if (list == items) reindex(slot);
         storedBytes = (int) projected;
         return true;
     }
@@ -349,15 +468,22 @@ public final class LoliStorageData implements Container {
     }
 
     private void load() {
-        CompoundTag root = ownerStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        Arrays.fill(itemBytes, 0);
+        Arrays.fill(blacklistBytes, 0);
+        Arrays.fill(encodedItems, null);
+        Arrays.fill(encodedBlacklist, null);
+        savedData = ownerStack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
+        CompoundTag root = LoliCustomData.view(savedData);
         CompoundTag storage = root.getCompound(ROOT_KEY);
+        savedStorage = storage;
         if (storage.sizeInBytes() > MAX_TOTAL_NBT_BYTES) {
+            rebuildIndexes();
             return;
         }
         currentPage = Math.clamp(com.liymod.compat.LegacyNbt.getIntOr(storage, CURRENT_PAGE_KEY, 0), 0, pageCount - 1);
         loadEntries(storage.getList(ITEMS_KEY, net.minecraft.nbt.Tag.TAG_COMPOUND), items, items.size(), false);
         loadEntries(storage.getList(BLACKLIST_KEY, net.minecraft.nbt.Tag.TAG_COMPOUND), blacklist, BLACKLIST_SIZE, true);
-        recalculateStoredBytes();
+        rebuildIndexes();
     }
 
     private void loadEntries(
@@ -378,47 +504,75 @@ public final class LoliStorageData implements Container {
             int size = serializedSize(sanitized);
             if (!sanitized.isEmpty() && (long) storedBytes + size <= MAX_TOTAL_NBT_BYTES) {
                 destination.set(slot, sanitized);
+                (destination == items ? itemBytes : blacklistBytes)[slot] = size;
                 storedBytes += size;
             }
         }
     }
 
-    private void recalculateStoredBytes() {
-        storedBytes = 0;
-        for (ItemStack stack : items) {
-            storedBytes += serializedSize(stack);
+    private void rebuildIndexes() {
+        emptySlots.clear();
+        partialSlots.clear();
+        for (int index = 0; index < items.size(); index++) {
+            indexedItems[index] = null;
+            reindex(index);
         }
-        for (ItemStack stack : blacklist) {
-            storedBytes += serializedSize(stack);
+    }
+
+    private void reindex(int slot) {
+        emptySlots.remove(slot);
+        Item previous = indexedItems[slot];
+        if (previous != null) {
+            TreeSet<Integer> previousSlots = partialSlots.get(previous);
+            if (previousSlots != null) {
+                previousSlots.remove(slot);
+                if (previousSlots.isEmpty()) partialSlots.remove(previous);
+            }
+        }
+        ItemStack stack = items.get(slot);
+        indexedItems[slot] = stack.isEmpty() ? null : stack.getItem();
+        if (stack.isEmpty()) emptySlots.add(slot);
+        else if (stack.getCount() < stack.getMaxStackSize()) {
+            partialSlots.computeIfAbsent(stack.getItem(), ignored -> new TreeSet<>()).add(slot);
         }
     }
 
     private void persist() {
         pagesDirty = true;
+        if (clientMenuView) return;
+        if (batchDepth > 0) {
+            pendingPersistence = true;
+            return;
+        }
         CompoundTag storage = new CompoundTag();
         storage.putInt(CURRENT_PAGE_KEY, currentPage);
-        storage.put(ITEMS_KEY, saveEntries(items));
-        storage.put(BLACKLIST_KEY, saveEntries(blacklist));
+        storage.put(ITEMS_KEY, saveEntries(items, encodedItems));
+        storage.put(BLACKLIST_KEY, saveEntries(blacklist, encodedBlacklist));
         if (storage.sizeInBytes() > MAX_TOTAL_NBT_BYTES) {
             return;
         }
-        CustomData.update(
-                DataComponents.CUSTOM_DATA,
-                ownerStack,
-                root -> root.put(ROOT_KEY, storage)
-        );
+        CompoundTag root = LoliCustomData.copyRoot(LoliCustomData.view(ownerStack));
+        root.put(ROOT_KEY, storage);
+        CustomData replacement = CustomData.of(root);
+        ownerStack.set(DataComponents.CUSTOM_DATA, replacement);
+        savedData = replacement;
+        savedStorage = LoliCustomData.view(replacement).getCompound(ROOT_KEY);
     }
 
-    private static ListTag saveEntries(NonNullList<ItemStack> source) {
+    private static ListTag saveEntries(NonNullList<ItemStack> source, CompoundTag[] cachedEntries) {
         ListTag encoded = new ListTag();
         for (int slot = 0; slot < source.size(); slot++) {
             ItemStack stack = source.get(slot);
             if (stack.isEmpty()) {
                 continue;
             }
-            CompoundTag entry = new CompoundTag();
-            entry.putInt(SLOT_KEY, slot);
-            com.liymod.compat.LegacyNbt.store(entry, STACK_KEY, ItemStack.CODEC, stack);
+            CompoundTag entry = cachedEntries[slot];
+            if (entry == null) {
+                entry = new CompoundTag();
+                entry.putInt(SLOT_KEY, slot);
+                com.liymod.compat.LegacyNbt.store(entry, STACK_KEY, ItemStack.CODEC, stack);
+                cachedEntries[slot] = entry;
+            }
             encoded.add(entry);
         }
         return encoded;
