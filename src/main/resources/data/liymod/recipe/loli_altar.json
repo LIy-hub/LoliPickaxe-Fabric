@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "liymod:loli_altar",
+  "ingredients": [
+    "minecraft:coal",
+    "minecraft:iron_ingot",
+    "minecraft:gold_ingot",
+    "minecraft:redstone",
+    "minecraft:lapis_lazuli",
+    "minecraft:diamond",
+    "minecraft:emerald",
+    "minecraft:quartz",
+    "minecraft:glowstone_dust"
+  ],
+  "result": {
+    "id": "liymod:loli_altar"
+  }
+}
