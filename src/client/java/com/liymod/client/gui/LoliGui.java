@@ -18,6 +18,10 @@ public final class LoliGui {
     private LoliGui() {
     }
 
+    public static void centeredText(GuiGraphicsExtractor graphics, Font font, Component text, int x, int y, int color) {
+        graphics.text(font, text, x - font.width(text) / 2, y, color, false);
+    }
+
     public static void panel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
         graphics.fill(x, y, x + width, y + height, 0xFF000000);
         graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, PANEL_COLOR);

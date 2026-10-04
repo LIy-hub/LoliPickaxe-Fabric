@@ -78,32 +78,32 @@ public final class FinalTeleportScreen extends AbstractLoliEditorScreen<FinalTel
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         drawLabel(graphics, titleText, 10, layout.row(0), TEXT_COLOR, mouseX, mouseY);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.space_folding.dimension"),
                 layout.width() / 2,
                 layout.row(1),
                 TEXT_COLOR);
         drawLabel(graphics, dimensionText, 10, layout.row(3), TEXT_COLOR, mouseX, mouseY);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.space_folding.relative"),
                 layout.width() / 2,
                 layout.row(4),
                 TEXT_COLOR);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.space_folding.x"),
                 10 + coordinateWidth / 2,
                 layout.row(5),
                 TEXT_COLOR);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.space_folding.y"),
                 16 + coordinateWidth + coordinateWidth / 2,
                 layout.row(5),
                 TEXT_COLOR);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.space_folding.z"),
                 22 + 2 * coordinateWidth + coordinateWidth / 2,

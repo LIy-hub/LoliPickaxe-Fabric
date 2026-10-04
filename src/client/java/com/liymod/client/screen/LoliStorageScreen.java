@@ -8,14 +8,13 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Nine-by-nine paged storage backed by the original 240x256 texture. */
-public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu> {
+public final class LoliStorageScreen extends FittedContainerScreen<StorageMenu> {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("liymod", "textures/gui/container/loli_pickaxe_container.png");
     private static final int TEXT_COLOR = LoliGui.TEXT_COLOR;
@@ -70,8 +69,7 @@ public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
-        super.extractBackground(graphics, mouseX, mouseY, deltaTicks);
+    protected void extractPanelBackground(GuiGraphicsExtractor graphics) {
         graphics.blit(
                 RenderPipelines.GUI_TEXTURED,
                 TEXTURE,

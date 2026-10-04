@@ -4,7 +4,6 @@ import com.liymod.menu.BlacklistMenu;
 import com.liymod.network.BlacklistUpdatePayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
@@ -12,7 +11,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Nine-by-nine ghost-slot blacklist editor backed by the original texture. */
-public final class LoliBlacklistScreen extends AbstractContainerScreen<BlacklistMenu> {
+public final class LoliBlacklistScreen extends FittedContainerScreen<BlacklistMenu> {
     private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath(
             "liymod",
             "textures/gui/container/loli_pickaxe_container_blacklist.png");
@@ -22,7 +21,7 @@ public final class LoliBlacklistScreen extends AbstractContainerScreen<Blacklist
     }
 
     @Override
-    public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+    protected boolean mouseClickedInPanel(MouseButtonEvent event, boolean doubleClick) {
         int blacklistSlot = blacklistSlotAt(event.x(), event.y());
         if (blacklistSlot >= 0 && (event.button() == 0 || event.button() == 1)) {
             ClientPlayNetworking.send(new BlacklistUpdatePayload(
@@ -30,12 +29,11 @@ public final class LoliBlacklistScreen extends AbstractContainerScreen<Blacklist
                     menu.getCarried().isEmpty()));
             return true;
         }
-        return super.mouseClicked(event, doubleClick);
+        return super.mouseClickedInPanel(event, doubleClick);
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
-        super.extractBackground(graphics, mouseX, mouseY, deltaTicks);
+    protected void extractPanelBackground(GuiGraphicsExtractor graphics) {
         graphics.blit(
                 RenderPipelines.GUI_TEXTURED,
                 TEXTURE,

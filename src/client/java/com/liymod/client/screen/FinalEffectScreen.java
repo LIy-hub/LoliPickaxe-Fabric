@@ -110,7 +110,7 @@ public final class FinalEffectScreen extends AbstractLoliEditorScreen<FinalEffec
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         drawLabel(graphics, titleText, 10, layout.row(0), TEXT_COLOR, mouseX, mouseY);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.potion.available"),
                 layout.width() / 2,
@@ -121,13 +121,13 @@ public final class FinalEffectScreen extends AbstractLoliEditorScreen<FinalEffec
         drawLabel(graphics, selectionText, 36, layout.row(2) + (selectionRowHeight - selectionText.height()) / 2,
                 TEXT_COLOR, mouseX, mouseY);
 
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.potion.level").append(": " + selectedLevel),
                 layout.width() / 2,
                 layout.row(3) + (20 - font.lineHeight) / 2,
                 TEXT_COLOR);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.potion.selected")
                         .append(": " + draftEffects.size() + " / " + MAX_ENTRIES),
@@ -136,14 +136,14 @@ public final class FinalEffectScreen extends AbstractLoliEditorScreen<FinalEffec
                 TEXT_COLOR);
 
         if (entryLimitReached) {
-            graphics.centeredText(
+            LoliGui.centeredText(graphics,
                     font,
                     Component.literal("64 / 64"),
                     layout.width() / 2,
                     layout.row(6),
                     ERROR_COLOR);
         } else if (selected != null && draftEffects.containsKey(selected)) {
-            graphics.centeredText(
+            LoliGui.centeredText(graphics,
                     font,
                     Component.translatable("gui.liymod.potion.level")
                             .append(": " + draftEffects.get(selected)),

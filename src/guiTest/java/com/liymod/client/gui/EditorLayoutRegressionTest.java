@@ -39,7 +39,37 @@ public final class EditorLayoutRegressionTest {
         EditorLayout narrow = EditorLayout.create(320, 240, 320, rows[3]);
         require(narrow.width() < wide.width(), "Resize does not reduce the panel width");
         require(!narrow.contains(wide.width() - 1, 10), "Resize retains stale outside-click bounds");
-        System.out.println("GUI_LAYOUT_OK scenarios=" + count + " resize=PASS");
+        int[][] windows = {{427, 247}, {427, 240}, {480, 265}, {640, 360}, {320, 240}, {180, 180}};
+        for (int[] window : windows) {
+            ContainerViewport fitted = ContainerViewport.fit(window[0], window[1], 240, 256);
+            int left = (fitted.width() - 240) / 2;
+            int top = (fitted.height() - 256) / 2;
+            require(fitted.screenX(left) >= 2 && fitted.screenY(top) >= 2,
+                    "Container top/left are cropped");
+            require(fitted.screenX(left + 240) <= window[0] - 2 && fitted.screenY(top + 256) <= window[1] - 2,
+                    "Container bottom/right are cropped");
+            require(fitted.scale() <= 1.0F, "Fit enlarges a container that already fits");
+            if (window[1] >= 240) {
+                require(fitted.scale() >= 0.9F, "Normal small-window fitting shrinks the container too much");
+            }
+            // Inverse-transform the painted centres of all storage slots, including the clipped ninth row.
+            for (int row = 0; row < 9; row++) {
+                for (int column = 0; column < 9; column++) {
+                    double mouseX = fitted.layoutX(fitted.screenX(left + 16 + column * 18));
+                    double mouseY = fitted.layoutY(fitted.screenY(top + 16 + row * 18));
+                    require((int) ((mouseX - left - 8) / 18) == column
+                                    && (int) ((mouseY - top - 8) / 18) == row,
+                            "Rendered slot and mouse target disagree");
+                }
+            }
+            require(fitted.layoutY(fitted.screenY(top + 255)) < top + 256,
+                    "Bottom edge is treated as an outside click");
+        }
+        require(ContainerViewport.fit(427, 247, 240, 256).scale() > 0.93F,
+                "Reported window should need less than 7 percent shrinkage");
+        require(ContainerViewport.fit(480, 265, 240, 256).scale() == 1.0F,
+                "Large screenshot window should retain its original size");
+        System.out.println("GUI_LAYOUT_OK scenarios=" + count + " resize=PASS localContainerTransforms=" + windows.length);
     }
 
     private static void require(boolean condition, String message) {

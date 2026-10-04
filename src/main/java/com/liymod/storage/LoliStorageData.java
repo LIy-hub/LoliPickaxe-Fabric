@@ -34,6 +34,8 @@ public final class LoliStorageData implements Container {
     private final NonNullList<ItemStack> blacklist;
     private int currentPage;
     private int storedBytes;
+    private int visiblePageCount = 1;
+    private boolean pagesDirty = true;
 
     private LoliStorageData(ItemStack ownerStack, int pageCount) {
         this.ownerStack = ownerStack;
@@ -72,6 +74,32 @@ public final class LoliStorageData implements Container {
 
     public int getPageCount() {
         return pageCount;
+    }
+
+    /** Retains sparse saved positions; a full last page exposes one extra page for manual insertion. */
+    public int getVisiblePageCount() {
+        if (pagesDirty) {
+            int lastSlot = items.size() - 1;
+            while (lastSlot >= 0 && items.get(lastSlot).isEmpty()) {
+                lastSlot--;
+            }
+            visiblePageCount = lastSlot < 0 ? 1 : lastSlot / SLOTS_PER_PAGE + 1;
+            if (lastSlot >= 0 && visiblePageCount < pageCount) {
+                boolean full = true;
+                int pageStart = (visiblePageCount - 1) * SLOTS_PER_PAGE;
+                for (int slot = pageStart; slot < pageStart + SLOTS_PER_PAGE; slot++) {
+                    if (items.get(slot).isEmpty()) {
+                        full = false;
+                        break;
+                    }
+                }
+                if (full) {
+                    visiblePageCount++;
+                }
+            }
+            pagesDirty = false;
+        }
+        return visiblePageCount;
     }
 
     public ItemStack getOwnerStack() {
@@ -366,6 +394,7 @@ public final class LoliStorageData implements Container {
     }
 
     private void persist() {
+        pagesDirty = true;
         CompoundTag storage = new CompoundTag();
         storage.putInt(CURRENT_PAGE_KEY, currentPage);
         storage.put(ITEMS_KEY, saveEntries(items));
