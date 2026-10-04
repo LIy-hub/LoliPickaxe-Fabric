@@ -15,7 +15,7 @@ public final class UpgradeSuperpositionRecipe extends CustomRecipe {
     public static final MapCodec<UpgradeSuperpositionRecipe> MAP_CODEC =
             MapCodec.unit(UpgradeSuperpositionRecipe::new);
     public static final StreamCodec<RegistryFriendlyByteBuf, UpgradeSuperpositionRecipe> STREAM_CODEC =
-            StreamCodec.unit(new UpgradeSuperpositionRecipe());
+            StreamCodec.of((buffer, recipe) -> { }, buffer -> new UpgradeSuperpositionRecipe());
 
     @Override
     public boolean matches(CraftingInput input, Level level) {
