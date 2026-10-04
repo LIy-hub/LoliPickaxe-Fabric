@@ -17,7 +17,7 @@ import net.minecraft.world.level.Level;
 public final class SmallLoliUpgradeRecipe extends CustomRecipe {
     public static final MapCodec<SmallLoliUpgradeRecipe> MAP_CODEC = MapCodec.unit(SmallLoliUpgradeRecipe::new);
     public static final StreamCodec<RegistryFriendlyByteBuf, SmallLoliUpgradeRecipe> STREAM_CODEC =
-            StreamCodec.unit(new SmallLoliUpgradeRecipe());
+            StreamCodec.of((buffer, recipe) -> { }, buffer -> new SmallLoliUpgradeRecipe());
 
     @Override
     public boolean matches(CraftingInput input, Level level) {
