@@ -61,6 +61,10 @@ and survival implementation.
   single-block mining has no added cooldown. Each received mining batch rebuilds
   its affected visible section meshes in the same frame rather than distributing
   them across asynchronous section updates.
+  The server directly replaces solid blocks with air, avoiding per-block vanilla
+  break-effect packets. Loot, Fortune, smelting, experience and storage acceptance
+  remain active; waterlogged solids still leave their existing fluid state. Automatic
+  storage is read once and saved once per mining action instead of for every block.
 - In Fabric 26.2, the per-item **Select fluid blocks** option enables targeting,
   outlining and mining both source and flowing water/lava while the final pickaxe
   is in the main hand. Disabled by default, it ignores pure fluids during targeting
@@ -160,6 +164,9 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   保留中心方块的原版选中框，并叠加白色范围框，线宽使用原版随窗口调整的数值。
   每次范围采掘完成后保留 100 毫秒间隔，客户端限制发包，服务端独立校验；单方块
   采掘不增加冷却。客户端收到同一次采掘结果后，在同一帧重建受影响的可见区块网格。
+  服务端直接把实体方块替换为空气，省去逐方块的原版碎裂效果发包；掉落、时运、
+  自动熔炼、经验和自动收纳继续生效，含水方块仍留下原有流体。镐内储存在同一次
+  采掘中只读取和保存一次，不再为每个方块反复编解码。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品

@@ -138,15 +138,19 @@ public final class LoliFinalMiningEvents {
         ACTIVE_MINERS.add(serverPlayer.getUUID());
         try {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
+            boolean autoAccept = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_ACCEPT);
+            LoliStorageData storage = autoAccept ? LoliStorageData.open(tool) : null;
             boolean brokeAny = false;
             List<BlockPos> changedPositions = new ArrayList<>();
-            for (BlockPos target : LoliMiningRange.positions(origin, radius)) {
-                if (!serverLevel.hasChunkAt(target)) {
-                    continue;
-                }
-                if (breakOne(serverLevel, serverPlayer, tool, target)) {
-                    brokeAny = true;
-                    changedPositions.add(target.immutable());
+            try (var batch = storage == null ? null : storage.beginBatch()) {
+                for (BlockPos target : LoliMiningRange.positions(origin, radius)) {
+                    if (!serverLevel.hasChunkAt(target)) {
+                        continue;
+                    }
+                    if (replaceOne(serverLevel, serverPlayer, tool, target, storage)) {
+                        brokeAny = true;
+                        changedPositions.add(target.immutable());
+                    }
                 }
             }
             LoliRangeMiningSync.send(serverLevel, origin, changedPositions);
@@ -173,11 +177,12 @@ public final class LoliFinalMiningEvents {
                 ? InteractionResult.SUCCESS : InteractionResult.FAIL;
     }
 
-    private static boolean breakOne(
+    private static boolean replaceOne(
             ServerLevel level,
             ServerPlayer player,
             ItemStack tool,
-            BlockPos pos
+            BlockPos pos,
+            LoliStorageData storage
     ) {
         BlockState state = level.getBlockState(pos);
         boolean selectFluids = LoliFluidMining.isEnabled(tool);
@@ -186,7 +191,7 @@ public final class LoliFinalMiningEvents {
         }
 
         if (LoliFluidMining.isFluidBlock(state)) {
-            if (!LoliFluidMining.clearFluid(level, pos, state, selectFluids)) {
+            if (!LoliBlockReplacement.remove(level, pos, state, selectFluids)) {
                 return false;
             }
             level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, state));
@@ -215,15 +220,16 @@ public final class LoliFinalMiningEvents {
             }
         }
 
-        if (!level.destroyBlock(pos, false, player)) {
+        if (!LoliBlockReplacement.remove(level, pos, state, selectFluids)) {
             return false;
         }
+        level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, state));
         state.spawnAfterBreak(level, pos, tool, true);
 
         if (LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_FURNACE)) {
             drops = smeltDrops(level, player, drops);
         }
-        deliverDrops(level, player, tool, pos, drops);
+        deliverDrops(level, player, storage, pos, drops);
         return true;
     }
 
@@ -272,14 +278,13 @@ public final class LoliFinalMiningEvents {
     private static void deliverDrops(
             ServerLevel level,
             ServerPlayer player,
-            ItemStack tool,
+            LoliStorageData storage,
             BlockPos origin,
             List<ItemStack> drops
     ) {
-        LoliStorageData storage = LoliStorageData.open(tool);
-        boolean autoAccept = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_ACCEPT);
+        boolean autoAccept = storage != null;
         for (ItemStack drop : drops) {
-            boolean blacklisted = storage.isBlacklisted(drop);
+            boolean blacklisted = autoAccept && storage.isBlacklisted(drop);
             ItemStack remaining = autoAccept ? storage.insert(drop) : drop.copy();
             if (autoAccept && !blacklisted && !remaining.isEmpty()) {
                 // Inventory.add mutates this exact stack, leaving only the part that did not fit.

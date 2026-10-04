@@ -62,7 +62,61 @@ public final class StoragePagesRegressionTest {
         require(reopened.getVisiblePageCount() == 1 && reopened.isEmpty(), "Drop-all must reset visible pages");
         require(fixture(reopened.getOwnerStack()).getVisiblePageCount() == 1,
                 "Empty storage does not survive reopening");
-        System.out.println("STORAGE_PAGES_OK empty partial full growth shrink sparse reopen capacity dropAll=PASS");
+        verifyBatchInsertion();
+        System.out.println("STORAGE_PAGES_OK empty partial full growth shrink sparse reopen capacity dropAll batch nested exceptionalExit=PASS");
+    }
+
+    private static void verifyBatchInsertion() throws ReflectiveOperationException {
+        ItemStack batchedOwner = new ItemStack(Items.NETHERITE_PICKAXE);
+        LoliStorageData batched = fixture(batchedOwner);
+        batched.setBlacklistItem(0, new ItemStack(Items.DIAMOND));
+        var before = batchedOwner.get(DataComponents.CUSTOM_DATA);
+        ItemStack ordinaryOwner = batchedOwner.copy();
+        long ordinaryStart = System.nanoTime();
+        // Reproduce the previous mining path: decode and encode the storage for every block.
+        for (int block = 0; block < 256; block++) {
+            require(fixture(ordinaryOwner).insert(new ItemStack(Items.STONE)).isEmpty(),
+                    "Baseline insertion unexpectedly rejected an ordinary drop");
+        }
+        long ordinaryNanos = System.nanoTime() - ordinaryStart;
+        long batchStart = System.nanoTime();
+        var outer = batched.beginBatch();
+        try (outer) {
+            for (int block = 0; block < 256; block++) {
+                require(batched.insert(new ItemStack(Items.STONE)).isEmpty(), "Batched insertion lost a drop");
+                require(batchedOwner.get(DataComponents.CUSTOM_DATA) == before,
+                        "Mining must not serialize the complete storage for each block");
+            }
+            try (var nested = batched.beginBatch()) {
+                require(batched.insert(new ItemStack(Items.DIAMOND, 3)).getCount() == 3,
+                        "Batching must preserve blacklisted remainders");
+                require(batched.insert(new ItemStack(Items.DIRT, 2)).isEmpty(), "Nested batch lost a drop");
+            }
+            require(batchedOwner.get(DataComponents.CUSTOM_DATA) == before,
+                    "Closing an inner batch must not encode before the outer mining action completes");
+            require(batched.getItem(0).getCount() == 64 && batched.getItem(3).getCount() == 64,
+                    "Accepted batched drops must already obey ordinary stack limits");
+        }
+        long batchNanos = System.nanoTime() - batchStart;
+        outer.close(); // Resource cleanup is safe to repeat.
+        LoliStorageData ordinary = fixture(ordinaryOwner);
+        ordinary.insert(new ItemStack(Items.DIRT, 2));
+        require(batchedOwner.get(DataComponents.CUSTOM_DATA).equals(ordinaryOwner.get(DataComponents.CUSTOM_DATA)),
+                "Batched persistence must produce exactly the same saved items, order, blacklist and metadata");
+        LoliStorageData after = fixture(batchedOwner.copy());
+        require(after.getItem(3).getCount() == 64 && after.getItem(4).getCount() == 2,
+                "The completed mining batch did not survive reopening");
+        boolean failed = false;
+        try (var exceptionalBatch = batched.beginBatch()) {
+            batched.insert(new ItemStack(Items.GOLD_INGOT, 7));
+            throw new IllegalStateException("isolated mining failure fixture");
+        } catch (IllegalStateException expected) {
+            failed = true;
+        }
+        require(failed && fixture(batchedOwner.copy()).getItem(5).getCount() == 7,
+                "An exceptional exit must save already accepted drops instead of losing them");
+        System.out.printf("STORAGE_BATCH_SAMPLE blocks=256 previousDecodeEncodeMs=%.3f batchMs=%.3f%n",
+                ordinaryNanos / 1_000_000.0D, batchNanos / 1_000_000.0D);
     }
 
     private static LoliStorageData fixture(ItemStack owner) throws ReflectiveOperationException {

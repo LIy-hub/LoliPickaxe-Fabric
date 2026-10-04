@@ -71,8 +71,51 @@ public final class LoliFluidMiningRegressionTest {
                 "Fluid selection must not see through a solid wall");
         var miss = LoliFluidMining.clip(new Fixture(), EYE, END, CollisionContext.empty(), true);
         require(miss.getType() == HitResult.Type.MISS, "Empty ray must remain a miss");
+        verifyDirectReplacement();
         System.out.println("FLUID_MINING_OK source/flowing water/lava selection on/off removal neighbor/client flags"
-                + " nearest entity solid occlusion waterlogged underwater blocks legacy id/default=PASS");
+                + " nearest entity solid occlusion waterlogged underwater blocks directReplacement legacy id/default=PASS");
+    }
+
+    private static void verifyDirectReplacement() {
+        Fixture level = new Fixture();
+        for (var state : new BlockState[]{Blocks.STONE.defaultBlockState(), Blocks.BEDROCK.defaultBlockState(),
+                Blocks.CHEST.defaultBlockState(), Blocks.COMMAND_BLOCK.defaultBlockState()}) {
+            level.blocks.put(SOLID, state);
+            require(LoliBlockReplacement.remove(level, SOLID, state, false)
+                            && level.getBlockState(SOLID).isAir(),
+                    "A solid must become air through a direct world write, including restricted/container blocks");
+            require((level.lastFlags & Block.UPDATE_CLIENTS) != 0
+                            && (level.lastFlags & Block.UPDATE_NEIGHBORS) != 0,
+                    "Direct writes must retain client and neighbor updates");
+        }
+        for (var state : new BlockState[]{Blocks.WATER.defaultBlockState(), Blocks.LAVA.defaultBlockState(),
+                Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL, 5),
+                Blocks.LAVA.defaultBlockState().setValue(LiquidBlock.LEVEL, 5)}) {
+            level.blocks.put(LIQUID, state);
+            require(!LoliBlockReplacement.remove(level, LIQUID, state, false)
+                            && level.getBlockState(LIQUID) == state,
+                    "Direct replacement must preserve disabled fluid targets");
+            require(LoliBlockReplacement.remove(level, LIQUID, state, true)
+                            && level.getBlockState(LIQUID).isAir(),
+                    "Selected fluid must directly become air rather than restore itself");
+        }
+        for (var state : new BlockState[]{
+                Blocks.OAK_SLAB.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, true),
+                Blocks.KELP.defaultBlockState()}) {
+            level.blocks.put(SOLID, state);
+            require(LoliBlockReplacement.remove(level, SOLID, state, false)
+                            && level.getBlockState(SOLID) == state.getFluidState().createLegacyBlock(),
+                    "Waterlogged and underwater solids must keep their established fluid state");
+        }
+        int previousWrites = level.writes;
+        require(!LoliBlockReplacement.remove(level, SOLID, Blocks.AIR.defaultBlockState(), true)
+                        && level.writes == previousWrites,
+                "Air must not trigger world updates or claim a mined block");
+        level.acceptWrites = false;
+        level.blocks.put(SOLID, Blocks.STONE.defaultBlockState());
+        require(!LoliBlockReplacement.remove(level, SOLID, level.getBlockState(SOLID), false)
+                        && level.getBlockState(SOLID).is(Blocks.STONE),
+                "A failed write must not be reported as a successful replacement");
     }
 
     private static void require(boolean condition, String message) {
@@ -84,6 +127,8 @@ public final class LoliFluidMiningRegressionTest {
     private static final class Fixture implements BlockGetter, LevelWriter {
         private final Map<BlockPos, BlockState> blocks = new HashMap<>();
         private int lastFlags;
+        private int writes;
+        private boolean acceptWrites = true;
 
         @Override
         public BlockEntity getBlockEntity(BlockPos pos) {
@@ -112,6 +157,8 @@ public final class LoliFluidMiningRegressionTest {
 
         @Override
         public boolean setBlock(BlockPos pos, BlockState state, int flags, int recursionLeft) {
+            if (!acceptWrites) return false;
+            writes++;
             lastFlags = flags;
             blocks.put(pos.immutable(), state);
             return true;

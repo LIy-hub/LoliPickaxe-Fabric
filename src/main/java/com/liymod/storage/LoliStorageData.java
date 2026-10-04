@@ -36,6 +36,8 @@ public final class LoliStorageData implements Container {
     private int storedBytes;
     private int visiblePageCount = 1;
     private boolean pagesDirty = true;
+    private int batchDepth;
+    private boolean pendingPersistence;
 
     private LoliStorageData(ItemStack ownerStack, int pageCount) {
         this.ownerStack = ownerStack;
@@ -51,6 +53,29 @@ public final class LoliStorageData implements Container {
             throw new IllegalArgumentException("Item does not expose Loli storage");
         }
         return new LoliStorageData(stack, pages);
+    }
+
+    /** Defers encoding until the complete synchronous operation, including exceptional exits. */
+    public Batch beginBatch() {
+        return new Batch();
+    }
+
+    public final class Batch implements AutoCloseable {
+        private boolean closed;
+
+        private Batch() {
+            batchDepth++;
+        }
+
+        @Override
+        public void close() {
+            if (closed) return;
+            closed = true;
+            if (--batchDepth == 0 && pendingPersistence) {
+                pendingPersistence = false;
+                persist();
+            }
+        }
     }
 
     public static boolean hasStorage(ItemStack stack) {
@@ -395,6 +420,10 @@ public final class LoliStorageData implements Container {
 
     private void persist() {
         pagesDirty = true;
+        if (batchDepth > 0) {
+            pendingPersistence = true;
+            return;
+        }
         CompoundTag storage = new CompoundTag();
         storage.putInt(CURRENT_PAGE_KEY, currentPage);
         storage.put(ITEMS_KEY, saveEntries(items));
