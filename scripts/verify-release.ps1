@@ -6,6 +6,8 @@ param(
     [ValidateSet(17, 21)]
     [int]$ExpectedJavaRelease,
 
+    [string]$ExpectedFabricApiVersion,
+
     [string]$JarPath
 )
 
@@ -71,6 +73,10 @@ Assert-True ($properties.yarn_mappings -like "$ExpectedMinecraftVersion+build.*"
     "Yarn mappings do not match Minecraft $ExpectedMinecraftVersion"
 Assert-True ($properties.fabric_version -notmatch 'SNAPSHOT') `
     "Fabric API must be an exact release"
+if (-not [string]::IsNullOrWhiteSpace($ExpectedFabricApiVersion)) {
+    Assert-True ($properties.fabric_version -eq $ExpectedFabricApiVersion) `
+        "fabric_version is $($properties.fabric_version), expected $ExpectedFabricApiVersion"
+}
 
 $buildScript = Get-Content -LiteralPath (Join-Path $projectRoot 'build.gradle') -Raw
 Assert-True ($buildScript -match "options\.release\s*=\s*$ExpectedJavaRelease") `
