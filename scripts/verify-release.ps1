@@ -111,10 +111,12 @@ foreach ($relativePath in $expectedAssets.Keys) {
 }
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
+# Frozen native source d71ca438: baseline 44 Inject + the mining XP award hook;
+# two existing expression hooks cover target protection and native legacy reach.
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 45
     '@ModifyVariable' = 3
-    '@ModifyExpressionValue' = 1
+    '@ModifyExpressionValue' = 2
     '@Accessor' = 4
 }
 $javaSources = Get-ChildItem -LiteralPath $mixinSourceRoot -Recurse -Filter '*.java'
