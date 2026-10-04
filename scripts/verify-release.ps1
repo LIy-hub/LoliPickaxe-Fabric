@@ -111,8 +111,9 @@ foreach ($relativePath in $expectedAssets.Keys) {
 }
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
+# Native full-port inventory plus storage-network and mining-XP hooks.
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 45
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
     '@Accessor' = 4
@@ -142,6 +143,8 @@ try {
     Assert-True ($metadata.depends.fabricloader -eq '>=0.19.3') `
         "JAR Fabric Loader dependency is not >=0.19.3"
 
+    Assert-True (@($archive.Entries | Where-Object FullName -match 'RegressionTest|EditorLayoutRegressionTest').Count -eq 0) 'Test classes leaked into runtime JAR'
+
     $requiredEntries = @(
         "LICENSE_LoliPickaxe-$ExpectedMinecraftVersion",
         "CREDITS.md_LoliPickaxe-$ExpectedMinecraftVersion",
@@ -154,6 +157,11 @@ try {
         'data/liymod/damage_type/loli_damage.json',
         'data/liymod/tags/block/incorrect_for_loli_tool.json',
         'data/liymod/tags/item/loli_repair_materials.json',
+        'com/liymod/item/LoliFluidMining.class',
+        'com/liymod/item/LoliMiningExperience.class',
+        'com/liymod/combat/LoliKillSummary.class',
+        'com/liymod/storage/LoliStorageNetworkCodec.class',
+        'com/liymod/client/gui/LoliChatRainbow.class',
         'liymod.mixins.json'
     )
     foreach ($entryPath in $requiredEntries) {
@@ -166,7 +174,7 @@ try {
         "Mixin compatibility level must match Java $ExpectedJavaRelease"
     Assert-True ($mixinConfig.injectors.defaultRequire -eq 1) `
         "Mixin defaultRequire must remain 1"
-    foreach ($mixinName in $mixinConfig.mixins) {
+    foreach ($mixinName in @($mixinConfig.mixins) + @($mixinConfig.client)) {
         $classPath = 'com/liymod/mixin/' + $mixinName.Replace('.', '/') + '.class'
         Assert-True ($null -ne $archive.GetEntry($classPath)) `
             "Configured mixin class missing from JAR: $classPath"

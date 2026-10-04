@@ -42,6 +42,17 @@ public final class LoliErasureService {
             Entity target,
             ExecutionAuthority authority
     ) {
+        try (var action = LoliKillSummary.begin(attacker)) {
+            return execute(attacker, target, authority, action);
+        }
+    }
+
+    private static Result execute(
+            @Nullable Entity attacker,
+            Entity target,
+            ExecutionAuthority authority,
+            LoliKillSummary.Action action
+    ) {
         if (!(target.level() instanceof ServerLevel serverWorld)
                 || target == attacker) {
             return Result.IGNORED;
@@ -78,7 +89,8 @@ public final class LoliErasureService {
             return Result.EXECUTED;
         }
 
-        try (LoliLegacyExecutionPolicy.PreparedExecution legacyExecution =
+        try (var summary = action.target(target);
+             LoliLegacyExecutionPolicy.PreparedExecution legacyExecution =
                      LoliLegacyExecutionPolicy.prepare(
                              authority == ExecutionAuthority.ABSOLUTE_EXECUTION ? attacker : null,
                              target
@@ -131,6 +143,7 @@ public final class LoliErasureService {
                 return Result.IGNORED;
             }
             legacyExecution.commit();
+            summary.commit();
             if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
                 StrengthConfrontation.onAbsoluteDeadLock(target);
             }

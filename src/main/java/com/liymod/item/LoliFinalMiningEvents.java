@@ -1,6 +1,7 @@
 package com.liymod.item;
 
 import com.liymod.LiyMod;
+import com.liymod.combat.LoliExecutionManager;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
 import com.liymod.storage.LoliStorageData;
@@ -11,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -30,12 +33,15 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
 /** Immediate single/range mining for the final pickaxe with bounded modern drops. */
 public final class LoliFinalMiningEvents {
     private static final Set<UUID> ACTIVE_MINERS = new HashSet<>();
+    private static final LoliMiningCooldown CLIENT_COOLDOWN = new LoliMiningCooldown();
+    private static final LoliMiningCooldown SERVER_COOLDOWN = new LoliMiningCooldown();
     private static final Map<Block, Item> SPECIAL_DROPS = Map.ofEntries(
             Map.entry(Blocks.SPAWNER, Items.SPAWNER),
             Map.entry(Blocks.STRUCTURE_BLOCK, Items.STRUCTURE_BLOCK),
@@ -72,6 +78,18 @@ public final class LoliFinalMiningEvents {
     public static void registerEvents() {
         LiyMod.LOGGER.info("Registering final Loli Pickaxe mining events for {}", LiyMod.MOD_ID);
         AttackBlockCallback.EVENT.register(LoliFinalMiningEvents::attackBlock);
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            SERVER_COOLDOWN.forget(handler.player.getUUID());
+            ACTIVE_MINERS.remove(handler.player.getUUID());
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            SERVER_COOLDOWN.clear();
+            ACTIVE_MINERS.clear();
+        });
+    }
+
+    public static void resetClientCooldown() {
+        CLIENT_COOLDOWN.clear();
     }
 
     private static InteractionResult attackBlock(
@@ -81,33 +99,59 @@ public final class LoliFinalMiningEvents {
             BlockPos origin,
             Direction direction
     ) {
-        if (!(level instanceof ServerLevel serverLevel)
-                || !(player instanceof ServerPlayer serverPlayer)
-                || hand != InteractionHand.MAIN_HAND
-                || !LoliItemSettings.isFinalPickaxe(serverPlayer.getMainHandItem())) {
+        if (hand != InteractionHand.MAIN_HAND
+                || !LoliItemSettings.isFinalPickaxe(player.getMainHandItem())) {
             return InteractionResult.PASS;
         }
-        if (!ACTIVE_MINERS.add(serverPlayer.getUUID())) {
+        // Fabric sends START_DESTROY_BLOCK for a consumed client attack. Avoid
+        // vanilla's hardness/progressive prediction and its competing ABORT/STOP.
+        // Radius zero uses the same authoritative action for only the origin block.
+        if (level.isClientSide()) {
+            if (player.isSpectator()) return InteractionResult.PASS;
+            var result = clientAttackResult(level.getBlockState(origin),
+                    LoliFluidMining.isEnabled(player.getMainHandItem()));
+            if (result == InteractionResult.SUCCESS && !CLIENT_COOLDOWN.tryAcquire(
+                    player.getUUID(), LoliItemSettings.getMiningRadius(player.getMainHandItem()))) {
+                return InteractionResult.FAIL;
+            }
+            return result;
+        }
+        if (!(level instanceof ServerLevel serverLevel)
+                || !(player instanceof ServerPlayer serverPlayer)) {
+            return InteractionResult.PASS;
+        }
+        // Fabric invokes this callback before vanilla's spectator, reach and build checks.
+        if (serverPlayer.isSpectator() || LoliExecutionManager.isDeadLocked(serverPlayer)
+                || !serverLevel.isInWorldBounds(origin) || !serverLevel.hasChunkAt(origin)
+                || !serverPlayer.canInteractWithBlock(origin, 1.0D)
+                || !canBreakAt(serverLevel, serverPlayer, origin)
+                || !LoliFluidMining.canMine(serverLevel.getBlockState(origin),
+                        LoliFluidMining.isEnabled(serverPlayer.getMainHandItem()))) {
+            return InteractionResult.FAIL;
+        }
+        ItemStack tool = serverPlayer.getMainHandItem();
+        int radius = LoliItemSettings.getServerMiningRadius(tool);
+        if (ACTIVE_MINERS.contains(serverPlayer.getUUID())
+                || !SERVER_COOLDOWN.tryAcquire(serverPlayer.getUUID(), radius)) {
             return InteractionResult.SUCCESS_SERVER;
         }
-
-        ItemStack tool = serverPlayer.getMainHandItem();
-        try {
+        ACTIVE_MINERS.add(serverPlayer.getUUID());
+        try (var experience = LoliMiningExperience.begin(serverPlayer)) {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
-            int radius = LoliItemSettings.getMiningRadius(tool);
+            boolean autoAccept = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_ACCEPT);
+            boolean selectFluids = LoliFluidMining.isEnabled(tool);
+            boolean autoFurnace = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_FURNACE);
+            LoliStorageData storage = autoAccept ? LoliStorageData.open(tool) : null;
             boolean brokeAny = false;
             List<BlockPos> changedPositions = new ArrayList<>();
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        BlockPos target = origin.offset(x, y, z);
-                        if (!serverLevel.hasChunkAt(target)) {
-                            continue;
-                        }
-                        if (breakOne(serverLevel, serverPlayer, tool, target)) {
-                            brokeAny = true;
-                            changedPositions.add(target.immutable());
-                        }
+            try (var batch = storage == null ? null : storage.beginBatch()) {
+                for (BlockPos target : LoliMiningRange.positions(origin, radius)) {
+                    if (!serverLevel.hasChunkAt(target)) {
+                        continue;
+                    }
+                    if (replaceOne(serverLevel, serverPlayer, tool, target, storage, selectFluids, autoFurnace)) {
+                        brokeAny = true;
+                        changedPositions.add(target.immutable());
                     }
                 }
             }
@@ -123,24 +167,40 @@ public final class LoliFinalMiningEvents {
                 );
             }
         } finally {
+            // Count the gap from completion too, so queued packets cannot repeat a slow action.
+            SERVER_COOLDOWN.finished(serverPlayer.getUUID(), radius);
             ACTIVE_MINERS.remove(serverPlayer.getUUID());
         }
         return InteractionResult.SUCCESS_SERVER;
     }
 
-    private static boolean breakOne(
+    static InteractionResult clientAttackResult(BlockState state, boolean selectFluids) {
+        return LoliFluidMining.canMine(state, selectFluids)
+                ? InteractionResult.SUCCESS : InteractionResult.FAIL;
+    }
+
+    private static boolean replaceOne(
             ServerLevel level,
             ServerPlayer player,
             ItemStack tool,
-            BlockPos pos
+            BlockPos pos,
+            LoliStorageData storage,
+            boolean selectFluids,
+            boolean autoFurnace
     ) {
         BlockState state = level.getBlockState(pos);
-        if (state.isAir()
-                || !player.mayInteract(level, pos)
-                || player.blockActionRestricted(level, pos, player.gameMode())
-                || (LoliItemSettings.getBoolean(tool, LoliConfigOption.STOP_ON_LIQUID)
-                && !state.getFluidState().isEmpty())) {
+        // Empty positions do not read settings, calculate loot, write blocks or enter the sync batch.
+        if (state.isAir()) return false;
+        if (!LoliFluidMining.canMine(state, selectFluids) || !canBreakAt(level, player, pos)) {
             return false;
+        }
+
+        if (LoliFluidMining.isFluidBlock(state)) {
+            if (!LoliBlockReplacement.remove(level, pos, state, selectFluids)) {
+                return false;
+            }
+            level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, state));
+            return true;
         }
 
         BlockEntity blockEntity = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
@@ -165,16 +225,24 @@ public final class LoliFinalMiningEvents {
             }
         }
 
-        if (!level.destroyBlock(pos, false, player)) {
+        if (!LoliBlockReplacement.remove(level, pos, state, selectFluids)) {
             return false;
         }
+        level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, state));
         state.spawnAfterBreak(level, pos, tool, true);
 
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_FURNACE)) {
+        if (autoFurnace) {
             drops = smeltDrops(level, player, drops);
         }
-        deliverDrops(level, player, tool, pos, drops);
+        deliverDrops(level, player, storage, pos, drops);
         return true;
+    }
+
+    private static boolean canBreakAt(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        return level.isInWorldBounds(pos) && level.getWorldBorder().isWithinBounds(pos)
+                && level.mayInteract(player, pos) && player.mayInteract(level, pos)
+                && !level.getServer().isUnderSpawnProtection(level, pos, player)
+                && !player.blockActionRestricted(level, pos, player.gameMode.getGameModeForPlayer());
     }
 
     private static List<ItemStack> smeltDrops(
@@ -215,14 +283,13 @@ public final class LoliFinalMiningEvents {
     private static void deliverDrops(
             ServerLevel level,
             ServerPlayer player,
-            ItemStack tool,
+            LoliStorageData storage,
             BlockPos origin,
             List<ItemStack> drops
     ) {
-        LoliStorageData storage = LoliStorageData.open(tool);
-        boolean autoAccept = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_ACCEPT);
+        boolean autoAccept = storage != null;
         for (ItemStack drop : drops) {
-            boolean blacklisted = storage.isBlacklisted(drop);
+            boolean blacklisted = autoAccept && storage.isBlacklisted(drop);
             ItemStack remaining = autoAccept ? storage.insert(drop) : drop.copy();
             if (autoAccept && !blacklisted && !remaining.isEmpty()) {
                 // Inventory.add mutates this exact stack, leaving only the part that did not fit.
