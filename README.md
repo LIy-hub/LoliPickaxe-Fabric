@@ -6,7 +6,7 @@ An unbreakable pickaxe with extreme mining power, flight, and attacks that wipe 
 
 ### Getting the pickaxe
 
-Find the Loli Pickaxe and Loli Fragment in the mod's creative inventory tab. There is no crafting recipe. With commands enabled, use:
+Find the Loli Pickaxe and Loli Fragment in the mod's creative inventory tab. The Small Loli Pickaxe and its addons also support crafting and upgrades; combining a fully upgraded Small Loli Pickaxe with a maximum-tier Entity Soul produces the final pickaxe. With commands enabled, obtain the final pickaxe directly:
 
 ```text
 /give @s liymod:loli_pickaxe
@@ -19,6 +19,9 @@ Find the Loli Pickaxe and Loli Fragment in the mod's creative inventory tab. The
 - **Right-click** to attack entities in a box extending 32 blocks outward from the player, with lightning at successfully removed targets.
 - **Hold it in your main hand** for flight, protection from ordinary damage, and continuously restored health and air. Holding it does not increase movement speed.
 - **Two main-hand holders** cannot defeat each other with the pickaxe. Their attacks trigger alternating immunity sounds.
+- **Configure mining** for a single block or a range, fluid selection and range previews. Mining experience is collected directly and can repair damaged Mending equipment first.
+- **Open the tool menus** with B for storage, U for the blacklist, N for configuration, M for enchantments, P for effects and K for teleportation. Shift+B drops all stored items. Keys can be reassigned in Minecraft controls.
+- **Read each attack summary** for the action’s kill, item-drop and experience totals, with a localized animated rainbow title.
 
 The item does not lose durability and is fireproof. Its attacks can affect players and nearby non-hostile entities, and its mining can affect normally restricted blocks. This is intended for worlds that allow this level of power; server owners should decide who receives it.
 
@@ -40,7 +43,7 @@ Use files built for the same Minecraft version. Compatibility with third-party c
 
 ### 获取方式
 
-在模组的创造物品栏中可以找到“氪金萝莉”和“萝莉碎片”。当前没有合成配方。开启命令后，也可以输入：
+在模组的创造物品栏中可以找到“氪金萝莉”和“萝莉碎片”。小萝莉和升级配件支持合成与升级；完全升级的小萝莉与最高阶实体之魂可合成为最终镐。开启命令后，也可以直接输入：
 
 ```text
 /give @s liymod:loli_pickaxe
@@ -53,6 +56,9 @@ Use files built for the same Minecraft version. Compatibility with third-party c
 - **右键**：攻击玩家周围、向外扩展 32 格的方形区域内的实体，并在成功清除的目标处生成闪电。
 - **主手持有**：获得飞行、常规伤害防护，以及持续的生命与空气值恢复；不会额外提高移动速度。
 - **双方都主手持有**：无法用这把镐击败对方，攻击时会交替播放免疫提示音。
+- **配置挖掘**：可选择单方块或范围挖掘、流体选择与范围预览；挖掘经验直接收集，并优先修复带经验修补的受损装备。
+- **打开工具界面**：B 打开储藏室，U 打开黑名单，N 打开配置，M 打开附魔，P 打开药水效果，K 打开传送；Shift+B 丢出全部储存物品。按键可在游戏控制设置中修改。
+- **查看攻击汇总**：每次攻击汇总本次击杀数、掉落物数量和经验，标题支持本地化和彩虹动画。
 
 镐子不消耗耐久，掉落物防火。范围攻击会波及玩家和友好实体，挖掘能力也可影响通常受限的方块。它适合允许超强度道具的世界，服务器中应由服主决定发放范围。
 
@@ -74,6 +80,6 @@ Original project: **IslenautsGK and contributors**. Fabric port: **Liy**. Licens
 
 ## Development / 开发
 
-Choose the `mc/<Minecraft version>` branch for your target release; `main` retains the original 1.20.1 development source. 构建时请选择对应的 `mc/<Minecraft 版本>` 分支，`main` 保留最初的 1.20.1 开发源码。
+Choose the `mc/<Minecraft version>` branch for your target release; `main` contains the synchronized Fabric 1.20.1 source. 构建时请选择对应的 `mc/<Minecraft 版本>` 分支，`main` 保留同步后的 Fabric 1.20.1 源码。
 
 [Source branches, builds, and technical notes / 源码分支、构建与技术说明](docs/development.md)

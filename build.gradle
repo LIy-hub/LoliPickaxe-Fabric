@@ -7,27 +7,32 @@ version = project.mod_version
 group = project.maven_group
 
 base {
-	archivesName = project.archives_base_name
+	archivesName = "${project.archives_base_name}-${project.minecraft_version}"
 }
 
 repositories {
 	maven {
-		url = 'https://maven.aliyun.com/nexus/content/groups/public'
+		name = 'Fabric'
+		url = 'https://maven.fabricmc.net/'
 	}
-	maven {
-		url = 'https://repository.hanbings.io/proxy'
-	}
+	mavenCentral()
+}
+
+loom {
+    splitEnvironmentSourceSets()
+    mods { liymod { sourceSet sourceSets.main; sourceSet sourceSets.client } }
 }
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
 	inputs.property "version", project.version
+    exclude 'assets/liymod/lolicards/**'
 
 	filesMatching("fabric.mod.json") {
 		expand "version": inputs.properties.version
@@ -46,6 +51,42 @@ java {
 
 	sourceCompatibility = JavaVersion.VERSION_17
 	targetCompatibility = JavaVersion.VERSION_17
+}
+
+// Geometry checks run without opening Minecraft or adding a test framework dependency.
+sourceSets {
+	guiTest {
+		compileClasspath += sourceSets.client.output + sourceSets.main.output + sourceSets.main.compileClasspath
+		runtimeClasspath += sourceSets.client.output + sourceSets.main.runtimeClasspath
+	}
+}
+
+tasks.register('verifyGuiLayout', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.client.gui.EditorLayoutRegressionTest'
+}
+
+tasks.register('verifyStoragePages', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.storage.StoragePagesRegressionTest'
+	workingDir = layout.buildDirectory.dir('storage-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
+tasks.register('verifyRecipeCodecs', JavaExec) {
+    dependsOn tasks.named('guiTestClasses')
+    classpath = sourceSets.guiTest.runtimeClasspath
+    mainClass = 'com.liymod.recipe.RecipeCodecRegressionTest'
+    workingDir = layout.buildDirectory.dir('recipe-test-run').get().asFile
+    doFirst { workingDir.mkdirs() }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verifyRecipeCodecs')
+	dependsOn tasks.named('verifyGuiLayout')
+	dependsOn tasks.named('verifyStoragePages')
 }
 
 jar {
@@ -76,3 +117,37 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+tasks.register('verifyFluidMining', JavaExec) {
+ workingDir = layout.buildDirectory.dir('verifyFluidMining-run').get().asFile
+ doFirst { workingDir.mkdirs() }
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.item.LoliFluidMiningRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyFluidMining') }
+
+tasks.register('verifyMiningInteractions', JavaExec) {
+ workingDir = layout.buildDirectory.dir('verifyMiningInteractions-run').get().asFile
+ doFirst { workingDir.mkdirs() }
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.item.MiningInteractionRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyMiningInteractions') }
+
+tasks.register('verifyKillSummaries', JavaExec) {
+ workingDir = layout.buildDirectory.dir('verifyKillSummaries-run').get().asFile
+ doFirst { workingDir.mkdirs() }
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.combat.LoliKillSummaryRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyKillSummaries') }
+
+tasks.register('verifyDivineChat', JavaExec) {
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.client.gui.LoliChatRainbowRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyDivineChat') }
