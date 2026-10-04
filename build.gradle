@@ -146,3 +146,20 @@ tasks.named('check') {
 test {
 	useJUnitPlatform()
 }
+
+// Version synchronization behavior regressions, using native target APIs.
+[
+    verifyFluidMining: 'com.liymod.item.LoliFluidMiningRegressionTest',
+    verifyMiningInteractions: 'com.liymod.item.MiningInteractionRegressionTest',
+    verifyKillSummaries: 'com.liymod.combat.LoliKillSummaryRegressionTest',
+    verifyDivineChat: 'com.liymod.client.gui.LoliChatRainbowRegressionTest'
+].each { taskName, entryPoint ->
+    tasks.register(taskName, JavaExec) {
+        dependsOn tasks.named('guiTestClasses')
+        classpath = sourceSets.guiTest.runtimeClasspath
+        mainClass = entryPoint
+        workingDir = layout.buildDirectory.dir("${taskName}-run").get().asFile
+        doFirst { workingDir.mkdirs() }
+    }
+    tasks.named('check') { dependsOn tasks.named(taskName) }
+}
