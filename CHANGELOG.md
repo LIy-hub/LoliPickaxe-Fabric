@@ -1,11 +1,19 @@
 # Changelog
 
-## 1.0.0 for Minecraft 26.3
+## 1.0.1 for Minecraft 26.3
 
 - Fix all twenty recipe-unlocked advancement criteria to use the 26.3 `recipes`
   field. Validate bundled advancements with Minecraft's registry-aware codec.
 - Exclude duplicate legacy card PNGs from runtime and sources JARs. Keep the
   originals in the repository and all ten game-addressable textures unchanged.
+
+Local validation: Java 25 build, all 78 configuration assertions, both Loader and
+advancement-codec tests, release/content contracts, and combined-client world
+loading passed. The versioned release contains the same gameplay classes and
+runtime resources as the validated 2026-10-04 fixes.
+
+## 1.0.0 for Minecraft 26.3
+
 - Create the `mc/26.3` port from `mc/26.2` without changing older branches.
 - Target Minecraft 26.3, Fabric Loader 0.19.5 and Fabric API 0.161.0+26.3.
 - Update Fabric Loom to 1.17.21 and Gradle to 9.6.0, with its official
