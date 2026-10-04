@@ -189,3 +189,9 @@ code that bypasses normal targeting APIs.
 This branch includes storage/blacklist, configuration, enchantment, effect, teleport, password-workbench and card menus with their server-owned persistence/networking and backing content. See [GUI behavior and validation](docs/gui-validation.md). Client startup and build checks are distinct from in-game/visual acceptance.
 
 本分支已补齐储藏室、黑名单、配置、附魔、药水、传送、密码工作台和卡片界面，以及服务端保存、同步和配套内容。界面行为与检查见上述文档；构建和启动检查不代表游戏内操作或画面验收。
+
+## 26.2 behavior synchronization
+
+Ported fluid selection, single/range mining and white range outline, direct block replacement, batched storage writes, direct XP/Mending, 20 ms range cooldown, bounded compressed storage networking with unchanged disk NBT, independent owning-stack caches, visible-page menu sync, per-action kill/drop/XP summaries and client rainbow titles. Native 1.21.7 APIs and pinned dependencies are retained. Startup checks do not establish in-world visual or performance acceptance.
+
+已同步流体选择、单方块/范围采掘与白色范围框、直接替换方块、批量储存写入、经验直入/经验修补、20 毫秒范围间隔、有界储存网络压缩（磁盘 NBT 不变）、持有物品独立缓存、当前页同步、单次击杀/掉落/经验汇总和彩虹标题。保留本版本 API 及固定依赖；启动检查不等于世界内视觉或性能验收。
