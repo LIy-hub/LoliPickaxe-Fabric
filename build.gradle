@@ -103,7 +103,16 @@ tasks.register('verifyRecipeCodecs', JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+tasks.register('verifyKillSummaries', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.combat.LoliKillSummaryRegressionTest'
+	workingDir = layout.buildDirectory.dir('kill-summary-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
 tasks.named('check') {
+	dependsOn tasks.named('verifyKillSummaries')
     dependsOn tasks.named('verifyRecipeCodecs')
 	dependsOn tasks.named('verifyGuiLayout')
 	dependsOn tasks.named('verifyStoragePages')

@@ -1,6 +1,7 @@
 package com.liymod.item;
 
 import com.liymod.combat.LoliErasureService;
+import com.liymod.combat.LoliKillSummary;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
 import com.liymod.storage.LoliStorageData;
@@ -112,13 +113,15 @@ public final class LoliPickaxeItem extends Item {
             }
         }
 
-        for (Entity target : targets) {
-            double x = target.getX();
-            double y = target.getY();
-            double z = target.getZ();
-            if (LoliErasureService.executeAbsolute(user, target)
-                    == LoliErasureService.Result.EXECUTED) {
-                spawnLightning(world, x, y, z);
+        try (var summary = LoliKillSummary.begin(user)) {
+            for (Entity target : targets) {
+                double x = target.getX();
+                double y = target.getY();
+                double z = target.getZ();
+                if (LoliErasureService.executeAbsolute(user, target)
+                        == LoliErasureService.Result.EXECUTED) {
+                    spawnLightning(world, x, y, z);
+                }
             }
         }
 

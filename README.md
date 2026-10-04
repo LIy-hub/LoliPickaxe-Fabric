@@ -54,6 +54,12 @@ and survival implementation.
   loaded entities within 1024 blocks. Inventory-wide holder protection is available as
   an operator option but is disabled by default, preserving the port's original
   main-hand rule.
+- Each final-pickaxe kill action sends one chat summary with the number of living
+  targets killed, dropped items (stack quantities, not stack count) and experience
+  points awarded by that action. Right-click and automatic range execution each
+  combine their targets into one message. Immune, already dead and non-living
+  targets do not count; rejected executions and unrelated pickups do not add rewards.
+  This observes the existing death/drop pipeline and preserves collection rules.
 - In Fabric 26.2, radius **0** is **Single-block mining** and disables neighboring
   block mining. A non-zero radius shows the centered mining cube around the
   targeted block before clicking. The server's radius limit is synchronized on
