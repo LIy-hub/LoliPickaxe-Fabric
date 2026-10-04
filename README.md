@@ -34,6 +34,9 @@ and survival implementation.
   upgrade tier. Nearby auto-collection runs only while a storage pickaxe is in
   either hand, and intentional player drops are never immediately collected
   back. Stored stacks use normal modern stack limits and bounded NBT.
+  Large pickaxe storage is compressed only for network transfer and restored on
+  receipt, keeping full 100-page storage below vanilla's packet NBT quota without
+  changing saved slots, item counts or unrelated custom data.
 - While holding the final Loli Pickaxe, press N for per-item mining/combat
   settings, M for enchantments, P for status effects and K for bounded relative
   space folding. The server validates every id, level, setting, dimension,
@@ -175,6 +178,8 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   经验修补，剩余部分计入玩家经验。
   手持氪金萝莉并开启自动收纳时，也会吸收周围 4 格已有的经验球，合并经验球中的
   全部经验都会计入。
+  大容量镐内储存仅在网络传输时压缩，接收后完整还原，防止 100 页物品数据超过
+  原版背包同步的 NBT 解码上限而断开；存档中的槽位、数量及其他自定义数据不变。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品

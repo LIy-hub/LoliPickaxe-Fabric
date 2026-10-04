@@ -51,6 +51,10 @@ path.
   updates, permissions and the existing fluid policy. Automatic storage is decoded
   once per mining action and persisted once at the end, including exceptional exits;
   this changes neither saved storage format nor blacklist, size or capacity rules.
+- Large `LoliStorage` custom data is compressed only in the network component codec
+  and restored before use. Vanilla's 2 MiB wire NBT quota and the storage's 4 MiB
+  decoded budget remain bounded; disk NBT stays unchanged and existing storage
+  requires no destructive migration. Other custom data follows the native codec.
 - Final-pickaxe block and auto-smelting experience is collected only within the
   active server-thread mining action, applied to Mending equipment and then to the
   mining player directly. No world XP orbs are spawned for that action; unrelated

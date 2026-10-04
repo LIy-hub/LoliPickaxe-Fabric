@@ -1,16 +1,26 @@
 package com.liymod.storage;
 
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.DecoderException;
+import java.io.ByteArrayOutputStream;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.Bootstrap;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
 
 /** Exercises real ItemStacks and storage NBT, including sparse legacy pages and page-count shrinkage. */
 public final class StoragePagesRegressionTest {
-    public static void main(String[] args) throws ReflectiveOperationException {
+    public static void main(String[] args) throws Exception {
         SharedConstants.tryDetectVersion();
         Bootstrap.bootStrap();
         // 26.2 binds default item components during data loading, after Bootstrap.
@@ -63,7 +73,102 @@ public final class StoragePagesRegressionTest {
         require(fixture(reopened.getOwnerStack()).getVisiblePageCount() == 1,
                 "Empty storage does not survive reopening");
         verifyBatchInsertion();
-        System.out.println("STORAGE_PAGES_OK empty partial full growth shrink sparse reopen capacity dropAll batch nested exceptionalExit=PASS");
+        verifyLargeStorageNetwork();
+        System.out.println("STORAGE_PAGES_OK empty partial full growth shrink sparse reopen capacity dropAll batch nested exceptionalExit network100Pages boundedDecode=PASS");
+    }
+
+    private static void verifyLargeStorageNetwork() throws Exception {
+        ItemStack owner = new ItemStack(Items.NETHERITE_PICKAXE);
+        LoliStorageData storage = fixture(owner);
+        try (var batch = storage.beginBatch()) {
+            for (int page = 0; page < 100; page++) {
+                storage.setCurrentPage(page);
+                for (int slot = 0; slot < 81; slot++) {
+                    storage.setItem(slot, new ItemStack(Items.STONE, 64));
+                }
+            }
+            storage.setItem(80, new ItemStack(Items.DIAMOND, 7));
+            storage.setBlacklistItem(0, new ItemStack(Items.GOLD_INGOT));
+        }
+        CustomData.update(DataComponents.CUSTOM_DATA, owner, root -> root.putString("OwnerFixture", "unchanged"));
+        CustomData original = owner.get(DataComponents.CUSTOM_DATA);
+        require(original.copyTag().sizeInBytes() > 2 * 1024 * 1024,
+                "Full storage must reproduce the native network NBT quota failure");
+        var registries = RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY);
+        var vanillaCodec = DataComponents.CUSTOM_DATA.streamCodec();
+        var vanillaBuffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), registries);
+        boolean nativeQuotaFailed = false;
+        try {
+            vanillaCodec.encode(vanillaBuffer, original);
+            vanillaCodec.decode(vanillaBuffer);
+        } catch (RuntimeException expected) {
+            nativeQuotaFailed = true;
+        } finally {
+            vanillaBuffer.release();
+        }
+        require(nativeQuotaFailed, "Vanilla decoding unexpectedly accepted oversized storage");
+        var configured = LoliStorageNetworkCodec.configure(
+                DataComponentType.<CustomData>builder().persistent(CustomData.CODEC)).build();
+        require(configured.codec() == CustomData.CODEC,
+                "The network fix must preserve the native persistent codec");
+        var codec = configured.streamCodec();
+        for (int direction = 0; direction < 2; direction++) {
+            var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), registries);
+            try {
+                codec.encode(buffer, original);
+                int wireBytes = buffer.readableBytes();
+                CustomData decoded = codec.decode(buffer);
+                require(decoded.equals(original) && buffer.readableBytes() == 0,
+                        "Network compaction must restore every slot, count, blacklist and unrelated key");
+                ItemStack received = owner.copy();
+                received.set(DataComponents.CUSTOM_DATA, decoded);
+                LoliStorageData reopened = fixture(received);
+                require(reopened.getVisiblePageCount() == 100 && reopened.getCurrentPage() == 99
+                                && reopened.getItem(80).is(Items.DIAMOND) && reopened.getItem(80).getCount() == 7
+                                && reopened.getBlacklistItem(0).is(Items.GOLD_INGOT),
+                        "Full storage was corrupted by network decoding");
+                reopened.setCurrentPageFromNetwork(0);
+                require(reopened.getItem(0).is(Items.STONE) && reopened.getItem(0).getCount() == 64,
+                        "Network compaction lost the first page");
+                System.out.printf("STORAGE_NETWORK_SAMPLE slots=8100 nbtAccountedBytes=%d wireBytes=%d%n",
+                        original.copyTag().sizeInBytes(), wireBytes);
+            } finally {
+                buffer.release();
+            }
+        }
+        require(owner.get(DataComponents.CUSTOM_DATA) == original,
+                "Network encoding must not migrate or mutate saved storage");
+        CompoundTag unrelated = new CompoundTag();
+        unrelated.putString("OtherMod", "unchanged");
+        CustomData ordinary = CustomData.of(unrelated);
+        require(LoliStorageNetworkCodec.compact(ordinary) == ordinary
+                        && LoliStorageNetworkCodec.expand(ordinary) == ordinary,
+                "Other custom data must retain the native encoding path");
+
+        CompoundTag excessive = new CompoundTag();
+        excessive.putByteArray("Oversized", new byte[4 * 1024 * 1024]);
+        ByteArrayOutputStream compressed = new ByteArrayOutputStream();
+        NbtIo.writeCompressed(excessive, compressed);
+        CompoundTag packed = new CompoundTag();
+        packed.putInt("NetworkVersion", 1);
+        packed.putByteArray("Compressed", compressed.toByteArray());
+        CompoundTag root = new CompoundTag();
+        root.put("LoliStorage", packed);
+        boolean excessiveRejected = false;
+        try {
+            LoliStorageNetworkCodec.expand(CustomData.of(root));
+        } catch (DecoderException expected) {
+            excessiveRejected = true;
+        }
+        require(excessiveRejected, "Compressed payloads must retain the 4 MiB decoded storage budget");
+        packed.putByteArray("Compressed", new byte[]{1, 2, 3});
+        boolean malformedRejected = false;
+        try {
+            LoliStorageNetworkCodec.expand(CustomData.of(root));
+        } catch (DecoderException expected) {
+            malformedRejected = true;
+        }
+        require(malformedRejected, "Malformed compressed storage must fail without silently losing items");
     }
 
     private static void verifyBatchInsertion() throws ReflectiveOperationException {
