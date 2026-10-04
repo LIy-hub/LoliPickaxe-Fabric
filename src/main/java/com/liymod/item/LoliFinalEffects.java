@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliServerConfig;
+import com.liymod.nbt.LoliCustomData;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.core.component.DataComponents;
@@ -27,24 +28,23 @@ public final class LoliFinalEffects {
     }
 
     public static void ensureDefaults(ItemStack stack) {
-        CompoundTag custom = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        CompoundTag custom = LoliCustomData.view(stack);
         CompoundTag root = custom.getCompound(ROOT_KEY);
         if (root.contains(EFFECTS_KEY)) {
             return;
         }
         Map<ResourceLocation, Integer> defaults = new LinkedHashMap<>();
-        defaults.put(new ResourceLocation("night_vision"), 1);
-        defaults.put(new ResourceLocation("water_breathing"), 1);
+        defaults.put(new ResourceLocation("minecraft", "night_vision"), 1);
+        defaults.put(new ResourceLocation("minecraft", "water_breathing"), 1);
         set(stack, defaults);
     }
 
     public static Map<ResourceLocation, Integer> get(ItemStack stack) {
         Map<ResourceLocation, Integer> values = new LinkedHashMap<>();
-        CompoundTag custom = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
-        if (custom.sizeInBytes() > 64 * 1024) {
+        ListTag list = LoliCustomData.view(stack).getCompound(ROOT_KEY).getList(EFFECTS_KEY, net.minecraft.nbt.Tag.TAG_COMPOUND);
+        if (list.sizeInBytes() > 64 * 1024) {
             return Map.of();
         }
-        ListTag list = custom.getCompound(ROOT_KEY).getList(EFFECTS_KEY, net.minecraft.nbt.Tag.TAG_COMPOUND);
         int maximum = 32;
         for (int index = 0; index < list.size() && values.size() < MAX_ENTRIES; index++) {
             CompoundTag entry = list.getCompound(index);

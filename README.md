@@ -189,3 +189,9 @@ code that bypasses normal targeting APIs.
 This branch includes storage/blacklist, configuration, enchantment, effect, teleport, password-workbench and card menus with their server-owned persistence/networking and backing content. See [GUI behavior and validation](docs/gui-validation.md). Client startup and build checks are distinct from in-game/visual acceptance.
 
 本分支已补齐储藏室、黑名单、配置、附魔、药水、传送、密码工作台和卡片界面，以及服务端保存、同步和配套内容。界面行为与检查见上述文档；构建和启动检查不代表游戏内操作或画面验收。
+
+## Current behavior synchronized from Fabric 26.2
+
+The final pickaxe uses authoritative single-block/range mining with a 20 ms range-action completion gap, configurable range preview, optional fluid selection and removal, direct replacement, batched storage writes, direct mining XP and native Mending repair. Storage keeps the native item-component disk format, caches independently per owning stack, synchronizes only the current menu page and bounds compressed wire decoding to 4 MiB. Left-click, right-click and automatic range executions produce one localized divine kill/drop/XP summary per action; only its client chat title animates with cached rainbow styles. Existing GUI, capacities, dependencies and artwork remain intact.
+
+氪金萝莉镐已同步 26.2 的单块/范围服务端采掘、范围动作结束后 20 毫秒间隔、可配置范围预览、可选流体选择与清除、直接方块替换、储存批量写入、采掘经验直入及原生经验修补。储存沿用当前版本物品组件存档格式，按持有物品独立缓存，仅同步菜单当前页；网络压缩解码维持 4 MiB 上限。左键、右键及自动范围处决每次动作只发送一条本地化击杀/掉落/经验统计，客户端只为神圣标题应用缓存彩虹动画。保留已有 GUI、容量、依赖及美术资源。
