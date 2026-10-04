@@ -1,21 +1,21 @@
 package com.liymod.tool;
 
 import com.liymod.LiyMod;
-import net.minecraft.block.Block;
-import net.minecraft.item.Item;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.level.block.Block;
 
 public final class ModToolMaterials {
-    private static final TagKey<Block> INCORRECT_FOR_LOLI_TOOL = TagKey.of(
-            RegistryKeys.BLOCK,
-            Identifier.of(LiyMod.MOD_ID, "incorrect_for_loli_tool")
+    private static final TagKey<Block> INCORRECT_FOR_LOLI_TOOL = TagKey.create(
+            Registries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath(LiyMod.MOD_ID, "incorrect_for_loli_tool")
     );
-    private static final TagKey<Item> LOLI_REPAIR_MATERIALS = TagKey.of(
-            RegistryKeys.ITEM,
-            Identifier.of(LiyMod.MOD_ID, "loli_repair_materials")
+    private static final TagKey<Item> LOLI_REPAIR_MATERIALS = TagKey.create(
+            Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_repair_materials")
     );
 
     public static final ToolMaterial LOLI = new ToolMaterial(
