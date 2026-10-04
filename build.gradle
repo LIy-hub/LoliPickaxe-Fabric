@@ -75,6 +75,22 @@ tasks.register('verifyStoragePages', JavaExec) {
 	doFirst { workingDir.mkdirs() }
 }
 
+tasks.register('verifyFluidMining', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.item.LoliFluidMiningRegressionTest'
+	workingDir = layout.buildDirectory.dir('fluid-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
+tasks.register('verifyMiningInteractions', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.item.MiningInteractionRegressionTest'
+	workingDir = layout.buildDirectory.dir('mining-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
 tasks.register('verifyRecipeCodecs', JavaExec) {
     dependsOn tasks.named('guiTestClasses')
     classpath = sourceSets.guiTest.runtimeClasspath
@@ -83,10 +99,28 @@ tasks.register('verifyRecipeCodecs', JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 
+tasks.register('verifyKillSummaries', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.combat.LoliKillSummaryRegressionTest'
+	workingDir = layout.buildDirectory.dir('kill-summary-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
+tasks.register('verifyDivineChat', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.client.gui.LoliChatRainbowRegressionTest'
+}
+
 tasks.named('check') {
+	dependsOn tasks.named('verifyDivineChat')
+	dependsOn tasks.named('verifyKillSummaries')
     dependsOn tasks.named('verifyRecipeCodecs')
 	dependsOn tasks.named('verifyGuiLayout')
 	dependsOn tasks.named('verifyStoragePages')
+	dependsOn tasks.named('verifyFluidMining')
+	dependsOn tasks.named('verifyMiningInteractions')
 }
 
 jar {

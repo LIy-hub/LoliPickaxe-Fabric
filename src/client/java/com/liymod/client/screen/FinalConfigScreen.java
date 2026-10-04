@@ -3,6 +3,7 @@ package com.liymod.client.screen;
 import com.liymod.client.gui.EditorLayout;
 import com.liymod.client.gui.LoliGui;
 import com.liymod.config.LoliConfigOption;
+import com.liymod.item.LoliPickaxeItem;
 import com.liymod.menu.FinalConfigMenu;
 import com.liymod.network.LoliItemSettingPayload;
 import java.util.LinkedHashMap;
@@ -55,6 +56,10 @@ public final class FinalConfigScreen extends AbstractLoliEditorScreen<FinalConfi
                 .mapToInt(option -> LoliGui.text(font, Component.translatable(option.translationKey()), contentWidth - 52, 2).height())
                 .max().orElse(font.lineHeight);
         optionRowHeight = Math.max(20, optionRowHeight);
+        for (int radius : new int[]{0, 5}) {
+            optionRowHeight = Math.max(optionRowHeight, LoliGui.text(font,
+                    LoliPickaxeItem.miningModeDescription(radius), contentWidth - 52, 2).height());
+        }
         placePanel(EditorLayout.create(width, height, 300, titleText.height(), optionRowHeight, 20,
                 font.lineHeight, 20, Math.max(helpText.height(), errorText.height())));
         previousButton = addRenderableWidget(Button.builder(
@@ -82,6 +87,7 @@ public final class FinalConfigScreen extends AbstractLoliEditorScreen<FinalConfi
                 20,
                 Component.translatable("gui.liymod.config.title"));
         valueBox.setMaxLength(LoliItemSettingPayload.MAX_VALUE_LENGTH);
+        valueBox.setResponder(ignored -> updateOptionText());
         addRenderableWidget(valueBox);
         addRenderableWidget(Button.builder(
                         Component.translatable("gui.liymod.config.save"),
@@ -136,8 +142,6 @@ public final class FinalConfigScreen extends AbstractLoliEditorScreen<FinalConfi
     private void showCurrentOption() {
         LoliConfigOption option = currentOption();
         boolean hasOption = option != null;
-        optionText = LoliGui.text(font, hasOption ? Component.translatable(option.translationKey()) : Component.empty(),
-                layout.contentWidth() - 52, 2);
         previousButton.active = hasOption;
         nextButton.active = hasOption;
         boolean isBoolean = hasOption && option.type() == LoliConfigOption.ValueType.BOOLEAN;
@@ -153,7 +157,21 @@ public final class FinalConfigScreen extends AbstractLoliEditorScreen<FinalConfi
                 valueBox.setValue(encoded);
             }
         }
+        updateOptionText();
         invalidValue = false;
+    }
+
+    private void updateOptionText() {
+        LoliConfigOption option = currentOption();
+        Component label = option == null ? Component.empty() : Component.translatable(option.translationKey());
+        if (option == LoliConfigOption.MINING_RADIUS && valueBox != null) {
+            try {
+                label = LoliPickaxeItem.miningModeDescription((Integer) option.parse(valueBox.getValue()));
+            } catch (IllegalArgumentException ignored) {
+                // Keep the option name while the user enters an incomplete number.
+            }
+        }
+        optionText = LoliGui.text(font, label, layout.contentWidth() - 52, 2);
     }
 
     private boolean captureCurrentValue() {
