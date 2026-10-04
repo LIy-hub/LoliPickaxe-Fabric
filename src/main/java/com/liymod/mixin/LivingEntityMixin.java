@@ -2,10 +2,11 @@ package com.liymod.mixin;
 
 import com.liymod.combat.LoliExecutionManager;
 import com.liymod.protection.LoliProtection;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -18,7 +19,7 @@ public abstract class LivingEntityMixin {
     @ModifyVariable(method = "setAbsorptionAmount", at = @At("HEAD"), argsOnly = true)
     private float lolipickaxe$blockPlayerAbsorptionWhileDead(float amount) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (self instanceof PlayerEntity && LoliExecutionManager.isTerminal(self)) {
+        if (self instanceof Player && LoliExecutionManager.isTerminal(self)) {
             return 0.0F;
         }
         return amount;
@@ -30,7 +31,7 @@ public abstract class LivingEntityMixin {
         if (LoliExecutionManager.isTerminal(self)) {
             return 0.0F;
         }
-        if (LoliProtection.isProtected(self)) {
+        if (LoliProtection.isExecutionImmune(self)) {
             return lolipickaxe$safeMaximumHealth(self);
         }
         return requestedHealth;
@@ -41,17 +42,17 @@ public abstract class LivingEntityMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (LoliExecutionManager.isTerminal(self)) {
             cir.setReturnValue(0.0F);
-        } else if (LoliProtection.isProtected(self)) {
+        } else if (LoliProtection.isExecutionImmune(self)) {
             cir.setReturnValue(lolipickaxe$safeMaximumHealth(self));
         }
     }
 
-    @Inject(method = "isDead", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isDeadOrDying", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventDeadState(CallbackInfoReturnable<Boolean> cir) {
         LivingEntity self = (LivingEntity) (Object) this;
         if (LoliExecutionManager.isTerminal(self)) {
             cir.setReturnValue(true);
-        } else if (LoliProtection.isProtected(self)) {
+        } else if (LoliProtection.isExecutionImmune(self)) {
             cir.setReturnValue(false);
         }
     }
@@ -61,12 +62,12 @@ public abstract class LivingEntityMixin {
         LivingEntity self = (LivingEntity) (Object) this;
         if (LoliExecutionManager.isTerminal(self)) {
             cir.setReturnValue(false);
-        } else if (LoliProtection.isProtected(self)) {
+        } else if (LoliProtection.isExecutionImmune(self)) {
             cir.setReturnValue(true);
         }
     }
 
-    @Inject(method = "canHit", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "isPickable", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$excludeProtectedPlayerFromRaycasts(
             CallbackInfoReturnable<Boolean> cir
     ) {
@@ -76,7 +77,7 @@ public abstract class LivingEntityMixin {
     }
 
     @Inject(
-            method = "canTarget(Lnet/minecraft/entity/LivingEntity;)Z",
+            method = "canAttack(Lnet/minecraft/world/entity/LivingEntity;)Z",
             at = @At("HEAD"),
             cancellable = true
     )
@@ -98,22 +99,22 @@ public abstract class LivingEntityMixin {
 
     @Inject(method = "kill", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventKill(CallbackInfo ci) {
-        if (LoliProtection.isProtected((LivingEntity) (Object) this)) {
+        if (LoliProtection.isExecutionImmune((LivingEntity) (Object) this)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "onDeath", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventLivingDeath(DamageSource source, CallbackInfo ci) {
-        if (LoliProtection.isProtected((LivingEntity) (Object) this)) {
+        if (LoliProtection.isExecutionImmune((LivingEntity) (Object) this)) {
             ci.cancel();
         }
     }
 
-    @Inject(method = "onDeath", at = @At("RETURN"))
+    @Inject(method = "die", at = @At("RETURN"))
     private void lolipickaxe$recordLivingDeath(DamageSource source, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
-        if (!(self instanceof ServerPlayerEntity)) {
+        if (!(self instanceof ServerPlayer)) {
             LoliExecutionManager.markVanillaDeathCommitted(self);
         }
     }

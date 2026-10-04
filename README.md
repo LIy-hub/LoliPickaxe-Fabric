@@ -183,3 +183,9 @@ This is logical target isolation rather than a change to Java inheritance. A
 player connected and ticking. The existing damage, death, removal, and
 execution defenses remain responsible for rejecting direct references from
 code that bypasses normal targeting APIs.
+
+## GUI and feature synchronization / 界面与功能同步
+
+This branch includes storage/blacklist, configuration, enchantment, effect, teleport, password-workbench and card menus with their server-owned persistence/networking and backing content. See [GUI behavior and validation](docs/gui-validation.md). Client startup and build checks are distinct from in-game/visual acceptance.
+
+本分支已补齐储藏室、黑名单、配置、附魔、药水、传送、密码工作台和卡片界面，以及服务端保存、同步和配套内容。界面行为与检查见上述文档；构建和启动检查不代表游戏内操作或画面验收。

@@ -8,5 +8,17 @@
     "sounds": [
       "liymod:loli_immunity_second"
     ]
+  },
+  "lolirecord": {
+    "category": "record",
+    "sounds": [
+      "liymod:lolirecord"
+    ]
+  },
+  "lolisuccess": {
+    "category": "block",
+    "sounds": [
+      "liymod:lolisuccess"
+    ]
   }
 }

@@ -1,14 +1,14 @@
 package com.liymod.combat;
 
 import com.liymod.sound.ModSounds;
-import net.minecraft.entity.Entity;
-import net.minecraft.registry.RegistryKey;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
@@ -25,7 +25,7 @@ public final class LoliImmunityFeedback {
     }
 
     public static void play(
-            ServerWorld world,
+            ServerLevel world,
             @Nullable Entity attacker,
             Entity protectedTarget
     ) {
@@ -42,16 +42,16 @@ public final class LoliImmunityFeedback {
 
     @Nullable
     private static SoundEvent selectNextSound(
-            ServerWorld world,
+            ServerLevel world,
             @Nullable Entity attacker,
             Entity protectedTarget
     ) {
         MinecraftServer server = world.getServer();
-        int tick = server.getTicks();
+        int tick = server.getTickCount();
         ImmunityEvent event = new ImmunityEvent(
-                world.getRegistryKey(),
-                attacker == null ? null : attacker.getUuid(),
-                protectedTarget.getUuid()
+                world.dimension(),
+                attacker == null ? null : attacker.getUUID(),
+                protectedTarget.getUUID()
         );
 
         synchronized (SEQUENCES) {
@@ -79,13 +79,13 @@ public final class LoliImmunityFeedback {
             @Nullable Entity participant,
             SoundEvent sound
     ) {
-        if (participant instanceof ServerPlayerEntity player) {
-            player.playSound(sound, SoundCategory.PLAYERS, 1.0F, 1.0F);
+        if (participant instanceof ServerPlayer player) {
+            player.playSound(sound, 1.0F, 1.0F);
         }
     }
 
     private record ImmunityEvent(
-            RegistryKey<World> world,
+            ResourceKey<Level> world,
             @Nullable UUID attacker,
             UUID protectedTarget
     ) {
