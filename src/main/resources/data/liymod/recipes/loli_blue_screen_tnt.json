@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "group": "liymod:loli_blue_screen_tnt",
+  "pattern": [
+    "XXX",
+    "XXX",
+    "XXX"
+  ],
+  "key": {
+    "X": {
+      "item": "minecraft:tnt"
+    }
+  },
+  "result": {
+    "item": "liymod:loli_blue_screen_tnt"
+  }
+}
