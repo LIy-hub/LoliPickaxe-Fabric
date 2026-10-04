@@ -105,3 +105,22 @@ extend or rebalance the behavior below.
 与单向票据状态、持有者防伤害/死亡/移除/锁定、飞行与恢复、目标隔离、二级
 创造管理员检查、高幸运与经验替换、同持有者免疫、单 tick 去重、双音效交替及
 全部素材哈希。服务端风险属于既有玩法，也不得在“兼容迁移”中暗中改动。
+
+
+## Canonical 26.2 behavior synchronization (2026-10-04)
+
+The final pickaxe supports fluid targeting/mining through the legacy `stop_on_liquid`
+key, single-block radius zero and a configurable range preview. Server actions validate
+reach, build restrictions and loaded chunks, replace blocks directly, batch storage writes
+and award mining XP directly after Mending. Range actions enforce a 20 ms completion gap.
+Native client rendering preserves the selected-block outline, draws a separate white range
+outline and rebuilds the accepted batch's affected visible sections synchronously.
+Storage snapshots belong to each owning stack; copied stacks remain independent and cache
+refresh follows custom-data changes. Current-page client menus do not rewrite full storage.
+Storage NBT is compressed only on the network wire with bounded decoding; native disk NBT,
+capacity, blacklist and insertion order are retained. Kill summaries count newly executed
+living targets and their action's item quantities/XP once; the localized title animates
+client-side using cached glyph styles without changing rewards or chat layout.
+
+Native version signatures are retained, including Mojang mappings and the pinned production
+dependencies. Build/startup evidence and in-game visual acceptance are separate gates.
