@@ -111,8 +111,10 @@ foreach ($relativePath in $expectedAssets.Keys) {
 }
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
+# Frozen native source 08dd65a2: baseline 44 Inject + mining XP and the native
+# CustomData wire-codec builder hook. All annotation counts remain exact.
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 46
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
     '@Accessor' = 4
