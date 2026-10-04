@@ -117,10 +117,56 @@ $recipeFiles = @(
     Get-ChildItem -LiteralPath $dataRoot -Recurse -File |
         Where-Object { $_.FullName -match '[\\/](recipes?)[\\/]' }
 )
-Assert-True ($recipeFiles.Count -eq 0) "Compatibility branch must not add recipes"
+$expectedRecipePaths = @(
+    'liymod/advancement/recipes/building_blocks/loli_altar.json'
+    'liymod/advancement/recipes/building_blocks/password_work_bench.json'
+    'liymod/advancement/recipes/equipment/loli_auto_furnace_addon.json'
+    'liymod/advancement/recipes/equipment/loli_coal_addon.json'
+    'liymod/advancement/recipes/equipment/loli_diamond_addon.json'
+    'liymod/advancement/recipes/equipment/loli_emerald_addon.json'
+    'liymod/advancement/recipes/equipment/loli_fly_addon.json'
+    'liymod/advancement/recipes/equipment/loli_glow_addon.json'
+    'liymod/advancement/recipes/equipment/loli_gold_addon.json'
+    'liymod/advancement/recipes/equipment/loli_iron_addon.json'
+    'liymod/advancement/recipes/equipment/loli_lapis_addon.json'
+    'liymod/advancement/recipes/equipment/loli_nether_star_addon.json'
+    'liymod/advancement/recipes/equipment/loli_obsidian_addon.json'
+    'liymod/advancement/recipes/equipment/loli_quartz_addon.json'
+    'liymod/advancement/recipes/equipment/loli_redstone_addon.json'
+    'liymod/advancement/recipes/equipment/small_loli_pickaxe.json'
+    'liymod/advancement/recipes/misc/loli_card_online.json'
+    'liymod/advancement/recipes/redstone/loli_blue_screen_tnt.json'
+    'liymod/advancement/recipes/redstone/loli_exit_tnt.json'
+    'liymod/advancement/recipes/redstone/loli_fail_respond_tnt.json'
+    'liymod/recipe/loli_altar.json'
+    'liymod/recipe/loli_auto_furnace_addon.json'
+    'liymod/recipe/loli_blue_screen_tnt.json'
+    'liymod/recipe/loli_card_online.json'
+    'liymod/recipe/loli_coal_addon.json'
+    'liymod/recipe/loli_diamond_addon.json'
+    'liymod/recipe/loli_emerald_addon.json'
+    'liymod/recipe/loli_exit_tnt.json'
+    'liymod/recipe/loli_fail_respond_tnt.json'
+    'liymod/recipe/loli_fly_addon.json'
+    'liymod/recipe/loli_glow_addon.json'
+    'liymod/recipe/loli_gold_addon.json'
+    'liymod/recipe/loli_iron_addon.json'
+    'liymod/recipe/loli_lapis_addon.json'
+    'liymod/recipe/loli_nether_star_addon.json'
+    'liymod/recipe/loli_obsidian_addon.json'
+    'liymod/recipe/loli_pickaxe_upgrade.json'
+    'liymod/recipe/loli_quartz_addon.json'
+    'liymod/recipe/loli_redstone_addon.json'
+    'liymod/recipe/password_work_bench.json'
+    'liymod/recipe/small_loli_pickaxe.json'
+    'liymod/recipe/small_loli_upgrade.json'
+    'liymod/recipe/upgrade_superposition.json'
+)
+$actualRecipePaths = @($recipeFiles | ForEach-Object { [IO.Path]::GetRelativePath($dataRoot, $_.FullName).Replace('\', '/') })
+Assert-True (@(Compare-Object $expectedRecipePaths $actualRecipePaths).Count -eq 0) 'Recipe/advancement inventory differs from restored gameplay baseline'
 
 $attackBlockSource = Get-Content -LiteralPath (
-    Join-Path $projectRoot 'src/main/java/com/liymod/event/AttackBlockEvents.java'
+    Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliFinalMiningEvents.java'
 ) -Raw
 $expectedDropBlocks = @(
     'SPAWNER', 'STRUCTURE_BLOCK', 'JIGSAW', 'END_PORTAL_FRAME',
@@ -135,18 +181,18 @@ $expectedDropBlocks = @(
 $dropCount = ([regex]::Matches($attackBlockSource, 'Map\.entry\(')).Count
 Assert-True ($dropCount -eq 27) "Special drop count is $dropCount, expected 27"
 foreach ($block in $expectedDropBlocks) {
-    Assert-True ($attackBlockSource -match "Map\.entry\($block,") `
+    Assert-True ($attackBlockSource -match "Map\.entry\(Blocks\.$block,") `
         "Special drop source missing: $block"
 }
 
 $pickaxeSource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/item/LoliPickaxeItem.java'
 ) -Raw
-Assert-True ($pickaxeSource -match 'ABILITY_RANGE\s*=\s*32\.0') `
-    "Ability range must remain 32 blocks"
-Assert-True ($pickaxeSource -match 'DataComponentTypes\.UNBREAKABLE') `
+Assert-True ($pickaxeSource -match 'ABILITY_RANGE\s*=\s*1024\.0') `
+    "Ability range must retain restored 1024 block baseline"
+Assert-True ($pickaxeSource -match 'DataComponents\.UNBREAKABLE') `
     "Version-appropriate unbreakable component is missing"
-Assert-True ($pickaxeSource -match 'stack\.setDamage\(0\)') `
+Assert-True ($pickaxeSource -match 'stack\.setDamageValue\(0\)') `
     "Pickaxe damage reset is missing"
 
 $resolverSource = Get-Content -LiteralPath (
@@ -200,8 +246,8 @@ $immunitySource = Get-Content -LiteralPath (
     Join-Path $projectRoot 'src/main/java/com/liymod/combat/LoliImmunityFeedback.java'
 ) -Raw
 foreach ($requiredToken in @(
-    'server\.getTicks\(\)', 'world\.getRegistryKey\(\)',
-    'attacker\.getUuid\(\)', 'protectedTarget\.getUuid\(\)',
+    'server\.getTickCount\(\)', 'world\.dimension\(\)',
+    'attacker\.getUUID\(\)', 'protectedTarget\.getUUID\(\)',
     'eventsThisTick', 'playFirstNext',
     'LOLI_IMMUNITY_FIRST', 'LOLI_IMMUNITY_SECOND'
 )) {
@@ -210,8 +256,9 @@ foreach ($requiredToken in @(
 }
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
+# Native full-port inventory plus storage-network and mining-XP hooks.
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 45
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
     '@Accessor' = 4
@@ -244,6 +291,8 @@ try {
     Assert-True ($metadata.depends.'fabric-api' -eq $expectedFabricMinimum) `
         "JAR Fabric API dependency is not $expectedFabricMinimum"
 
+    Assert-True (@($archive.Entries | Where-Object FullName -match 'RegressionTest|EditorLayoutRegressionTest').Count -eq 0) 'Test classes leaked into runtime JAR'
+
     $requiredEntries = @(
         "LICENSE_LoliPickaxe-$ExpectedMinecraftVersion",
         "CREDITS.md_LoliPickaxe-$ExpectedMinecraftVersion",
@@ -256,6 +305,11 @@ try {
         'data/liymod/damage_type/loli_damage.json',
         'data/liymod/tags/block/incorrect_for_loli_tool.json',
         'data/liymod/tags/item/loli_repair_materials.json',
+        'com/liymod/item/LoliFluidMining.class',
+        'com/liymod/item/LoliMiningExperience.class',
+        'com/liymod/combat/LoliKillSummary.class',
+        'com/liymod/storage/LoliStorageNetworkCodec.class',
+        'com/liymod/client/gui/LoliChatRainbow.class',
         'liymod.mixins.json'
     )
     foreach ($entryPath in $requiredEntries) {
@@ -268,7 +322,7 @@ try {
         "Mixin compatibility level must match Java $ExpectedJavaRelease"
     Assert-True ($mixinConfig.injectors.defaultRequire -eq 1) `
         "Mixin defaultRequire must remain 1"
-    foreach ($mixinName in $mixinConfig.mixins) {
+    foreach ($mixinName in @($mixinConfig.mixins) + @($mixinConfig.client)) {
         $classPath = 'com/liymod/mixin/' + $mixinName.Replace('.', '/') + '.class'
         Assert-True ($null -ne $archive.GetEntry($classPath)) `
             "Configured mixin class missing from JAR: $classPath"
