@@ -48,6 +48,7 @@ abstract class FittedContainerScreen<T extends AbstractContainerMenu> extends Ab
         pushPanelTransform(graphics);
         try {
             super.render(graphics, layoutMouseX, layoutMouseY, deltaTicks);
+            renderTooltip(graphics, layoutMouseX, layoutMouseY);
 
         } finally {
             graphics.pose().popPose();
