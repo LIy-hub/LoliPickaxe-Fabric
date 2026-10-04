@@ -20,6 +20,9 @@ public final class FinalConfigMenu extends AbstractFinalToolMenu {
     }
 
     public String getEncodedValue(LoliConfigOption option) {
+        if (option == LoliConfigOption.MINING_RADIUS) {
+            return option.encode(LoliItemSettings.getMiningRadius(getOwnerStack()));
+        }
         Object value = switch (option.type()) {
             case BOOLEAN -> LoliItemSettings.getBoolean(getOwnerStack(), option);
             case INTEGER -> LoliItemSettings.getInt(getOwnerStack(), option);
