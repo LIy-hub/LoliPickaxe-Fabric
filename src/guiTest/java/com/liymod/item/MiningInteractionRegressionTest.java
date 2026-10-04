@@ -29,7 +29,24 @@ public final class MiningInteractionRegressionTest {
         verifyRangeCooldown();
         verifyBatchSections();
         verifyExperienceCollection();
+        verifyNativeMendingBoundary();
         System.out.println("MINING_INTERACTIONS_OK single range preview instantDispatch saveBeforeClose offThread cooldown20ms batchSections xpBatch xpThreadIsolation xpException xpOverflow mergedOrb mendingBudget=PASS");
+    }
+
+    private static void verifyNativeMendingBoundary() {
+        var stack = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_SWORD);
+        for (int experience : new int[]{Integer.MAX_VALUE, Integer.MAX_VALUE / 2 + 1}) {
+            stack.setDamageValue(9);
+            int remaining = LoliMiningExperience.applyMendingRepair(stack, experience);
+            require(stack.getDamageValue() == 0 && remaining == experience - 4,
+                    "Huge direct XP must repair equipment with native odd-durability rounding");
+        }
+        stack.setDamageValue(9);
+        require(LoliMiningExperience.applyMendingRepair(stack, 2) == 0 && stack.getDamageValue() == 5,
+                "Ordinary Mending must repair exactly two durability per XP");
+        stack.setDamageValue(9);
+        require(LoliMiningExperience.applyMendingRepair(stack, 5) == 1 && stack.getDamageValue() == 0,
+                "Native odd durability must consume only the rounded-down XP debit");
     }
 
     private static void verifyExperienceCollection() throws InterruptedException {
@@ -87,7 +104,7 @@ public final class MiningInteractionRegressionTest {
         require(LoliMiningExperience.afterRepair(10, 20, 6) == 7
                         && LoliMiningExperience.afterRepair(10, 20, 20) == 0
                         && LoliMiningExperience.afterRepair(10, 20, 0) == 10
-                        && LoliMiningExperience.afterRepair(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE) == 0,
+                        && LoliMiningExperience.afterRepair(Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE) == 1_073_741_824,
                 "Mending must subtract only spent XP and keep large multiplication safe");
     }
 
