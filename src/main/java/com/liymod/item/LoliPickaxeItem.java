@@ -146,7 +146,7 @@ public final class LoliPickaxeItem extends Item {
     ) {
         tooltip.accept(divineDescription());
         tooltip.accept(Component.translatable("liymod.loli_pickaxe.tip").withStyle(ChatFormatting.AQUA));
-        int miningWidth = LoliItemSettings.getMiningRadius(stack) * 2 + 1;
+        int miningRadius = LoliItemSettings.getMiningRadius(stack);
         int automaticRange = LoliItemSettings.getInt(stack, LoliConfigOption.AUTO_KILL_RANGE);
 
         tooltip.accept(Component.translatable(
@@ -157,7 +157,7 @@ public final class LoliPickaxeItem extends Item {
         ).withStyle(ChatFormatting.GRAY));
         tooltip.accept(Component.translatable(
                 "liymod.loli_pickaxe.tooltip.mining",
-                value(miningWidth),
+                miningModeDescription(miningRadius).copy().withStyle(ChatFormatting.AQUA),
                 value(FORTUNE_LEVEL),
                 value(LoliItemSettings.getDouble(stack, LoliConfigOption.BLOCK_REACH_DISTANCE))
         ).withStyle(ChatFormatting.GRAY));
@@ -188,6 +188,13 @@ public final class LoliPickaxeItem extends Item {
         tooltip.accept(Component.translatable("liymod.loli_pickaxe.tooltip.keys.secondary")
                 .withStyle(ChatFormatting.DARK_GRAY));
         super.appendHoverText(stack, context, display, tooltip, flag);
+    }
+
+    public static Component miningModeDescription(int radius) {
+        if (radius <= 0) {
+            return Component.translatable("liymod.loli_pickaxe.mining.single");
+        }
+        return Component.translatable("liymod.loli_pickaxe.mining.range", radius * 2 + 1);
     }
 
     private static Component divineDescription() {

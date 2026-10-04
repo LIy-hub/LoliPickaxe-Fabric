@@ -83,10 +83,20 @@ public final class LoliFinalMiningEvents {
             BlockPos origin,
             Direction direction
     ) {
+        if (hand != InteractionHand.MAIN_HAND
+                || !LoliItemSettings.isFinalPickaxe(player.getMainHandItem())) {
+            return InteractionResult.PASS;
+        }
+        // Fabric sends START_DESTROY_BLOCK for a consumed client attack. Avoid
+        // vanilla's hardness/progressive prediction and its competing ABORT/STOP.
+        // Radius zero uses the same authoritative action for only the origin block.
+        if (level.isClientSide()) {
+            return player.isSpectator() ? InteractionResult.PASS
+                    : clientAttackResult(level.getBlockState(origin),
+                            LoliFluidMining.isEnabled(player.getMainHandItem()));
+        }
         if (!(level instanceof ServerLevel serverLevel)
-                || !(player instanceof ServerPlayer serverPlayer)
-                || hand != InteractionHand.MAIN_HAND
-                || !LoliItemSettings.isFinalPickaxe(serverPlayer.getMainHandItem())) {
+                || !(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResult.PASS;
         }
         // Fabric invokes this callback before vanilla's spectator, reach and build checks.
@@ -105,21 +115,16 @@ public final class LoliFinalMiningEvents {
         ItemStack tool = serverPlayer.getMainHandItem();
         try {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
-            int radius = LoliItemSettings.getMiningRadius(tool);
+            int radius = LoliItemSettings.getServerMiningRadius(tool);
             boolean brokeAny = false;
             List<BlockPos> changedPositions = new ArrayList<>();
-            for (int x = -radius; x <= radius; x++) {
-                for (int y = -radius; y <= radius; y++) {
-                    for (int z = -radius; z <= radius; z++) {
-                        BlockPos target = origin.offset(x, y, z);
-                        if (!serverLevel.hasChunkAt(target)) {
-                            continue;
-                        }
-                        if (breakOne(serverLevel, serverPlayer, tool, target)) {
-                            brokeAny = true;
-                            changedPositions.add(target.immutable());
-                        }
-                    }
+            for (BlockPos target : LoliMiningRange.positions(origin, radius)) {
+                if (!serverLevel.hasChunkAt(target)) {
+                    continue;
+                }
+                if (breakOne(serverLevel, serverPlayer, tool, target)) {
+                    brokeAny = true;
+                    changedPositions.add(target.immutable());
                 }
             }
             LoliRangeMiningSync.send(serverLevel, origin, changedPositions);
@@ -137,6 +142,11 @@ public final class LoliFinalMiningEvents {
             ACTIVE_MINERS.remove(serverPlayer.getUUID());
         }
         return InteractionResult.SUCCESS_SERVER;
+    }
+
+    static InteractionResult clientAttackResult(BlockState state, boolean selectFluids) {
+        return LoliFluidMining.canMine(state, selectFluids)
+                ? InteractionResult.SUCCESS : InteractionResult.FAIL;
     }
 
     private static boolean breakOne(

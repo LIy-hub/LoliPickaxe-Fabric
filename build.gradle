@@ -87,10 +87,19 @@ tasks.register('verifyFluidMining', JavaExec) {
 	doFirst { workingDir.mkdirs() }
 }
 
+tasks.register('verifyMiningInteractions', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.item.MiningInteractionRegressionTest'
+	workingDir = layout.buildDirectory.dir('mining-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
 tasks.named('check') {
 	dependsOn tasks.named('verifyGuiLayout')
 	dependsOn tasks.named('verifyStoragePages')
 	dependsOn tasks.named('verifyFluidMining')
+	dependsOn tasks.named('verifyMiningInteractions')
 }
 
 jar {

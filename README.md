@@ -47,6 +47,14 @@ and survival implementation.
   loaded entities within 1024 blocks. Inventory-wide holder protection is available as
   an operator option but is disabled by default, preserving the port's original
   main-hand rule.
+- In Fabric 26.2, radius **0** is **Single-block mining** and disables neighboring
+  block mining. A non-zero radius shows the centered mining cube around the
+  targeted block before clicking. The server's radius limit is synchronized on
+  the held pickaxe so the preview and tooltip use the accepted limit; unloaded
+  chunks and protected/non-mineable blocks inside the cube are still skipped.
+  Saving per-item settings applies before the configuration menu closes, including
+  switching back to single-block mode. Client clicks request the immediate server
+  action instead of starting vanilla's progressive mining prediction.
 - In Fabric 26.2, the per-item **Select fluid blocks** option enables targeting,
   outlining and mining both source and flowing water/lava while the final pickaxe
   is in the main hand. Disabled by default, it ignores pure fluids during targeting

@@ -16,6 +16,7 @@ public final class LoliItemSettings {
     private static final String OWNER_UUID_KEY = "OwnerUuid";
     private static final String OWNER_NAME_KEY = "OwnerName";
     private static final String SETTINGS_REVISION_KEY = "SettingsRevision";
+    private static final String SERVER_MINING_LIMIT_KEY = "ServerMiningLimit";
     private static final int CURRENT_SETTINGS_REVISION = 2;
 
     private LoliItemSettings() {
@@ -67,6 +68,7 @@ public final class LoliItemSettings {
             CompoundTag settings = loli.getCompoundOrEmpty(SETTINGS_KEY);
             put(settings, option, validated);
             loli.put(SETTINGS_KEY, settings);
+            loli.putInt(SERVER_MINING_LIMIT_KEY, LoliServerConfig.getInt(LoliConfigOption.MAX_MINING_RANGE));
             root.put(ROOT_KEY, loli);
         });
         return true;
@@ -80,6 +82,8 @@ public final class LoliItemSettings {
         CompoundTag currentRoot = root(stack);
         CompoundTag existing = currentRoot.getCompoundOrEmpty(SETTINGS_KEY);
         int revision = currentRoot.getIntOr(SETTINGS_REVISION_KEY, 0);
+        int miningLimit = LoliServerConfig.getInt(LoliConfigOption.MAX_MINING_RANGE);
+        boolean limitChanged = currentRoot.getIntOr(SERVER_MINING_LIMIT_KEY, -1) != miningLimit;
         boolean missing = false;
         for (LoliConfigOption option : LoliConfigOption.values()) {
             if (option.itemOverride() && !existing.contains(option.id())) {
@@ -90,7 +94,7 @@ public final class LoliItemSettings {
         boolean migrateReach = revision < 2
                 && existing.contains(LoliConfigOption.BLOCK_REACH_DISTANCE.id())
                 && existing.getDoubleOr(LoliConfigOption.BLOCK_REACH_DISTANCE.id(), 0.0D) == 0.0D;
-        if (!missing && !migrateReach && revision >= CURRENT_SETTINGS_REVISION) {
+        if (!missing && !migrateReach && !limitChanged && revision >= CURRENT_SETTINGS_REVISION) {
             return;
         }
         CustomData.update(DataComponents.CUSTOM_DATA, stack, root -> {
@@ -106,6 +110,7 @@ public final class LoliItemSettings {
             }
             loli.put(SETTINGS_KEY, settings);
             loli.putInt(SETTINGS_REVISION_KEY, CURRENT_SETTINGS_REVISION);
+            loli.putInt(SERVER_MINING_LIMIT_KEY, miningLimit);
             root.put(ROOT_KEY, loli);
         });
     }
@@ -114,8 +119,15 @@ public final class LoliItemSettings {
         if (!isFinalPickaxe(stack)) {
             return 0;
         }
-        int maximum = LoliServerConfig.getInt(LoliConfigOption.MAX_MINING_RANGE);
+        int maximum = Math.clamp(root(stack).getIntOr(SERVER_MINING_LIMIT_KEY,
+                LoliServerConfig.getInt(LoliConfigOption.MAX_MINING_RANGE)), 0, 5);
         return Math.clamp(getInt(stack, LoliConfigOption.MINING_RADIUS), 0, maximum);
+    }
+
+    /** Mining always checks the current server policy, even before the next item tick. */
+    public static int getServerMiningRadius(ItemStack stack) {
+        return isFinalPickaxe(stack) ? Math.clamp(getInt(stack, LoliConfigOption.MINING_RADIUS),
+                0, LoliServerConfig.getInt(LoliConfigOption.MAX_MINING_RANGE)) : 0;
     }
 
     public static int cycleMiningRadius(ItemStack stack) {
@@ -123,7 +135,8 @@ public final class LoliItemSettings {
             return 0;
         }
         int maximum = LoliServerConfig.getInt(LoliConfigOption.MAX_MINING_RANGE);
-        int next = getMiningRadius(stack) >= maximum ? 0 : getMiningRadius(stack) + 1;
+        int current = getServerMiningRadius(stack);
+        int next = current >= maximum ? 0 : current + 1;
         set(stack, LoliConfigOption.MINING_RADIUS, Integer.toString(next));
         return next;
     }

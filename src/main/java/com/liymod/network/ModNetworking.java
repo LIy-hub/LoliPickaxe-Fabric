@@ -94,7 +94,7 @@ public final class ModNetworking {
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliItemSettingPayload.TYPE, (payload, context) ->
-                context.server().execute(() -> {
+                LoliPacketTasks.execute(context.server(), () -> {
                     if (context.player().containerMenu instanceof FinalConfigMenu menu
                             && menu.stillValid(context.player())) {
                         menu.update(payload.optionId(), payload.encodedValue());
