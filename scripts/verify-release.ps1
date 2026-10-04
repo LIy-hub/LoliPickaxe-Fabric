@@ -113,11 +113,13 @@ foreach ($relativePath in $expectedAssets.Keys) {
 }
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
+# Main-source inventory: original 43 Inject + XP award + compressed CustomData decode;
+# original 3 Accessor + ExperienceOrb count. Client inventory is checked separately.
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 45
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
-    '@Accessor' = 2
+    '@Accessor' = 4
 }
 $javaSources = Get-ChildItem -LiteralPath $mixinSourceRoot -Recurse -Filter '*.java'
 $combinedMixinSource = ($javaSources | Get-Content) -join "`n"
@@ -130,6 +132,14 @@ foreach ($annotation in $annotationCounts.Keys) {
         "Mixin contract changed: $annotation count is $actualCount, expected $($annotationCounts[$annotation])"
 }
 
+$clientMixinSource = (Get-ChildItem -LiteralPath (Join-Path $projectRoot 'src/client/java/com/liymod/mixin') -Recurse -Filter '*.java' | Get-Content) -join "`n"
+# Fluid selection/extraction (3), render-state reset (1), range outline (1),
+# batch section redirect (1), and divine chat formatted-line argument (1).
+$clientAnnotationCounts = [ordered]@{'@Inject'=5; '@Redirect'=1; '@ModifyArg'=1}
+foreach ($annotation in $clientAnnotationCounts.Keys) {
+    $actualCount = ([regex]::Matches($clientMixinSource, [regex]::Escape($annotation))).Count
+    Assert-True ($actualCount -eq $clientAnnotationCounts[$annotation]) "Client mixin inventory changed: $annotation count is $actualCount, expected $($clientAnnotationCounts[$annotation])"
+}
 Add-Type -AssemblyName System.IO.Compression
 $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $JarPath))
 try {
@@ -158,6 +168,13 @@ try {
         'data/liymod/damage_type/loli_damage.json',
         'data/liymod/tags/block/incorrect_for_loli_tool.json',
         'data/liymod/tags/item/loli_repair_materials.json',
+        'com/liymod/item/LoliFluidMining.class',
+        'com/liymod/item/LoliMiningExperience.class',
+        'com/liymod/item/LoliMiningCooldown.class',
+        'com/liymod/combat/LoliKillSummary.class',
+        'com/liymod/storage/LoliStorageNetworkCodec.class',
+        'com/liymod/nbt/LoliCustomData.class',
+        'com/liymod/client/gui/LoliChatRainbow.class',
         'liymod.mixins.json'
     )
     foreach ($entryPath in $requiredEntries) {
@@ -168,7 +185,7 @@ try {
     Assert-True ($mixinConfig.required -eq $true) "Mixin config must remain required"
     Assert-True ($mixinConfig.injectors.defaultRequire -eq 1) `
         "Mixin defaultRequire must remain 1"
-    foreach ($mixinName in $mixinConfig.mixins) {
+    foreach ($mixinName in @($mixinConfig.mixins) + @($mixinConfig.client)) {
         $classPath = 'com/liymod/mixin/' + $mixinName.Replace('.', '/') + '.class'
         Assert-True ($null -ne $archive.GetEntry($classPath)) `
             "Configured mixin class missing from JAR: $classPath"
