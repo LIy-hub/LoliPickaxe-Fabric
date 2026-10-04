@@ -189,3 +189,9 @@ code that bypasses normal targeting APIs.
 This branch includes storage/blacklist, configuration, enchantment, effect, teleport, password-workbench and card menus with their server-owned persistence/networking and backing content. See [GUI behavior and validation](docs/gui-validation.md). Client startup and build checks are distinct from in-game/visual acceptance.
 
 本分支已补齐储藏室、黑名单、配置、附魔、药水、传送、密码工作台和卡片界面，以及服务端保存、同步和配套内容。界面行为与检查见上述文档；构建和启动检查不代表游戏内操作或画面验收。
+
+## Final-pickaxe synchronized behavior
+
+Fluid selection supports source and flowing fluids while preserving vanilla entity targeting. Single-block and radius 1–5 mining share server authority, native reach/protection checks, direct block replacement, batched storage writes, direct XP with Mending, and a 20 ms range-action gap. Preview preserves the selected block outline and adds a separate range cube; changed sections rebuild together.
+
+Storage preserves native disk NBT and capacities, caches per owning stack, sends bounded compressed storage only on the wire, and keeps client menus to the current page. Left/right/automatic range kills report one localized per-action kill/drop/XP summary; its divine title animates locally without repeating rewards or network traffic.

@@ -111,11 +111,13 @@ foreach ($relativePath in $expectedAssets.Keys) {
 }
 
 $mixinSourceRoot = Join-Path $projectRoot 'src/main/java/com/liymod/mixin'
+# Full native inventory: baseline hooks plus mining XP and storage compression/accessor.
 $annotationCounts = [ordered]@{
-    '@Inject' = 39
+    '@Inject' = 45
     '@ModifyVariable' = 3
     '@ModifyExpressionValue' = 1
     '@Accessor' = 4
+    '@Redirect' = 1
 }
 $javaSources = Get-ChildItem -LiteralPath $mixinSourceRoot -Recurse -Filter '*.java'
 $combinedMixinSource = ($javaSources | Get-Content) -join "`n"
@@ -165,7 +167,7 @@ try {
         "Mixin compatibility level must match Java $ExpectedJavaRelease"
     Assert-True ($mixinConfig.injectors.defaultRequire -eq 1) `
         "Mixin defaultRequire must remain 1"
-    foreach ($mixinName in $mixinConfig.mixins) {
+    foreach ($mixinName in @($mixinConfig.mixins) + @($mixinConfig.client)) {
         $classPath = 'com/liymod/mixin/' + $mixinName.Replace('.', '/') + '.class'
         Assert-True ($null -ne $archive.GetEntry($classPath)) `
             "Configured mixin class missing from JAR: $classPath"

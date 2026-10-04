@@ -15,9 +15,20 @@
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerMixin",
     "TargetPredicateMixin",
-    "LootTableMixin"
+    "LootTableMixin",
+    "CustomDataStorageNetworkMixin",
+    "CustomDataCacheMixin",
+    "ItemStackStorageMixin",
+    "ExperienceOrbMiningMixin",
+    "accessor.ExperienceOrbAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "client.LocalPlayerFluidSelectionMixin",
+    "client.LoliMiningOutlineMixin",
+    "client.LevelRendererMiningMixin",
+    "client.ChatComponentDivineMixin"
+  ]
 }
