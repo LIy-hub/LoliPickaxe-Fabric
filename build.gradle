@@ -95,7 +95,16 @@ tasks.register('verifyMiningInteractions', JavaExec) {
 	doFirst { workingDir.mkdirs() }
 }
 
+tasks.register('verifyRecipeCodecs', JavaExec) {
+    dependsOn tasks.named('guiTestClasses')
+    classpath = sourceSets.guiTest.runtimeClasspath
+    mainClass = 'com.liymod.recipe.RecipeCodecRegressionTest'
+    workingDir = layout.buildDirectory.dir('recipe-test-run').get().asFile
+    doFirst { workingDir.mkdirs() }
+}
+
 tasks.named('check') {
+    dependsOn tasks.named('verifyRecipeCodecs')
 	dependsOn tasks.named('verifyGuiLayout')
 	dependsOn tasks.named('verifyStoragePages')
 	dependsOn tasks.named('verifyFluidMining')
