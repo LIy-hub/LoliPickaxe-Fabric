@@ -32,7 +32,8 @@ public final class StorageMenu extends AbstractContainerMenu {
         this.player = inventory.player;
         this.hand = data.hand();
         this.ownerStack = player.getItemInHand(hand);
-        this.storage = LoliStorageData.open(ownerStack);
+        this.storage = player.level().isClientSide()
+                ? LoliStorageData.clientMenu(ownerStack) : LoliStorageData.open(ownerStack);
         this.syncedPageCount = storage.getVisiblePageCount();
         this.syncedPage = Math.clamp(storage.getCurrentPage(), 0, syncedPageCount - 1);
         storage.setCurrentPageFromNetwork(syncedPage);
@@ -150,7 +151,9 @@ public final class StorageMenu extends AbstractContainerMenu {
         if (isBoundToolInteraction(slotId, button, input)) {
             return;
         }
-        super.clicked(slotId, button, input, player);
+        try (var batch = storage.beginBatch()) {
+            super.clicked(slotId, button, input, player);
+        }
     }
 
     @Override

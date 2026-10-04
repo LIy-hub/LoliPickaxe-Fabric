@@ -25,7 +25,7 @@ extend or rebalance the behavior below.
 - The tool keeps the original extreme material values: maximum integer mining
   level and durability, `Float.MAX_VALUE` mining speed, infinite attack damage
   contribution and enchantability 30.
-- Attacking a block on the logical server attempts immediate vanilla breaking,
+- Attacking a block on the logical server immediately removes its solid state,
   plays the amethyst-block break sound and then emits the configured special
   drop for these 27 blocks:
   spawner, structure block, jigsaw, end portal frame, command block, chain
@@ -34,6 +34,31 @@ extend or rebalance the behavior below.
   ore, redstone ore, deepslate redstone ore, diamond ore, deepslate diamond
   ore, emerald ore, deepslate emerald ore, lapis ore, deepslate lapis ore,
   copper ore, deepslate copper ore, nether quartz ore and ancient debris.
+- In Fabric 1.21.4 the final pickaxe writes the replacement block state directly,
+  avoiding `destroyBlock`'s individual break-effect packets. It retains loot,
+  Fortune, special drops, smelting, experience, container removal, neighbor/client
+  updates, permissions and the existing fluid policy. Automatic storage reuses a
+  decoded snapshot per owning stack and is persisted once at the end, including exceptional exits;
+  this changes neither saved storage format nor blacklist, size or capacity rules.
+- Large `LoliStorage` custom data is compressed only in the network component codec
+  and restored before use. Vanilla's 2 MiB wire NBT quota and the storage's 4 MiB
+  decoded budget remain bounded; disk NBT stays unchanged and existing storage
+  requires no destructive migration. Other custom data follows the native codec.
+- Storage caches refresh when the owning component's saved contents change and
+  are independent on copied stacks. Partial/empty-slot indexes preserve the legacy
+  ascending merge/insertion order; menu in-place changes invalidate slot encodings.
+  Client menus hold only server-synchronized slots and never rewrite owner NBT.
+  Nearby collection avoids decoding on idle scans and persists once per collection.
+  Immutable custom-data reads and cached network encodings avoid whole-storage
+  copies for settings and repeated sends. Effect limits apply to the effect list,
+  independently of storage size. Air is skipped before per-block mining work.
+- Final-pickaxe block and auto-smelting experience is collected only within the
+  active server-thread mining action, applied to Mending equipment and then to the
+  mining player directly. No world XP orbs are spawned for that action; unrelated
+  experience awards retain their native behavior. Range actions retain a 20 ms
+  completion gap, independently enforced on both sides.
+  A held final pickaxe with auto-accept also collects nearby existing XP orbs in
+  the normal four-block collection area, preserving each merged orb's complete count.
 
 ## Active execution behavior
 

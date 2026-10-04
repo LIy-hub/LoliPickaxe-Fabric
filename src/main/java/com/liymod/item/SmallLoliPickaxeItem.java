@@ -34,6 +34,7 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import com.liymod.nbt.LoliCustomData;
 
 /** The original upgradeable pickaxe stage that precedes the final Loli Pickaxe. */
 public final class SmallLoliPickaxeItem extends Item {
@@ -47,7 +48,7 @@ public final class SmallLoliPickaxeItem extends Item {
         if (!type.appliesToSmallPickaxe()) {
             return -1;
         }
-        CompoundTag tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        CompoundTag tag = LoliCustomData.view(stack);
         return Math.clamp(com.liymod.compat.LegacyNbt.getIntOr(tag, type.smallPickaxeDataKey(), -1), -1, type.maxTier());
     }
 
@@ -162,9 +163,7 @@ public final class SmallLoliPickaxeItem extends Item {
 
     public static int getCurrentMiningRadius(ItemStack stack) {
         int maximumRadius = Math.max(0, (getMiningRange(stack) - 1) / 2);
-        int stored = com.liymod.compat.LegacyNbt.getIntOr(
-                stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag(),
-                CURRENT_MINING_RADIUS_KEY, 0);
+        int stored = com.liymod.compat.LegacyNbt.getIntOr(LoliCustomData.view(stack), CURRENT_MINING_RADIUS_KEY, 0);
         return Math.clamp(stored, 0, maximumRadius);
     }
 
