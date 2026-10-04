@@ -126,3 +126,19 @@ tasks.register('verifyStoragePages',JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 tasks.named('check') { dependsOn tasks.named('verifyGuiLayout'),tasks.named('verifyStoragePages') }
+
+// Canonical behavior fixtures adapted to the native 1.20.1 mapped classpath.
+def synchronizationChecks = [
+    verifyKillSummary: 'com.liymod.combat.LoliKillSummaryRegressionTest',
+    verifyChatRainbow: 'com.liymod.client.gui.LoliChatRainbowRegressionTest',
+    verifyMiningInteractions: 'com.liymod.item.ForgeMiningRegressionTest',
+    verifyStorageWire: 'com.liymod.storage.ForgeStorageWireRegressionTest'
+]
+synchronizationChecks.each { taskName, entry ->
+    tasks.register(taskName, JavaExec) {
+        dependsOn tasks.named('guiTestClasses')
+        classpath = sourceSets.guiTest.runtimeClasspath
+        mainClass = entry
+    }
+    tasks.named('check') { dependsOn tasks.named(taskName) }
+}

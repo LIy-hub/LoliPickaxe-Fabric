@@ -48,13 +48,14 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class ModNetwork {
-    private static final String VERSION = "2";
+    private static final String VERSION = "3";
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             new ResourceLocation(LiyMod.MOD_ID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
 
     private ModNetwork() { }
 
     public static void register() {
+        CHANNEL.registerMessage(12, MiningRequestPacket.class, MiningRequestPacket::encode, MiningRequestPacket::decode, MiningRequestPacket::handle, java.util.Optional.of(net.minecraftforge.network.NetworkDirection.PLAY_TO_SERVER));
         CHANNEL.registerMessage(0, StorageActionPacket.class, StorageActionPacket::encode, StorageActionPacket::decode, StorageActionPacket::handle);
         CHANNEL.registerMessage(1, PasswordUpdatePacket.class, PasswordUpdatePacket::encode, PasswordUpdatePacket::decode, PasswordUpdatePacket::handle);
         CHANNEL.registerMessage(2, OpenFinalMenuPacket.class, OpenFinalMenuPacket::encode, OpenFinalMenuPacket::decode, OpenFinalMenuPacket::handle);
@@ -68,6 +69,16 @@ public final class ModNetwork {
         CHANNEL.registerMessage(10, RangeMiningPacket.class, RangeMiningPacket::encode, RangeMiningPacket::decode, RangeMiningPacket::handle);
         CHANNEL.registerMessage(11, StoragePageSyncPacket.class, StoragePageSyncPacket::encode, StoragePageSyncPacket::decode,
                 StoragePageSyncPacket::handle, java.util.Optional.of(net.minecraftforge.network.NetworkDirection.PLAY_TO_CLIENT));
+    }
+
+    public record MiningRequestPacket(BlockPos pos) {
+        static void encode(MiningRequestPacket packet,FriendlyByteBuf buffer) { buffer.writeBlockPos(packet.pos); }
+        static MiningRequestPacket decode(FriendlyByteBuf buffer) { return new MiningRequestPacket(buffer.readBlockPos()); }
+        static void handle(MiningRequestPacket packet,Supplier<NetworkEvent.Context> supplier) {
+            NetworkEvent.Context context=supplier.get();ServerPlayer player=context.getSender();
+            context.enqueueWork(()-> { if(player!=null) com.liymod.event.ForgeEvents.mine(player,packet.pos); });
+            context.setPacketHandled(true);
+        }
     }
 
     /** Sent before vanilla contents, so slot updates use the intended page immediately. */

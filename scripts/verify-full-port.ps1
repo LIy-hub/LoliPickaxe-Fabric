@@ -3,7 +3,7 @@ param([string]$JarPath)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 function Assert-True([bool]$Condition, [string]$Message) { if (-not $Condition) { throw $Message } }
-function Source([string]$Relative) { Get-Content -Raw -LiteralPath (Join-Path $root $Relative) }
+function Source([string]$Relative) { (Get-Content -Raw -LiteralPath (Join-Path $root $Relative)).Replace("`r", "") }
 
 $itemIds = @(
     'loli','loli_pickaxe','small_loli_pickaxe','loli_coal_addon','loli_iron_addon','loli_gold_addon',
@@ -122,8 +122,14 @@ try {
         'META-INF/mods.toml','liymod.mixins.json','com/liymod/LiyMod.class',
         'com/liymod/combat/LoliExecutionManager.class','com/liymod/combat/LoliAttackResolver.class',
         'com/liymod/combat/LoliLegacyExecutionPolicy.class','com/liymod/compat/StrengthConfrontation.class',
-        'com/liymod/enchantment/AutoFurnaceEnchantment.class','assets/liymod/sounds/lolisuccess.ogg'
+        'com/liymod/enchantment/AutoFurnaceEnchantment.class','assets/liymod/sounds/lolisuccess.ogg',
+        'com/liymod/combat/LoliKillSummary.class','com/liymod/client/gui/LoliChatRainbow.class',
+        'com/liymod/item/LoliMiningExperience.class','com/liymod/storage/LoliStorageNetworkCodec.class',
+        'com/liymod/mixin/StorageNetworkMixin.class','com/liymod/mixin/client/ChatComponentDivineMixin.class',
+        'com/liymod/mixin/client/MultiPlayerMiningMixin.class','com/liymod/mixin/client/GameRendererFluidSelectionMixin.class'
     )) { Assert-True $entries.ContainsKey($required) "JAR entry missing: $required" }
+    Assert-True (-not ($entries.Keys | Where-Object { $_ -match 'RegressionTest\.class$' })) 'Regression fixtures leaked into Forge JAR'
+    Assert-True (-not $entries.ContainsKey('com/liymod/ForgeNativeRegressionEvents.class')) 'Native fixtures leaked into Forge JAR'
     Assert-True (-not $entries.ContainsKey('fabric.mod.json')) 'Fabric metadata leaked into Forge JAR'
 } finally { $zip.Dispose() }
 

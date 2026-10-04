@@ -31,7 +31,43 @@ public final class LoliStorageData {
     private static final int MAX_STACK_NBT_BYTES = 32 * 1024;
     private static final int MAX_TOTAL_NBT_BYTES = 4 * 1024 * 1024;
 
+    private static final java.util.Map<ItemStack,Decoded> CACHE=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>());
+    private record Decoded(ListTag snapshot,List<ItemStack> items,long bytes) { }
+    private static Decoded cached(ItemStack tool) {
+        ListTag current=tool.getOrCreateTag().getList(STORAGE_KEY,Tag.TAG_COMPOUND);
+        Decoded cached=CACHE.get(tool);
+        // Legacy NBT is mutable: compare a snapshot so in-place edits and stack copies cannot share stale contents.
+        if(cached==null || cached.items.size()!=pages(tool)*SLOTS_PER_PAGE || !current.equals(cached.snapshot)) {
+            List<ItemStack> decoded=loadUncached(tool);cached=new Decoded(current.copy(),decoded,totalSize(decoded));CACHE.put(tool,cached);
+        }
+        return cached;
+    }
+    private static final ThreadLocal<Batch> ACTIVE_BATCH = new ThreadLocal<>();
     private LoliStorageData() { }
+
+    /** One decode, one exact size scan and one persistent write per synchronous operation. */
+    public static Batch beginBatch(ItemStack tool) { return new Batch(tool); }
+    public static final class Batch implements AutoCloseable {
+        private final ItemStack tool;
+        private final List<ItemStack> items;
+        private final Batch parent;
+        private long bytes;
+        private boolean changed, closed;
+        private Batch(ItemStack tool) {
+            this.tool=tool; parent=ACTIVE_BATCH.get();
+            if(parent!=null && parent.tool==tool) { items=parent.items; bytes=parent.bytes; }
+            else { LoliStorageContainer active=LoliStorageContainer.active(tool);if(active==null) { Decoded cached=cached(tool);items=cached.items;bytes=cached.bytes; } else { items=active.allItems();bytes=totalSize(items); } }
+            ACTIVE_BATCH.set(this);
+        }
+        @Override public void close() {
+            if(closed) return;
+            if(ACTIVE_BATCH.get()!=this) throw new IllegalStateException("Storage batches must close in order");
+            closed=true;
+            if(parent==null) ACTIVE_BATCH.remove();else ACTIVE_BATCH.set(parent);
+            if(parent!=null && parent.tool==tool) { parent.bytes=bytes;parent.changed|=changed; }
+            else if(changed) { save(tool,items);LoliStorageContainer active=LoliStorageContainer.active(tool);if(active!=null) active.externalMutation(); }
+        }
+    }
 
     public static boolean supports(ItemStack tool) {
         return tool.is(ModContent.LOLI_PICKAXE.get())
@@ -58,6 +94,10 @@ public final class LoliStorageData {
     }
 
     public static List<ItemStack> load(ItemStack tool) {
+        List<ItemStack> result=new ArrayList<>();for(ItemStack item:cached(tool).items) result.add(item.copy());return result;
+    }
+
+    private static List<ItemStack> loadUncached(ItemStack tool) {
         int slots = pages(tool) * SLOTS_PER_PAGE;
         ArrayList<ItemStack> result = new ArrayList<>(slots);
         for (int i = 0; i < slots; i++) result.add(ItemStack.EMPTY);
@@ -91,15 +131,22 @@ public final class LoliStorageData {
         }
         while (!list.isEmpty() && encodedSize(list) > MAX_TOTAL_NBT_BYTES) list.remove(list.size() - 1);
         tool.getOrCreateTag().put(STORAGE_KEY, list);
+        // A saved root is a new list. Cache sanitized copies without retaining the owner stack in the value.
+        List<ItemStack> decoded=new ArrayList<>(slots);
+        for(int slot=0;slot<slots;slot++) decoded.add(ItemStack.EMPTY);
+        for(int entry=0;entry<list.size();entry++) { CompoundTag value=list.getCompound(entry);decoded.set(value.getInt("Slot"),ItemStack.of(value.getCompound("Stack"))); }
+        CACHE.put(tool,new Decoded(list.copy(),decoded,totalSize(decoded)));
     }
 
     public static ItemStack insert(ItemStack tool, ItemStack incoming) {
         if (!supports(tool) || incoming.isEmpty() || isStorageTool(incoming) || isBlacklisted(tool, incoming)) return incoming;
         if (!isSafeStack(incoming)) return incoming;
         LoliStorageContainer active = LoliStorageContainer.active(tool);
-        List<ItemStack> items = active == null ? load(tool) : active.allItems();
+        Batch batch = ACTIVE_BATCH.get();
+        if(batch!=null && batch.tool!=tool) batch=null;
+        List<ItemStack> items = batch!=null ? batch.items : active == null ? load(tool) : active.allItems();
         ItemStack remainder = incoming.copy();
-        long storedBytes = totalSize(items);
+        long storedBytes = batch==null ? totalSize(items) : batch.bytes;
         boolean changed = false;
         for (int index = 0; index < items.size(); index++) {
             ItemStack stored = items.get(index);
@@ -124,7 +171,10 @@ public final class LoliStorageData {
             if (storedBytes + size > MAX_TOTAL_NBT_BYTES) break;
             items.set(i, stored); storedBytes += size; remainder.shrink(moved); changed = true;
         }
-        if (changed) { save(tool, items); if (active != null) active.externalMutation(); }
+        if (changed) {
+            if(batch!=null) { batch.changed=true;batch.bytes=storedBytes; }
+            else { save(tool, items); if (active != null) active.externalMutation(); }
+        }
         return remainder;
     }
 
@@ -215,7 +265,7 @@ public final class LoliStorageData {
     private static int encodedSize(Tag value) {
         if (value == null) return 0;
         CompoundTag probe = new CompoundTag();
-        probe.put("Value", value.copy());
+        probe.put("Value", value);
         FriendlyByteBuf buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
             buffer.writeNbt(probe);

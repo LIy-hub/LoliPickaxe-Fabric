@@ -20,7 +20,7 @@ import net.minecraft.world.entity.player.Inventory;
 /** Measured slotless editors; drafts survive both resize and configuration-page navigation. */
 public final class FinalToolScreen extends AbstractContainerScreen<FinalToolMenu> {
     private static final String[][] CONFIG_KEYS={
-        {"mining_radius","stop_on_liquid","auto_accept","auto_furnace"},
+        {"mining_radius","range_preview","stop_on_liquid","auto_accept","auto_furnace"},
         {"thorns","auto_kill_range_entity","auto_kill_range","target_friendly_entities","target_all_entities"},
         {"force_remove","clear_inventory","drop_equipment","kick_player","reincarnation"},
         {"soul_redemption","kick_message"}
@@ -80,6 +80,7 @@ public final class FinalToolScreen extends AbstractContainerScreen<FinalToolMenu
             case "mining_radius" -> Integer.toString(FinalToolSettings.radius(menu.tool()));
             case "auto_kill_range" -> Integer.toString(FinalToolSettings.autoKillRange(menu.tool()));
             case "kick_message" -> FinalToolSettings.kickMessage(menu.tool());
+            case "range_preview" -> Boolean.toString(FinalToolSettings.rangePreview(menu.tool()));
             case "stop_on_liquid" -> Boolean.toString(FinalToolSettings.stopOnLiquid(menu.tool()));
             case "auto_accept" -> Boolean.toString(FinalToolSettings.autoAccept(menu.tool()));
             case "auto_furnace" -> Boolean.toString(FinalToolSettings.autoFurnace(menu.tool()));

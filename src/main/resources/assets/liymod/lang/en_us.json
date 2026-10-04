@@ -60,7 +60,7 @@
   "gui.liymod.config.server_authoritative": "Changes are checked and applied by the server.",
   "config.liymod.loli.max_mining_range": "Maximum mining radius",
   "config.liymod.loli.mining_radius": "Current mining radius",
-  "config.liymod.loli.stop_on_liquid": "Do not mine fluid blocks",
+  "config.liymod.loli.stop_on_liquid": "Select fluid blocks",
   "config.liymod.loli.auto_furnace": "Auto-smelt mined blocks",
   "config.liymod.loli.auto_accept": "Automatically collect into storage",
   "config.liymod.loli.thorns": "Retaliatory damage",
@@ -234,5 +234,8 @@
   "itemGroup.liymod.main": "LoliPickaxe",
   "loliPickaxe.range": "Mining range: %1$s x %2$s x %3$s",
   "gui.liymod.enchantment.level_limit": "Maximum enchantment level: %1$s",
-  "gui.liymod.loli_storage.drop_all_short": "Drop all"
+  "gui.liymod.loli_storage.drop_all_short": "Drop all",
+  "message.liymod.kill_summary.title": "[Loli Pickaxe · Final Judgment]",
+  "message.liymod.kill_summary": " Divine judgment falls; all souls fall silent. Slain: %s · Spoils: %s items · Experience: %s points",
+  "config.liymod.loli.range_preview": "Range preview"
 }

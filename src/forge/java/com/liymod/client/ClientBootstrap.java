@@ -48,6 +48,11 @@ public final class ClientBootstrap {
                 client.level.setBlock(change.pos(), change.state(), Block.UPDATE_ALL_IMMEDIATE);
             }
         }
+        var positions=changes.stream().map(BlockChange::pos).toList();
+        for(long section:com.liymod.client.mining.LoliMiningBatchSections.affectedSections(positions)) {
+            int x=net.minecraft.core.SectionPos.x(section),y=net.minecraft.core.SectionPos.y(section),z=net.minecraft.core.SectionPos.z(section);
+            ((com.liymod.mixin.client.LevelRendererMiningAccess)client.levelRenderer).liymod$markSection(x,y,z,true);
+        }
     }
 
     public static void applyStoragePage(int containerId,int page,int count) {
@@ -62,6 +67,7 @@ public final class ClientBootstrap {
         modBus.addListener(ClientBootstrap::registerLayers);
         modBus.addListener(ClientBootstrap::registerRenderers);
         MinecraftForge.EVENT_BUS.register(new ClientBootstrapEvents());
+        MinecraftForge.EVENT_BUS.register(new MiningOutline());
     }
 
     private static void registerKeys(RegisterKeyMappingsEvent event) {
@@ -91,7 +97,8 @@ public final class ClientBootstrap {
             Minecraft client = Minecraft.getInstance();
             boolean pressed = false;
             while (STORAGE.consumeClick()) pressed = true;
-            if (client.player == null || client.screen != null) return;
+            if (client.player == null) { LoliMiningClient.reset(); return; }
+            if (client.screen != null) return;
             if (pressed && (LoliStorageData.supports(client.player.getMainHandItem()) || LoliStorageData.supports(client.player.getOffhandItem()))) {
                 ModNetwork.CHANNEL.sendToServer(new ModNetwork.StorageActionPacket(
                         Screen.hasShiftDown() ? ModNetwork.StorageActionPacket.Action.DROP_ALL : ModNetwork.StorageActionPacket.Action.OPEN));

@@ -67,6 +67,7 @@ import net.minecraft.stats.Stats;
 public final class ForgeEvents {
     private static final UUID BLOCK_REACH_ID = UUID.fromString("80bbd27f-9aa4-4a54-a435-a61ea191c062");
     private static final UUID ENTITY_REACH_ID = UUID.fromString("c3cf8792-45e6-4d52-9f79-f3b1edb84914");
+    private static final com.liymod.item.LoliMiningCooldown SERVER_COOLDOWN = new com.liymod.item.LoliMiningCooldown();
     private static final ThreadLocal<Boolean> RANGE_BREAKING = ThreadLocal.withInitial(() -> false);
     private static final ThreadLocal<Boolean> REFLECTING = ThreadLocal.withInitial(() -> false);
     private static final Set<UUID> FLIGHT_GRANTED = new HashSet<>();
@@ -168,10 +169,12 @@ public final class ForgeEvents {
             applyConfiguredEffects(player, finalTool);
             if (player.tickCount % 5 == 0 && FinalToolSettings.autoKill(finalTool)) {
                 int range = FinalToolSettings.autoKillRange(finalTool);
+                try (var action = com.liymod.combat.LoliKillSummary.begin(player)) {
                 for (Entity target : player.level().getEntities(player, player.getBoundingBox().inflate(range),
                         entity -> entity != player && !LoliProtection.isProtected(entity)
                                 && LoliLegacyExecutionPolicy.permitsAutomaticRangeTarget(finalTool, entity))) {
                     LoliErasureService.executeAbsolute(player, target);
+                }
                 }
             }
         } else if (!small.isEmpty()) {
@@ -244,9 +247,12 @@ public final class ForgeEvents {
         ItemStack storage = findAutoStorage(player);
         if (storage.isEmpty()) return;
         AABB area = player.getBoundingBox().inflate(4.0D);
+        try (var batch = LoliStorageData.beginBatch(storage)) {
         for (ItemEntity item : player.level().getEntitiesOfClass(ItemEntity.class, area, Entity::isAlive)) {
             LoliStorageData.absorb(player, storage, item);
         }
+        }
+        if (player instanceof ServerPlayer serverPlayer) com.liymod.item.LoliMiningExperience.collectNearby(serverPlayer, player.level().getEntitiesOfClass(ExperienceOrb.class, area, Entity::isAlive));
     }
 
     private static ItemStack findAutoStorage(Player player) {
@@ -318,23 +324,37 @@ public final class ForgeEvents {
         else if (tool.is(ModContent.SMALL_LOLI_PICKAXE.get())) radius = SmallLoliPickaxeItem.radius(tool);
         else return;
         event.setCanceled(true);
+        if (!SERVER_COOLDOWN.tryAcquire(player.getUUID(), radius)) return;
+        mine(player, event.getPos(), tool, radius);
+    }
+
+    public static void mine(ServerPlayer player, BlockPos origin) {
+        ItemStack tool=player.getMainHandItem();
+        if (!FinalToolSettings.isFinal(tool) || player.isSpectator() || LoliExecutionManager.isDeadLocked(player) || !player.serverLevel().isLoaded(origin)
+                || player.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(origin)) > FinalLoliPickaxeItem.REACH*FinalLoliPickaxeItem.REACH) return;
+        int radius=FinalToolSettings.radius(tool);
+        if(!SERVER_COOLDOWN.tryAcquire(player.getUUID(),radius)) return;
+        mine(player,origin,tool,radius);
+    }
+
+    private static void mine(ServerPlayer player, BlockPos origin, ItemStack tool, int radius) {
         RANGE_BREAKING.set(true);
-        try {
-            BlockPos origin = event.getPos();
+        try (var storageBatch = LoliStorageData.beginBatch(tool); var xpBatch = com.liymod.item.LoliMiningExperience.begin(player)) {
             List<BlockPos> changedPositions = new ArrayList<>();
             int[] experience = {0};
             for (int x = -radius; x <= radius; x++) for (int y = -radius; y <= radius; y++) for (int z = -radius; z <= radius; z++) {
                 BlockPos pos = origin.offset(x, y, z);
-                if (!event.getLevel().isLoaded(pos) || event.getLevel().getBlockState(pos).isAir()) continue;
-                if (breakTool((ServerLevel) event.getLevel(), player, tool, pos, experience)) changedPositions.add(pos.immutable());
+                if (!player.serverLevel().isLoaded(pos) || player.serverLevel().getBlockState(pos).isAir()) continue;
+                if (breakTool(player.serverLevel(), player, tool, pos, experience)) changedPositions.add(pos.immutable());
             }
-            ServerLevel level = (ServerLevel) event.getLevel();
+            ServerLevel level = player.serverLevel();
             ModNetwork.sendRangeMining(player, level, changedPositions);
             if (!changedPositions.isEmpty()) {
                 level.playSound(null, origin, SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.BLOCKS, 1.0F, 1.0F);
                 if (experience[0] > 0) ExperienceOrb.award(level, net.minecraft.world.phys.Vec3.atCenterOf(origin), experience[0]);
             }
         } finally {
+            SERVER_COOLDOWN.finished(player.getUUID(), radius);
             RANGE_BREAKING.set(false);
         }
     }
@@ -362,8 +382,8 @@ public final class ForgeEvents {
     private static boolean breakTool(ServerLevel level, ServerPlayer player, ItemStack tool, BlockPos pos, int[] experience) {
         boolean finalTool = tool.is(ModContent.LOLI_PICKAXE.get());
         BlockState state = level.getBlockState(pos);
-        if (state.isAir() || !player.mayInteract(level, pos) || player.blockActionRestricted(level, pos, player.gameMode.getGameModeForPlayer())
-                || (finalTool && FinalToolSettings.stopOnLiquid(tool) && !state.getFluidState().isEmpty())
+        if (state.isAir() || !level.isInWorldBounds(pos) || !level.getWorldBorder().isWithinBounds(pos) || !level.mayInteract(player,pos) || level.getServer().isUnderSpawnProtection(level,pos,player) || !player.mayInteract(level, pos) || player.blockActionRestricted(level, pos, player.gameMode.getGameModeForPlayer())
+                || !com.liymod.item.LoliFluidMining.canMine(state, finalTool && FinalToolSettings.stopOnLiquid(tool))
                 || (!finalTool && !((SmallLoliPickaxeItem) tool.getItem()).isCorrectToolForDrops(tool, state))) return false;
         if (!tool.getItem().canAttackBlock(state, level, pos, player) || tool.onBlockStartBreak(pos, player)) return false;
         BlockEvent.BreakEvent breakEvent = new BlockEvent.BreakEvent(level, pos, state, player);
@@ -386,8 +406,11 @@ public final class ForgeEvents {
         }
         if (!creative) tool.mineBlock(level, state, pos, player);
         state.getBlock().playerWillDestroy(level, pos, state, player);
-        BlockState replacement = level.getFluidState(pos).createLegacyBlock();
+        BlockState replacement = finalTool && FinalToolSettings.stopOnLiquid(tool) && com.liymod.item.LoliFluidMining.isFluidBlock(state)
+                ? Blocks.AIR.defaultBlockState() : level.getFluidState(pos).createLegacyBlock();
         if (!level.setBlock(pos, replacement, Block.UPDATE_NEIGHBORS, 512)) return false;
+        level.gameEvent(net.minecraft.world.level.gameevent.GameEvent.BLOCK_DESTROY, pos,
+                net.minecraft.world.level.gameevent.GameEvent.Context.of(player, state));
         state.getBlock().destroy(level, pos, state);
         if (creative) return true;
         if (canHarvest) {
@@ -396,11 +419,11 @@ public final class ForgeEvents {
             experience[0] += Math.max(0, eventExperience);
             state.spawnAfterBreak(level, pos, tool, false);
         }
-        if (finalTool ? FinalToolSettings.autoFurnace(tool) : SmallLoliPickaxeItem.autoFurnace(tool)) drops = smelt(level, drops);
+        if (finalTool ? FinalToolSettings.autoFurnace(tool) : SmallLoliPickaxeItem.autoFurnace(tool)) drops = smelt(level, player, drops);
         boolean autoAccept = LoliStorageData.autoAccept(tool);
         for (ItemStack drop : drops) {
             ItemStack remaining = autoAccept ? LoliStorageData.insert(tool, drop) : drop.copy();
-            if (!remaining.isEmpty() && autoAccept) player.getInventory().add(remaining);
+            if (!remaining.isEmpty() && autoAccept && !LoliStorageData.isBlacklisted(tool,drop)) player.getInventory().add(remaining);
             if (!remaining.isEmpty()) {
                 ItemEntity entity = new ItemEntity(level, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, remaining);
                 entity.setTarget(player.getUUID()); level.addFreshEntity(entity);
@@ -409,7 +432,7 @@ public final class ForgeEvents {
         return true;
     }
 
-    private static List<ItemStack> smelt(ServerLevel level, List<ItemStack> drops) {
+    private static List<ItemStack> smelt(ServerLevel level, ServerPlayer player, List<ItemStack> drops) {
         List<ItemStack> result = new ArrayList<>();
         for (ItemStack drop : drops) {
             SimpleContainer input = new SimpleContainer(drop.copy());
@@ -417,6 +440,8 @@ public final class ForgeEvents {
             if (recipe == null) { result.add(drop); continue; }
             ItemStack output = recipe.getResultItem(level.registryAccess()).copy();
             if (output.isEmpty()) { result.add(drop); continue; }
+            int smeltingExperience=(int)(recipe.getExperience()*drop.getCount());
+            if(smeltingExperience>0) ExperienceOrb.award(level,player.position(),smeltingExperience);
             long count = (long) output.getCount() * drop.getCount();
             while (count > 0L) { ItemStack part = output.copy(); int amount = (int) Math.min(part.getMaxStackSize(), count); part.setCount(amount); result.add(part); count -= amount; }
         }
@@ -425,11 +450,17 @@ public final class ForgeEvents {
 
     @SubscribeEvent
     public void entityJoin(EntityJoinLevelEvent event) {
+
         if (event.getEntity() instanceof ItemEntity item && item.getItem().is(ModContent.LOLI_PICKAXE.get())) {
             UUID owner = FinalLoliPickaxeItem.owner(item.getItem()); if (owner != null) item.setTarget(owner);
             item.setInvulnerable(true); item.setUnlimitedLifetime();
         }
         if (!event.getLevel().isClientSide && StrengthConfrontation.suppressJoin(event.getEntity())) event.setCanceled(true);
+    }
+
+    @SubscribeEvent(priority=net.minecraftforge.eventbus.api.EventPriority.LOWEST)
+    public void summaryReward(EntityJoinLevelEvent event) {
+        if(event.getLevel() instanceof ServerLevel level && event.getEntity() instanceof ItemEntity reward) com.liymod.combat.LoliKillSummary.recordItems(level,reward.getItem().getCount());
     }
 
     @SubscribeEvent
@@ -442,6 +473,7 @@ public final class ForgeEvents {
 
     @SubscribeEvent
     public void serverStopped(ServerStoppedEvent event) {
+        SERVER_COOLDOWN.clear();
         FLIGHT_GRANTED.clear();
         INVULNERABILITY_GRANTED.clear();
         StrengthConfrontation.reset(event.getServer());
@@ -455,6 +487,7 @@ public final class ForgeEvents {
     }
     @SubscribeEvent public void playerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
+            SERVER_COOLDOWN.forget(player.getUUID());
             FLIGHT_GRANTED.remove(player.getUUID());
             INVULNERABILITY_GRANTED.remove(player.getUUID());
             LoliExecutionManager.completeDisconnect(player);

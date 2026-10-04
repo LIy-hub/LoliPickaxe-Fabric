@@ -11,6 +11,7 @@ import net.minecraft.world.item.ItemStack;
 /** Validated per-stack settings for the Forge final pickaxe. */
 public final class FinalToolSettings {
     public static final String AUTO_FURNACE = "LoliAutoFurnace";
+    public static final String RANGE_PREVIEW = "LoliRangePreview";
     public static final String STOP_ON_LIQUID = "LoliStopOnLiquid";
     public static final String THORNS = "LoliThorns";
     public static final String AUTO_KILL = "LoliAutoKill";
@@ -35,6 +36,7 @@ public final class FinalToolSettings {
     public static boolean autoAccept(ItemStack stack) { return LoliStorageData.autoAccept(stack); }
     public static void autoAccept(ItemStack stack, boolean value) { LoliStorageData.setAutoAccept(stack, value); }
     public static boolean autoFurnace(ItemStack stack) { return bool(stack, AUTO_FURNACE, true); }
+    public static boolean rangePreview(ItemStack stack) { return bool(stack, RANGE_PREVIEW, true); }
     public static boolean stopOnLiquid(ItemStack stack) { return bool(stack, STOP_ON_LIQUID, false); }
     public static boolean thorns(ItemStack stack) { return bool(stack, THORNS, true); }
     public static boolean autoKill(ItemStack stack) { return bool(stack, AUTO_KILL, false); }
@@ -62,6 +64,7 @@ public final class FinalToolSettings {
                 case "mining_radius" -> { radius(stack, Integer.parseInt(encoded)); yield true; }
                 case "auto_accept" -> { autoAccept(stack, parseBoolean(encoded)); yield true; }
                 case "auto_furnace" -> { stack.getOrCreateTag().putBoolean(AUTO_FURNACE, parseBoolean(encoded)); yield true; }
+                case "range_preview" -> { stack.getOrCreateTag().putBoolean(RANGE_PREVIEW, parseBoolean(encoded)); yield true; }
                 case "stop_on_liquid" -> { stack.getOrCreateTag().putBoolean(STOP_ON_LIQUID, parseBoolean(encoded)); yield true; }
                 case "thorns" -> { stack.getOrCreateTag().putBoolean(THORNS, parseBoolean(encoded)); yield true; }
                 case "auto_kill_range_entity" -> { stack.getOrCreateTag().putBoolean(AUTO_KILL, parseBoolean(encoded)); yield true; }

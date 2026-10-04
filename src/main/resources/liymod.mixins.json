@@ -13,9 +13,18 @@
     "PrimedTntAccessor",
     "ProjectileUtilMixin",
     "TargetPredicateMixin",
-    "ServerGamePacketListenerMixin"
+    "ServerGamePacketListenerMixin",
+    "ExperienceOrbMiningMixin",
+    "accessor.ExperienceOrbAccessor",
+    "StorageNetworkMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "client": [
+    "client.ChatComponentDivineMixin",
+    "client.GameRendererFluidSelectionMixin",
+    "client.MultiPlayerMiningMixin",
+    "client.LevelRendererMiningAccess"
+  ]
 }

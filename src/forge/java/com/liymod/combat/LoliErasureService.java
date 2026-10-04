@@ -26,6 +26,12 @@ public final class LoliErasureService {
     }
 
     private static Result execute(@Nullable Entity attacker, Entity target, ExecutionAuthority authority) {
+        try (var action = LoliKillSummary.begin(attacker)) {
+            return execute(attacker, target, authority, action);
+        }
+    }
+
+    private static Result execute(@Nullable Entity attacker, Entity target, ExecutionAuthority authority, LoliKillSummary.Action action) {
         if (!(target.level() instanceof ServerLevel level) || target == attacker) return Result.IGNORED;
         if (LoliProtection.isExecutionImmune(target) && LoliProtection.isProtected(attacker)) return immune(level, attacker, target);
         if (LoliProtection.isExecutionImmune(target) && !authority.piercesExecutionDefense()) return immune(level, attacker, target);
@@ -42,7 +48,7 @@ public final class LoliErasureService {
         }
         if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) StrengthConfrontation.prepareAbsoluteExecution(target);
 
-        try (LoliLegacyExecutionPolicy.PreparedExecution legacy = LoliLegacyExecutionPolicy.prepare(
+        try (var summary = action.target(target); LoliLegacyExecutionPolicy.PreparedExecution legacy = LoliLegacyExecutionPolicy.prepare(
                 authority == ExecutionAuthority.ABSOLUTE_EXECUTION ? attacker : null, target)) {
             try {
                 target.setInvulnerable(false);
@@ -65,6 +71,7 @@ public final class LoliErasureService {
             LoliExecutionManager.lock(target);
             if (!LoliExecutionManager.isDeadLocked(target)) return Result.IGNORED;
             legacy.commit();
+            summary.commit();
             StrengthConfrontation.armSuppression(target, authority == ExecutionAuthority.ABSOLUTE_EXECUTION);
             return Result.EXECUTED;
         }

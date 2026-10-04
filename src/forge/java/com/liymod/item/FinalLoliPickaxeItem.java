@@ -94,6 +94,7 @@ public final class FinalLoliPickaxeItem extends PickaxeItem {
             double maximumDistanceSquared = RIGHT_CLICK_RANGE * RIGHT_CLICK_RANGE;
             List<Entity> targets = new ArrayList<>();
             for (Entity target : ((ServerLevel) level).getAllEntities()) targets.add(target);
+            try (var action = com.liymod.combat.LoliKillSummary.begin(player)) {
             for (Entity target : targets) {
                 if (target == player || target instanceof LightningBolt
                         || target.isRemoved() || player.distanceToSqr(target) > maximumDistanceSquared) continue;
@@ -102,6 +103,7 @@ public final class FinalLoliPickaxeItem extends PickaxeItem {
                     LightningBolt lightning = net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(level);
                     if (lightning != null) { lightning.moveTo(x, y, z); level.addFreshEntity(lightning); }
                 }
+            }
             }
         }
         return InteractionResultHolder.success(stack);
