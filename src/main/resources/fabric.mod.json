@@ -1,32 +1,35 @@
 {
-	"schemaVersion": 1,
-	"id": "liymod",
-	"version": "${version}",
-	"name": "LoliPickaxe",
-	"description": "Adds the Loli Pickaxe and its powerful combat and mining abilities.",
-	"authors": [
-		"LIy"
-	],
-	"contact": {
-		"homepage": "https://github.com/LIy-hub/LoliPickaxe-Fabric",
-		"sources": "https://github.com/LIy-hub/LoliPickaxe-Fabric",
-		"issues": "https://github.com/LIy-hub/LoliPickaxe-Fabric/issues"
-	},
-	"license": "GPL-3.0-only",
-	"icon": "assets/liymod/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"main": [
-          "com.liymod.LiyMod"
-		]
-	},
-	"mixins": [
-		"liymod.mixins.json"
-	],
-	"depends": {
-		"fabricloader": ">=0.19.3",
-		"minecraft": "~1.21.3",
-		"java": ">=21",
-		"fabric-api": "*"
-	}
+  "schemaVersion": 1,
+  "id": "liymod",
+  "version": "${version}",
+  "name": "LoliPickaxe",
+  "description": "Adds the Loli Pickaxe and its powerful combat and mining abilities.",
+  "authors": [
+    "LIy"
+  ],
+  "contact": {
+    "homepage": "https://github.com/LIy-hub/LoliPickaxe-Fabric",
+    "sources": "https://github.com/LIy-hub/LoliPickaxe-Fabric",
+    "issues": "https://github.com/LIy-hub/LoliPickaxe-Fabric/issues"
+  },
+  "license": "GPL-3.0-only",
+  "icon": "assets/liymod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.liymod.LiyMod"
+    ],
+    "client": [
+      "com.liymod.client.LiyModClient"
+    ]
+  },
+  "mixins": [
+    "liymod.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~1.21.3",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
 }
