@@ -2,6 +2,8 @@
 
 ## 1.0.0 for Minecraft 26.3
 
+- Exclude duplicate legacy card PNGs from runtime and sources JARs. Keep the
+  originals in the repository and all ten game-addressable textures unchanged.
 - Create the `mc/26.3` port from `mc/26.2` without changing older branches.
 - Target Minecraft 26.3, Fabric Loader 0.19.5 and Fabric API 0.161.0+26.3.
 - Update Fabric Loom to 1.17.21 and Gradle to 9.6.0, with its official

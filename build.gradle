@@ -38,6 +38,8 @@ dependencies {
 
 processResources {
 	inputs.property "version", project.version
+	// Keep legacy originals in the repository; the viewer uses textures/lolicards.
+	exclude 'assets/liymod/lolicards/**'
 
 	filesMatching("fabric.mod.json") {
 		expand "version": inputs.properties.version
@@ -56,6 +58,10 @@ java {
 
 	sourceCompatibility = JavaVersion.VERSION_25
 	targetCompatibility = JavaVersion.VERSION_25
+}
+
+tasks.named('sourcesJar') {
+	exclude 'assets/liymod/lolicards/**'
 }
 
 jar {
