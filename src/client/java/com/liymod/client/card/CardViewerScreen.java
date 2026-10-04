@@ -1,5 +1,6 @@
 package com.liymod.client.card;
 
+import com.liymod.client.gui.LoliGui;
 import com.liymod.item.LoliCardCatalog;
 import com.liymod.item.LoliCardData;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -63,6 +64,13 @@ final class CardViewerScreen extends Screen {
     private double lastMouseX;
     private double lastMouseY;
     private boolean removed;
+    private long loadGeneration;
+    private LoliGui.TextBlock titleText;
+    private LoliGui.TextBlock urlText;
+    private LoliGui.TextBlock loadingText;
+    private LoliGui.TextBlock failedText;
+    private int imageTop;
+    private int imageBottom;
 
     private CardViewerScreen(
             Component title,
@@ -115,6 +123,19 @@ final class CardViewerScreen extends Screen {
 
     @Override
     protected void init() {
+        removed = false;
+        titleText = LoliGui.text(font, title, Math.max(1, width - 20), 2);
+        imageTop = 8 + titleText.height() + (album ? font.lineHeight + 8 : 6);
+        imageBottom = height - (onlineUrl == null ? 32 : 48);
+        if (onlineUrl != null) {
+            urlText = LoliGui.text(font, Component.literal(onlineUrl), Math.max(1, width - 40), 1);
+            if (onlineState == OnlineState.READY && onlineTexture == null) {
+                onlineState = OnlineState.LOADING;
+            }
+        }
+        int placeholderWidth = Math.min(320, Math.max(120, width - 80));
+        loadingText = LoliGui.text(font, Component.translatable("gui.liymod.card.loading"), placeholderWidth - 20, 2);
+        failedText = LoliGui.text(font, Component.translatable("gui.liymod.card.load_failed"), placeholderWidth - 20, 2);
         int buttonY = height - 26;
         if (album && bundledImages.size() > 1) {
             addRenderableWidget(Button.builder(
@@ -141,13 +162,13 @@ final class CardViewerScreen extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
         graphics.fill(0, 0, width, height, BACKGROUND_COLOR);
-        graphics.centeredText(font, title, width / 2, 8, TEXT_COLOR);
+        titleText.draw(graphics, font, 10, 8, TEXT_COLOR, mouseX, mouseY, 0, 0);
 
         ImageEntry image = currentImage();
         if (image != null) {
             drawImage(graphics, image);
         } else {
-            drawPlaceholder(graphics);
+            drawPlaceholder(graphics, mouseX, mouseY);
         }
 
         if (album && !bundledImages.isEmpty()) {
@@ -155,11 +176,11 @@ final class CardViewerScreen extends Screen {
                     font,
                     Component.literal((imageIndex + 1) + " / " + bundledImages.size()),
                     width / 2,
-                    21,
+                    12 + titleText.height(),
                     TEXT_COLOR);
         }
         if (onlineUrl != null) {
-            graphics.centeredText(font, elidedUrl(), width / 2, height - 39, TEXT_COLOR);
+            urlText.draw(graphics, font, 20, height - 39, TEXT_COLOR, mouseX, mouseY, 0, 0);
         }
         super.extractRenderState(graphics, mouseX, mouseY, deltaTicks);
     }
@@ -170,7 +191,7 @@ final class CardViewerScreen extends Screen {
             return true;
         }
         ImageEntry image = currentImage();
-        if (event.button() == 0 && image != null && imageBounds(image).contains(event.x(), event.y())) {
+        if (event.button() == 0 && image != null && visibleImageContains(image, event.x(), event.y())) {
             dragging = true;
             dragMoved = false;
             pressMouseX = event.x();
@@ -213,7 +234,7 @@ final class CardViewerScreen extends Screen {
             if (!wasDragged
                     && image != null
                     && image.link() != null
-                    && imageBounds(image).contains(event.x(), event.y())) {
+                    && visibleImageContains(image, event.x(), event.y())) {
                 ConfirmLinkScreen.confirmLinkNow(this, image.link());
             }
             return true;
@@ -223,25 +244,30 @@ final class CardViewerScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
-        if (currentImage() == null || verticalAmount == 0.0D) {
+        ImageEntry image = currentImage();
+        if (image == null || verticalAmount == 0.0D || !visibleImageContains(image, mouseX, mouseY)) {
             return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
         }
         double oldZoom = zoom;
         zoom = Math.clamp(zoom * Math.pow(1.12D, verticalAmount), MIN_ZOOM, MAX_ZOOM);
         double ratio = zoom / oldZoom;
         double oldCenterX = width / 2.0D + panX;
-        double oldCenterY = height / 2.0D + panY;
+        double viewportCenterY = (imageTop + imageBottom) / 2.0D;
+        double oldCenterY = viewportCenterY + panY;
         panX = mouseX - (mouseX - oldCenterX) * ratio - width / 2.0D;
-        panY = mouseY - (mouseY - oldCenterY) * ratio - height / 2.0D;
+        panY = mouseY - (mouseY - oldCenterY) * ratio - viewportCenterY;
         return true;
     }
 
     @Override
     public void removed() {
         removed = true;
+        loadGeneration++;
+        onlineLoad = null;
         if (onlineTexture != null && minecraft != null) {
             minecraft.getTextureManager().release(onlineTexture);
             onlineTexture = null;
+            onlineState = OnlineState.LOADING;
         }
         super.removed();
     }
@@ -251,13 +277,15 @@ final class CardViewerScreen extends Screen {
             return;
         }
         onlineLoad = OnlineCardImageLoader.load(onlineUrl);
+        long generation = ++loadGeneration;
         onlineLoad.whenComplete((loaded, error) -> Minecraft.getInstance().execute(() -> {
-            if (removed || minecraft == null || minecraft.gui.screen() != this) {
+            if (generation != loadGeneration || removed || minecraft == null || minecraft.gui.screen() != this) {
                 if (loaded != null) {
                     loaded.image().close();
                 }
                 return;
             }
+            onlineLoad = null;
             if (error != null || loaded == null) {
                 onlineState = OnlineState.FAILED;
                 return;
@@ -306,7 +334,9 @@ final class CardViewerScreen extends Screen {
 
     private void drawImage(GuiGraphicsExtractor graphics, ImageEntry image) {
         ImageBounds bounds = imageBounds(image);
-        graphics.blit(
+        graphics.enableScissor(10, imageTop, width - 10, imageBottom);
+        try {
+            graphics.blit(
                 RenderPipelines.GUI_TEXTURED,
                 image.texture(),
                 bounds.left(),
@@ -319,31 +349,37 @@ final class CardViewerScreen extends Screen {
                 image.height(),
                 image.width(),
                 image.height());
+        } finally {
+            graphics.disableScissor();
+        }
     }
 
     private ImageBounds imageBounds(ImageEntry image) {
         int availableWidth = Math.max(1, width - 40);
-        int availableHeight = Math.max(1, height - (onlineUrl == null ? 68 : 80));
+        int availableHeight = Math.max(1, imageBottom - imageTop);
         double fit = Math.min(
                 (double) availableWidth / image.width(),
                 (double) availableHeight / image.height());
         int drawWidth = Math.max(1, (int) Math.round(image.width() * fit * zoom));
         int drawHeight = Math.max(1, (int) Math.round(image.height() * fit * zoom));
         int left = (int) Math.round((width - drawWidth) / 2.0D + panX);
-        int top = (int) Math.round(30.0D + (availableHeight - drawHeight) / 2.0D + panY);
+        int top = (int) Math.round(imageTop + (availableHeight - drawHeight) / 2.0D + panY);
         return new ImageBounds(left, top, drawWidth, drawHeight);
     }
 
-    private void drawPlaceholder(GuiGraphicsExtractor graphics) {
+    private boolean visibleImageContains(ImageEntry image, double x, double y) {
+        return x >= 10 && x < width - 10 && y >= imageTop && y < imageBottom && imageBounds(image).contains(x, y);
+    }
+
+    private void drawPlaceholder(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         int placeholderWidth = Math.min(320, Math.max(120, width - 80));
         int placeholderHeight = Math.min(180, Math.max(80, height - 120));
         int left = (width - placeholderWidth) / 2;
         int top = (height - placeholderHeight) / 2;
         graphics.fill(left, top, left + placeholderWidth, top + placeholderHeight, PLACEHOLDER_COLOR);
-        Component message = onlineState == OnlineState.LOADING
-                ? Component.translatable("gui.liymod.card.loading")
-                : Component.translatable("gui.liymod.card.load_failed");
-        graphics.centeredText(font, message, width / 2, top + placeholderHeight / 2 - 4, TEXT_COLOR);
+        LoliGui.TextBlock message = onlineState == OnlineState.LOADING ? loadingText : failedText;
+        message.draw(graphics, font, left + 10, top + (placeholderHeight - message.height()) / 2,
+                TEXT_COLOR, mouseX, mouseY, 0, 0);
     }
 
     private void changePage(int delta) {
@@ -360,15 +396,6 @@ final class CardViewerScreen extends Screen {
         panY = 0.0D;
         dragging = false;
         dragMoved = false;
-    }
-
-    private String elidedUrl() {
-        int maximumWidth = Math.max(40, width - 40);
-        if (font.width(onlineUrl) <= maximumWidth) {
-            return onlineUrl;
-        }
-        String suffix = "...";
-        return font.plainSubstrByWidth(onlineUrl, maximumWidth - font.width(suffix)) + suffix;
     }
 
     private static ImageDimensions bundledDimensions(String resourceName) {

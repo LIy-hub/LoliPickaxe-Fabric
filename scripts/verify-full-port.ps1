@@ -339,8 +339,32 @@ Assert-True ($playerMixinSource -match '(?s)blockInteractionRange.+extendLoliBlo
     'Final-pickaxe block reach does not bypass the vanilla 64-block attribute ceiling'
 Assert-True ($playerMixinSource -match '(?s)entityInteractionRange.+extendLoliEntityReach') `
     'Final-pickaxe entity reach does not bypass the vanilla 64-block attribute ceiling'
-Assert-True ($storageScreenSource -match 'TEXT_COLOR\s*=\s*0xFFF5F5F5') `
-    'Storage GUI labels are not rendered with high-contrast text'
+$guiSource = Get-Content -LiteralPath (
+    Join-Path $projectRoot 'src/client/java/com/liymod/client/gui/LoliGui.java'
+) -Raw
+Assert-True ($storageScreenSource -match 'TEXT_COLOR\s*=\s*LoliGui\.TEXT_COLOR') `
+    'Storage GUI labels must use the shared panel foreground'
+function Get-GuiLuminance {
+    param([uint32]$Color)
+    $linear = foreach ($shift in @(16, 8, 0)) {
+        $channel = (($Color -shr $shift) -band 255) / 255.0
+        if ($channel -le 0.04045) { $channel / 12.92 }
+        else { [Math]::Pow(($channel + 0.055) / 1.055, 2.4) }
+    }
+    return 0.2126 * $linear[0] + 0.7152 * $linear[1] + 0.0722 * $linear[2]
+}
+$foregroundMatch = [regex]::Match($guiSource, 'TEXT_COLOR\s*=\s*0x([0-9A-Fa-f]{8})')
+$backgroundMatch = [regex]::Match($guiSource, 'PANEL_COLOR\s*=\s*0x([0-9A-Fa-f]{8})')
+Assert-True ($foregroundMatch.Success -and $backgroundMatch.Success) 'GUI color constants are missing'
+$foreground = [Convert]::ToUInt32($foregroundMatch.Groups[1].Value, 16)
+$background = [Convert]::ToUInt32($backgroundMatch.Groups[1].Value, 16)
+Assert-True (($foreground -shr 24) -eq 255 -and ($background -shr 24) -eq 255) 'GUI text/panel must be opaque'
+$foregroundLuminance = Get-GuiLuminance $foreground
+$backgroundLuminance = Get-GuiLuminance $background
+$contrast = ([Math]::Max($foregroundLuminance, $backgroundLuminance) + 0.05) /
+        ([Math]::Min($foregroundLuminance, $backgroundLuminance) + 0.05)
+Assert-True ($contrast -ge 4.5) 'Storage GUI text/panel contrast is below 4.5:1'
+Write-Host ('GUI_CONTRAST_OK ratio={0:F2}' -f $contrast)
 Assert-True ($storageKeySource -match 'InputConstants\.KEY_B') `
     'Loli storage B/Shift+B key binding is missing'
 Assert-True ($storageKeySource -match 'InputConstants\.KEY_U') `

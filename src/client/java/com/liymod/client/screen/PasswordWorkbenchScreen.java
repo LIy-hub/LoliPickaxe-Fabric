@@ -1,5 +1,6 @@
 package com.liymod.client.screen;
 
+import com.liymod.client.gui.LoliGui;
 import com.liymod.menu.PasswordWorkbenchMenu;
 import com.liymod.network.PasswordUpdatePayload;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -23,6 +24,8 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
 
     private EditBox passwordBox;
     private boolean submitted;
+    private LoliGui.TextBlock titleText;
+    private LoliGui.TextBlock errorText;
 
     public PasswordWorkbenchScreen(PasswordWorkbenchMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 176, 196);
@@ -34,7 +37,10 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
 
     @Override
     protected void init() {
+        String previousPassword = passwordBox == null ? menu.getPassword() : passwordBox.getValue();
         super.init();
+        titleText = LoliGui.text(font, title, imageWidth - 36, 1);
+        errorText = LoliGui.text(font, Component.translatable("gui.liymod.password.no_match"), 81, 1);
         passwordBox = new EditBox(
                 font,
                 leftPos + 29,
@@ -44,7 +50,7 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
                 Component.translatable("gui.liymod.password"));
         passwordBox.setMaxLength(PasswordUpdatePayload.MAX_CODE_POINTS);
         passwordBox.setTextColor(0xFFFFFFFF);
-        passwordBox.setValue(menu.getPassword());
+        passwordBox.setValue(previousPassword);
         addRenderableWidget(passwordBox);
         addRenderableWidget(Button.builder(
                         Component.translatable("gui.liymod.password.done"),
@@ -83,16 +89,11 @@ public final class PasswordWorkbenchScreen extends AbstractContainerScreen<Passw
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        super.extractLabels(graphics, mouseX, mouseY);
+        titleText.draw(graphics, font, 28, titleLabelY, TEXT_COLOR, mouseX, mouseY, leftPos, topPos);
+        graphics.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT_COLOR, false);
         graphics.text(font, Component.translatable("container.crafting"), 28, 36, TEXT_COLOR, false);
         if (submitted && menu.getResultSlots().getItem(0).isEmpty()) {
-            graphics.text(
-                    font,
-                    Component.translatable("gui.liymod.password.no_match"),
-                    84,
-                    89,
-                    ERROR_COLOR,
-                    false);
+            errorText.draw(graphics, font, 87, 86, ERROR_COLOR, mouseX, mouseY, leftPos, topPos);
         }
     }
 

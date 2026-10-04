@@ -1,23 +1,19 @@
 package com.liymod.client.screen;
 
+import com.liymod.client.gui.EditorLayout;
+import com.liymod.client.gui.LoliGui;
 import com.liymod.menu.FinalTeleportMenu;
 import com.liymod.network.LoliTeleportPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Relative-coordinate teleport editor; the server remains authoritative for every safety check. */
-public final class FinalTeleportScreen extends AbstractContainerScreen<FinalTeleportMenu> {
-    private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath("liymod", "textures/gui/loli_pickaxe_space_folding.png");
-    private static final int PANEL_WIDTH = 260;
-    private static final int PANEL_HEIGHT = 195;
+public final class FinalTeleportScreen extends AbstractLoliEditorScreen<FinalTeleportMenu> {
     private static final int TEXT_COLOR = 0xFF404040;
     private static final int ERROR_COLOR = 0xFFB02020;
 
@@ -26,121 +22,103 @@ public final class FinalTeleportScreen extends AbstractContainerScreen<FinalTele
     private EditBox offsetYBox;
     private EditBox offsetZBox;
     private boolean invalidInput;
+    private LoliGui.TextBlock titleText;
+    private LoliGui.TextBlock dimensionText;
+    private LoliGui.TextBlock helpText;
+    private LoliGui.TextBlock errorText;
+    private int coordinateWidth;
 
     public FinalTeleportScreen(FinalTeleportMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title, PANEL_WIDTH, PANEL_HEIGHT);
+        super(menu, inventory, title);
     }
 
     @Override
     protected void init() {
+        String dimension = dimensionBox == null ? menu.getCurrentDimension().toString() : dimensionBox.getValue();
+        String x = offsetXBox == null ? "0" : offsetXBox.getValue();
+        String y = offsetYBox == null ? "0" : offsetYBox.getValue();
+        String z = offsetZBox == null ? "0" : offsetZBox.getValue();
         super.init();
+        int contentWidth = EditorLayout.panelWidth(width, 320) - 20;
+        titleText = LoliGui.text(font, title, contentWidth, 2);
+        dimensionText = LoliGui.text(font, Component.translatable("gui.liymod.space_folding.current_dimension",
+                menu.getCurrentDimension().toString()), contentWidth, 2);
+        helpText = LoliGui.text(font, Component.translatable("gui.liymod.space_folding.server_authoritative"), contentWidth, 2);
+        errorText = LoliGui.text(font, Component.translatable("gui.liymod.space_folding.invalid"), contentWidth, 2);
+        placePanel(EditorLayout.create(width, height, 320, titleText.height(), font.lineHeight, 20,
+                dimensionText.height(), font.lineHeight, font.lineHeight, 20, helpText.height(), errorText.height(), 20));
+        coordinateWidth = (layout.contentWidth() - 12) / 3;
         dimensionBox = new EditBox(
                 font,
-                leftPos + 15,
-                topPos + 32,
-                230,
+                leftPos + 10,
+                topPos + layout.row(2),
+                layout.contentWidth(),
                 20,
                 Component.translatable("gui.liymod.space_folding.dimension"));
         dimensionBox.setMaxLength(LoliTeleportPayload.MAX_ID_LENGTH);
-        dimensionBox.setValue(menu.getCurrentDimension().toString());
+        dimensionBox.setValue(dimension);
         addRenderableWidget(dimensionBox);
 
-        offsetXBox = coordinateBox(leftPos + 15, Component.translatable("gui.liymod.space_folding.x"));
-        offsetYBox = coordinateBox(leftPos + 95, Component.translatable("gui.liymod.space_folding.y"));
-        offsetZBox = coordinateBox(leftPos + 175, Component.translatable("gui.liymod.space_folding.z"));
+        offsetXBox = coordinateBox(leftPos + 10, Component.translatable("gui.liymod.space_folding.x"), x);
+        offsetYBox = coordinateBox(leftPos + 16 + coordinateWidth, Component.translatable("gui.liymod.space_folding.y"), y);
+        offsetZBox = coordinateBox(leftPos + 22 + 2 * coordinateWidth, Component.translatable("gui.liymod.space_folding.z"), z);
 
         addRenderableWidget(Button.builder(
                         Component.translatable("gui.liymod.space_folding.teleport"),
                         button -> requestTeleport())
-                .bounds(leftPos + 15, topPos + 166, 110, 20)
+                .bounds(leftPos + 10, topPos + layout.row(9), (layout.contentWidth() - 6) / 2, 20)
                 .build());
         addRenderableWidget(Button.builder(
                         Component.translatable("gui.liymod.space_folding.cancel"),
                         button -> onClose())
-                .bounds(leftPos + 135, topPos + 166, 110, 20)
+                .bounds(leftPos + 16 + (layout.contentWidth() - 6) / 2, topPos + layout.row(9), (layout.contentWidth() - 6) / 2, 20)
                 .build());
     }
 
     @Override
-    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
-        super.extractBackground(graphics, mouseX, mouseY, deltaTicks);
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
-                TEXTURE,
-                leftPos,
-                topPos,
-                0.0F,
-                0.0F,
-                PANEL_WIDTH,
-                PANEL_HEIGHT,
-                90,
-                50,
-                256,
-                256);
-    }
-
-    @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        graphics.centeredText(font, title, imageWidth / 2, 7, TEXT_COLOR);
+        drawLabel(graphics, titleText, 10, layout.row(0), TEXT_COLOR, mouseX, mouseY);
         graphics.centeredText(
                 font,
                 Component.translatable("gui.liymod.space_folding.dimension"),
-                imageWidth / 2,
-                20,
+                layout.width() / 2,
+                layout.row(1),
                 TEXT_COLOR);
-        graphics.centeredText(
-                font,
-                Component.translatable(
-                        "gui.liymod.space_folding.current_dimension",
-                        menu.getCurrentDimension().toString()),
-                imageWidth / 2,
-                56,
-                TEXT_COLOR);
+        drawLabel(graphics, dimensionText, 10, layout.row(3), TEXT_COLOR, mouseX, mouseY);
         graphics.centeredText(
                 font,
                 Component.translatable("gui.liymod.space_folding.relative"),
-                imageWidth / 2,
-                69,
+                layout.width() / 2,
+                layout.row(4),
                 TEXT_COLOR);
         graphics.centeredText(
                 font,
                 Component.translatable("gui.liymod.space_folding.x"),
-                50,
-                82,
+                10 + coordinateWidth / 2,
+                layout.row(5),
                 TEXT_COLOR);
         graphics.centeredText(
                 font,
                 Component.translatable("gui.liymod.space_folding.y"),
-                130,
-                82,
+                16 + coordinateWidth + coordinateWidth / 2,
+                layout.row(5),
                 TEXT_COLOR);
         graphics.centeredText(
                 font,
                 Component.translatable("gui.liymod.space_folding.z"),
-                210,
-                82,
+                22 + 2 * coordinateWidth + coordinateWidth / 2,
+                layout.row(5),
                 TEXT_COLOR);
-        graphics.textWithWordWrap(
-                font,
-                Component.translatable("gui.liymod.space_folding.server_authoritative"),
-                15,
-                119,
-                230,
-                TEXT_COLOR);
+        drawLabel(graphics, helpText, 10, layout.row(7), TEXT_COLOR, mouseX, mouseY);
         if (invalidInput) {
-            graphics.centeredText(
-                    font,
-                    Component.translatable("gui.liymod.space_folding.invalid"),
-                    imageWidth / 2,
-                    150,
-                    ERROR_COLOR);
+            drawLabel(graphics, errorText, 10, layout.row(8), ERROR_COLOR, mouseX, mouseY);
         }
     }
 
-    private EditBox coordinateBox(int x, Component label) {
-        EditBox box = new EditBox(font, x, topPos + 92, 70, 20, label);
+    private EditBox coordinateBox(int x, Component label, String value) {
+        EditBox box = new EditBox(font, x, topPos + layout.row(6), coordinateWidth, 20, label);
         box.setMaxLength(32);
-        box.setValue("0");
+        box.setValue(value);
         addRenderableWidget(box);
         return box;
     }

@@ -57,6 +57,24 @@ java {
 	targetCompatibility = JavaVersion.VERSION_25
 }
 
+// Geometry checks run without opening Minecraft or adding a test framework dependency.
+sourceSets {
+	guiTest {
+		compileClasspath += sourceSets.client.output
+		runtimeClasspath += sourceSets.client.output
+	}
+}
+
+tasks.register('verifyGuiLayout', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.client.gui.EditorLayoutRegressionTest'
+}
+
+tasks.named('check') {
+	dependsOn tasks.named('verifyGuiLayout')
+}
+
 jar {
 	inputs.property "archivesName", project.base.archivesName
 
