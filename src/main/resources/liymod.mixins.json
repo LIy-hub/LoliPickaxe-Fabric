@@ -22,6 +22,7 @@
     "TargetPredicateMixin"
   ],
   "client": [
+    "client.ChatComponentDivineMixin",
     "client.LocalPlayerFluidSelectionMixin",
     "client.LevelExtractorFluidOutlineMixin",
     "client.LevelRenderStateMiningMixin",

@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,12 +32,26 @@ public final class LoliKillSummary {
         return begin(player, player == null ? null : player.level(), counts -> {
             if (player == null) return;
             try {
-                player.sendSystemMessage(Component.translatable(
-                        "message.liymod.kill_summary", counts.kills(), counts.items(), counts.experience()));
+                player.sendSystemMessage(message(counts));
             } catch (RuntimeException exception) {
                 LiyMod.LOGGER.warn("Could not send Loli kill summary to {}", player.getUUID(), exception);
             }
         });
+    }
+
+    private static Component message(Counts counts) {
+        return Component.empty()
+                .append(Component.translatable("message.liymod.kill_summary.title")
+                        .withStyle(ChatFormatting.GOLD, ChatFormatting.BOLD))
+                .append(Component.translatable("message.liymod.kill_summary",
+                        number(counts.kills(), ChatFormatting.RED),
+                        number(counts.items(), ChatFormatting.AQUA),
+                        number(counts.experience(), ChatFormatting.GREEN))
+                        .withStyle(ChatFormatting.GRAY));
+    }
+
+    private static Component number(long value, ChatFormatting color) {
+        return Component.literal(Long.toString(value)).withStyle(color, ChatFormatting.BOLD);
     }
 
     // A recipient token and sink allow isolated accounting checks without opening a world.

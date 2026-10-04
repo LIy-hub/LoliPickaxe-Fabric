@@ -111,7 +111,14 @@ tasks.register('verifyKillSummaries', JavaExec) {
 	doFirst { workingDir.mkdirs() }
 }
 
+tasks.register('verifyDivineChat', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.client.gui.LoliChatRainbowRegressionTest'
+}
+
 tasks.named('check') {
+	dependsOn tasks.named('verifyDivineChat')
 	dependsOn tasks.named('verifyKillSummaries')
     dependsOn tasks.named('verifyRecipeCodecs')
 	dependsOn tasks.named('verifyGuiLayout')

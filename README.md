@@ -60,6 +60,9 @@ and survival implementation.
   combine their targets into one message. Immune, already dead and non-living
   targets do not count; rejected executions and unrelated pickups do not add rewards.
   This observes the existing death/drop pipeline and preserves collection rules.
+  The divine title flows through red, gold, green, cyan, blue and violet while
+  visible in chat; reward numbers retain distinct colors. Animation reuses cached
+  glyph styles locally without resending messages or rebuilding chat layout.
 - In Fabric 26.2, radius **0** is **Single-block mining** and disables neighboring
   block mining. A non-zero radius shows the centered mining cube around the
   targeted block before clicking. The server's radius limit is synchronized on
