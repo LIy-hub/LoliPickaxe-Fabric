@@ -2,30 +2,29 @@ package com.liymod.mixin;
 
 import com.liymod.protection.LoliProtection;
 import com.liymod.protection.TrustedPlayerLifecycle;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.network.packet.s2c.play.PositionFlag;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.TeleportTarget;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.world.level.portal.TeleportTransition;
+import java.util.Set;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Set;
-
-@Mixin(value = ServerPlayerEntity.class, priority = Integer.MAX_VALUE)
+@Mixin(value = ServerPlayer.class, priority = Integer.MAX_VALUE)
 public abstract class ServerPlayerEntityMixin {
-    @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "hurtServer", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventServerDamage(
-            ServerWorld world,
+            ServerLevel serverLevel,
             DamageSource source,
             float amount,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
+        ServerPlayer self = (ServerPlayer) (Object) this;
         if (LoliProtection.isProtected(self)) {
             LoliProtection.retaliate(self, source);
             self.setHealth(self.getMaxHealth());
@@ -33,9 +32,9 @@ public abstract class ServerPlayerEntityMixin {
         }
     }
 
-    @Inject(method = "onDeath", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void lolipickaxe$preventServerDeath(DamageSource source, CallbackInfo ci) {
-        ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
+        ServerPlayer self = (ServerPlayer) (Object) this;
         if (LoliProtection.isProtected(self)) {
             self.setHealth(self.getMaxHealth());
             self.deathTime = 0;
@@ -43,55 +42,61 @@ public abstract class ServerPlayerEntityMixin {
         }
     }
 
-    @Inject(method = "teleportTo", at = @At("HEAD"))
+    @Inject(
+            method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;",
+            at = @At("HEAD")
+    )
     private void lolipickaxe$beginTrustedDimensionMove(
-            TeleportTarget target,
-            CallbackInfoReturnable<Entity> cir
+            TeleportTransition transition,
+            CallbackInfoReturnable<ServerPlayer> cir
     ) {
-        TrustedPlayerLifecycle.begin((ServerPlayerEntity) (Object) this);
-    }
-
-    @Inject(method = "teleportTo", at = @At("RETURN"))
-    private void lolipickaxe$endTrustedDimensionMove(
-            TeleportTarget target,
-            CallbackInfoReturnable<Entity> cir
-    ) {
-        TrustedPlayerLifecycle.end((ServerPlayerEntity) (Object) this);
+        TrustedPlayerLifecycle.begin((ServerPlayer) (Object) this);
     }
 
     @Inject(
-            method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDLjava/util/Set;FFZ)Z",
+            method = "teleport(Lnet/minecraft/world/level/portal/TeleportTransition;)Lnet/minecraft/server/level/ServerPlayer;",
+            at = @At("RETURN")
+    )
+    private void lolipickaxe$endTrustedDimensionMove(
+            TeleportTransition transition,
+            CallbackInfoReturnable<ServerPlayer> cir
+    ) {
+        TrustedPlayerLifecycle.end((ServerPlayer) (Object) this);
+    }
+
+    @Inject(
+            method = "teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDLjava/util/Set;FFZ)Z",
             at = @At("HEAD")
     )
     private void lolipickaxe$beginTrustedCrossWorldTeleport(
-            ServerWorld destination,
+            ServerLevel destination,
             double x,
             double y,
             double z,
-            Set<PositionFlag> positionFlags,
+            Set<Relative> relatives,
             float yaw,
             float pitch,
-            boolean resetCamera,
+            boolean dismount,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        TrustedPlayerLifecycle.begin((ServerPlayerEntity) (Object) this);
+        TrustedPlayerLifecycle.begin((ServerPlayer) (Object) this);
     }
 
     @Inject(
-            method = "teleport(Lnet/minecraft/server/world/ServerWorld;DDDLjava/util/Set;FFZ)Z",
+            method = "teleportTo(Lnet/minecraft/server/level/ServerLevel;DDDLjava/util/Set;FFZ)Z",
             at = @At("RETURN")
     )
     private void lolipickaxe$endTrustedCrossWorldTeleport(
-            ServerWorld destination,
+            ServerLevel destination,
             double x,
             double y,
             double z,
-            Set<PositionFlag> positionFlags,
+            Set<Relative> relatives,
             float yaw,
             float pitch,
-            boolean resetCamera,
+            boolean dismount,
             CallbackInfoReturnable<Boolean> cir
     ) {
-        TrustedPlayerLifecycle.end((ServerPlayerEntity) (Object) this);
+        TrustedPlayerLifecycle.end((ServerPlayer) (Object) this);
     }
 }
