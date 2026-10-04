@@ -4,9 +4,14 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "accessor.EntityAccessor",
+    "accessor.ExperienceOrbAccessor",
     "accessor.LivingEntityAccessor",
     "accessor.PrimedTntAccessor",
+    "CustomDataCacheMixin",
+    "CustomDataStorageNetworkMixin",
     "EntityMixin",
+    "ExperienceOrbMiningMixin",
+    "ItemStackStorageMixin",
     "LivingEntityMixin",
     "PlayerManagerMixin",
     "PlayerMixin",
@@ -15,6 +20,13 @@
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerMixin",
     "TargetPredicateMixin"
+  ],
+  "client": [
+    "client.ChatComponentDivineMixin",
+    "client.LocalPlayerFluidSelectionMixin",
+    "client.LevelExtractorFluidOutlineMixin",
+    "client.LevelRenderStateMiningMixin",
+    "client.LevelRendererMiningMixin"
   ],
   "injectors": {
     "defaultRequire": 1
