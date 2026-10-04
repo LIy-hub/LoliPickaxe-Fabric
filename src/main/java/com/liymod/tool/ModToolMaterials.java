@@ -1,68 +1,34 @@
 package com.liymod.tool;
 
-import com.liymod.item.ModItems;
-import net.minecraft.block.Block;
-import net.minecraft.item.ToolMaterial;
-import net.minecraft.recipe.Ingredient;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.util.Identifier;
+import com.liymod.LiyMod;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Tier;
+import net.minecraft.world.level.block.Block;
 
-import java.util.function.Supplier;
-
-public enum ModToolMaterials implements ToolMaterial {
-    LOLI(
-            Integer.MAX_VALUE,
-            Float.MAX_VALUE,
-            Float.POSITIVE_INFINITY,
-            30,
-            () -> Ingredient.ofItems(ModItems.LOLI)
+public final class ModToolMaterials {
+    private static final TagKey<Block> INCORRECT_FOR_LOLI_TOOL = TagKey.create(
+            Registries.BLOCK,
+            ResourceLocation.fromNamespaceAndPath(LiyMod.MOD_ID, "incorrect_for_loli_tool")
+    );
+    private static final TagKey<Item> LOLI_REPAIR_MATERIALS = TagKey.create(
+            Registries.ITEM,
+            ResourceLocation.fromNamespaceAndPath(LiyMod.MOD_ID, "loli_repair_materials")
     );
 
-    private final int itemDurability;
-    private final float miningSpeed;
-    private final float attackDamage;
-    private final int enchantability;
-    private final Supplier<Ingredient> repairIngredient;
+    public static final net.minecraft.world.item.Tier LOLI = new net.minecraft.world.item.Tier() {
+        @Override public int getUses() { return Integer.MAX_VALUE; }
+        @Override public float getSpeed() { return Float.MAX_VALUE; }
+        @Override public float getAttackDamageBonus() { return Float.POSITIVE_INFINITY; }
+        @Override public TagKey<Block> getIncorrectBlocksForDrops() { return INCORRECT_FOR_LOLI_TOOL; }
+        @Override public int getEnchantmentValue() { return 30; }
+        @Override public net.minecraft.world.item.crafting.Ingredient getRepairIngredient() {
+            return net.minecraft.world.item.crafting.Ingredient.of(LOLI_REPAIR_MATERIALS);
+        }
+    };
 
-    ModToolMaterials(
-            int itemDurability,
-            float miningSpeed,
-            float attackDamage,
-            int enchantability,
-            Supplier<Ingredient> repairIngredient
-    ) {
-        this.itemDurability = itemDurability;
-        this.miningSpeed = miningSpeed;
-        this.attackDamage = attackDamage;
-        this.enchantability = enchantability;
-        this.repairIngredient = repairIngredient;
-    }
-
-    public int getDurability() {
-        return this.itemDurability;
-    }
-
-    public float getMiningSpeedMultiplier() {
-        return this.miningSpeed;
-    }
-
-    public float getAttackDamage() {
-        return this.attackDamage;
-    }
-
-    public TagKey<Block> getInverseTag() {
-        return TagKey.of(
-                RegistryKeys.BLOCK,
-                Identifier.of("liymod", "incorrect_for_loli_tool")
-        );
-    }
-
-    public int getEnchantability() {
-        return this.enchantability;
-    }
-
-    public Ingredient getRepairIngredient() {
-        return this.repairIngredient.get();
+    private ModToolMaterials() {
     }
 }

@@ -2,44 +2,47 @@ package com.liymod.mixin;
 
 import com.liymod.combat.LoliExecutionManager;
 import com.liymod.protection.TrustedPlayerLifecycle;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(value = PlayerManager.class, priority = Integer.MAX_VALUE)
+@Mixin(value = PlayerList.class, priority = Integer.MAX_VALUE)
 public abstract class PlayerManagerMixin {
     @Inject(method = "remove", at = @At("HEAD"))
-    private void lolipickaxe$beginTrustedDisconnect(ServerPlayerEntity player, CallbackInfo ci) {
+    private void lolipickaxe$beginTrustedDisconnect(ServerPlayer player, CallbackInfo ci) {
         LoliExecutionManager.completeDisconnect(player);
         TrustedPlayerLifecycle.begin(player);
     }
 
     @Inject(method = "remove", at = @At("RETURN"))
-    private void lolipickaxe$endTrustedDisconnect(ServerPlayerEntity player, CallbackInfo ci) {
+    private void lolipickaxe$endTrustedDisconnect(ServerPlayer player, CallbackInfo ci) {
         TrustedPlayerLifecycle.end(player);
     }
 
-    @Inject(method = "respawnPlayer", at = @At("HEAD"))
+    @Inject(method = "respawn", at = @At("HEAD"))
     private void lolipickaxe$beginTrustedRespawn(
-            ServerPlayerEntity player,
+            ServerPlayer player,
             boolean alive,
-            CallbackInfoReturnable<ServerPlayerEntity> cir
+            Entity.RemovalReason reason,
+            CallbackInfoReturnable<ServerPlayer> cir
     ) {
         TrustedPlayerLifecycle.begin(player);
     }
 
-    @Inject(method = "respawnPlayer", at = @At("RETURN"))
+    @Inject(method = "respawn", at = @At("RETURN"))
     private void lolipickaxe$finishTrustedRespawn(
-            ServerPlayerEntity oldPlayer,
+            ServerPlayer oldPlayer,
             boolean alive,
-            CallbackInfoReturnable<ServerPlayerEntity> cir
+            Entity.RemovalReason reason,
+            CallbackInfoReturnable<ServerPlayer> cir
     ) {
         TrustedPlayerLifecycle.end(oldPlayer);
-        ServerPlayerEntity replacement = cir.getReturnValue();
+        ServerPlayer replacement = cir.getReturnValue();
         if (replacement != null) {
             LoliExecutionManager.completeRespawn(oldPlayer, replacement);
         }
