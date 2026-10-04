@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -38,6 +40,8 @@ import net.minecraft.sounds.SoundSource;
 /** Immediate single/range mining for the final pickaxe with bounded modern drops. */
 public final class LoliFinalMiningEvents {
     private static final Set<UUID> ACTIVE_MINERS = new HashSet<>();
+    private static final LoliMiningCooldown CLIENT_COOLDOWN = new LoliMiningCooldown();
+    private static final LoliMiningCooldown SERVER_COOLDOWN = new LoliMiningCooldown();
     private static final Map<Block, Item> SPECIAL_DROPS = Map.ofEntries(
             Map.entry(Blocks.SPAWNER, Items.SPAWNER),
             Map.entry(Blocks.STRUCTURE_BLOCK, Items.STRUCTURE_BLOCK),
@@ -74,6 +78,18 @@ public final class LoliFinalMiningEvents {
     public static void registerEvents() {
         LiyMod.LOGGER.info("Registering final Loli Pickaxe mining events for {}", LiyMod.MOD_ID);
         AttackBlockCallback.EVENT.register(LoliFinalMiningEvents::attackBlock);
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            SERVER_COOLDOWN.forget(handler.player.getUUID());
+            ACTIVE_MINERS.remove(handler.player.getUUID());
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            SERVER_COOLDOWN.clear();
+            ACTIVE_MINERS.clear();
+        });
+    }
+
+    public static void resetClientCooldown() {
+        CLIENT_COOLDOWN.clear();
     }
 
     private static InteractionResult attackBlock(
@@ -91,9 +107,14 @@ public final class LoliFinalMiningEvents {
         // vanilla's hardness/progressive prediction and its competing ABORT/STOP.
         // Radius zero uses the same authoritative action for only the origin block.
         if (level.isClientSide()) {
-            return player.isSpectator() ? InteractionResult.PASS
-                    : clientAttackResult(level.getBlockState(origin),
-                            LoliFluidMining.isEnabled(player.getMainHandItem()));
+            if (player.isSpectator()) return InteractionResult.PASS;
+            var result = clientAttackResult(level.getBlockState(origin),
+                    LoliFluidMining.isEnabled(player.getMainHandItem()));
+            if (result == InteractionResult.SUCCESS && !CLIENT_COOLDOWN.tryAcquire(
+                    player.getUUID(), LoliItemSettings.getMiningRadius(player.getMainHandItem()))) {
+                return InteractionResult.FAIL;
+            }
+            return result;
         }
         if (!(level instanceof ServerLevel serverLevel)
                 || !(player instanceof ServerPlayer serverPlayer)) {
@@ -108,14 +129,15 @@ public final class LoliFinalMiningEvents {
                         LoliFluidMining.isEnabled(serverPlayer.getMainHandItem()))) {
             return InteractionResult.FAIL;
         }
-        if (!ACTIVE_MINERS.add(serverPlayer.getUUID())) {
+        ItemStack tool = serverPlayer.getMainHandItem();
+        int radius = LoliItemSettings.getServerMiningRadius(tool);
+        if (ACTIVE_MINERS.contains(serverPlayer.getUUID())
+                || !SERVER_COOLDOWN.tryAcquire(serverPlayer.getUUID(), radius)) {
             return InteractionResult.SUCCESS_SERVER;
         }
-
-        ItemStack tool = serverPlayer.getMainHandItem();
+        ACTIVE_MINERS.add(serverPlayer.getUUID());
         try {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
-            int radius = LoliItemSettings.getServerMiningRadius(tool);
             boolean brokeAny = false;
             List<BlockPos> changedPositions = new ArrayList<>();
             for (BlockPos target : LoliMiningRange.positions(origin, radius)) {
@@ -139,6 +161,8 @@ public final class LoliFinalMiningEvents {
                 );
             }
         } finally {
+            // Count the gap from completion too, so queued packets cannot repeat a slow action.
+            SERVER_COOLDOWN.finished(serverPlayer.getUUID(), radius);
             ACTIVE_MINERS.remove(serverPlayer.getUUID());
         }
         return InteractionResult.SUCCESS_SERVER;

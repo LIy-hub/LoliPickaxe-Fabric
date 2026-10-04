@@ -18,7 +18,9 @@
   ],
   "client": [
     "client.LocalPlayerFluidSelectionMixin",
-    "client.LevelExtractorFluidOutlineMixin"
+    "client.LevelExtractorFluidOutlineMixin",
+    "client.LevelRenderStateMiningMixin",
+    "client.LevelRendererMiningMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -55,6 +55,12 @@ and survival implementation.
   Saving per-item settings applies before the configuration menu closes, including
   switching back to single-block mode. Client clicks request the immediate server
   action instead of starting vanilla's progressive mining prediction.
+  The targeted block keeps its vanilla outline; a separate white range outline
+  uses vanilla's current window-dependent line width. Range actions have a 100 ms
+  gap after completion, with client packet throttling and server enforcement;
+  single-block mining has no added cooldown. Each received mining batch rebuilds
+  its affected visible section meshes in the same frame rather than distributing
+  them across asynchronous section updates.
 - In Fabric 26.2, the per-item **Select fluid blocks** option enables targeting,
   outlining and mining both source and flowing water/lava while the final pickaxe
   is in the main hand. Disabled by default, it ignores pure fluids during targeting
@@ -150,6 +156,10 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   接入，切换采掘范围会播放恢复的原版 `lolisuccess.ogg`；分级内部储存、黑名单、
   附近掉落物自动收纳及采掘掉落直入储存也已接入。
   范围采掘会由服务端一次完成并以单个有界批次同步给附近客户端，不再逐排刷新。
+- Fabric 26.2 中采掘半径 0 显示「单方块挖掘」，只挖准星指向的方块。范围模式
+  保留中心方块的原版选中框，并叠加白色范围框，线宽使用原版随窗口调整的数值。
+  每次范围采掘完成后保留 100 毫秒间隔，客户端限制发包，服务端独立校验；单方块
+  采掘不增加冷却。客户端收到同一次采掘结果后，在同一帧重建受影响的可见区块网格。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品
