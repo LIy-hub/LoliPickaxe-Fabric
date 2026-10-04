@@ -49,6 +49,7 @@ abstract class FittedContainerScreen<T extends AbstractContainerMenu> extends Ab
         pushPanelTransform(graphics);
         try {
             super.render(graphics, layoutMouseX, layoutMouseY, deltaTicks);
+            renderTooltip(graphics, layoutMouseX, layoutMouseY);
             if (viewport.scale() < 1.0F) {
                 // These grid screens have no text inputs. Flush their deferred tooltips under the
                 // same transform; Screen's later pass sees an already-consumed tooltip.
