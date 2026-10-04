@@ -60,17 +60,21 @@ public final class LoliMiningExperience {
                     Enchantments.MENDING, player, ItemStack::isDamaged);
             if (selected == null) break;
             var stack = selected.getValue();
-            int repairBudget = remaining * 2;
-            if (repairBudget <= 0) break;
-            int repaired = Math.min(repairBudget, stack.getDamageValue());
-            stack.setDamageValue(stack.getDamageValue() - repaired);
-            remaining = afterRepair(remaining, repairBudget, repaired);
+            remaining = applyMendingRepair(stack, remaining);
         }
         if (remaining > 0) player.giveExperiencePoints(remaining);
     }
 
+    /** Native legacy Mending repairs two durability per XP, rounding the debit down. */
+    static int applyMendingRepair(ItemStack stack, int experience) {
+        int repairBudget = (int) Math.min(Integer.MAX_VALUE, (long) experience * 2L);
+        int repaired = Math.min(repairBudget, stack.getDamageValue());
+        stack.setDamageValue(stack.getDamageValue() - repaired);
+        return afterRepair(experience, repairBudget, repaired);
+    }
+
     static int afterRepair(int experience, int repairBudget, int repaired) {
-        return experience - (int) ((long) repaired * experience / repairBudget);
+        return experience - repaired / 2;
     }
 
     public static final class Batch implements AutoCloseable {
