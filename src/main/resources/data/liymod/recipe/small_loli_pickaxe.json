@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "group": "liymod:small_loli_pickaxe",
+  "pattern": [
+    "ABC",
+    " # ",
+    " # "
+  ],
+  "key": {
+    "A": "minecraft:iron_axe",
+    "B": "minecraft:iron_pickaxe",
+    "C": "minecraft:iron_shovel",
+    "#": "minecraft:iron_ingot"
+  },
+  "result": {
+    "id": "liymod:small_loli_pickaxe"
+  }
+}
