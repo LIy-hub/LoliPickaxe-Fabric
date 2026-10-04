@@ -67,8 +67,8 @@ tasks.named('sourcesJar') {
 // Geometry checks run without opening Minecraft or adding a test framework dependency.
 sourceSets {
 	guiTest {
-		compileClasspath += sourceSets.client.output
-		runtimeClasspath += sourceSets.client.output
+		compileClasspath += sourceSets.client.output + sourceSets.main.output + sourceSets.main.compileClasspath
+		runtimeClasspath += sourceSets.client.output + sourceSets.main.runtimeClasspath
 	}
 }
 
@@ -78,8 +78,17 @@ tasks.register('verifyGuiLayout', JavaExec) {
 	mainClass = 'com.liymod.client.gui.EditorLayoutRegressionTest'
 }
 
+tasks.register('verifyStoragePages', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.storage.StoragePagesRegressionTest'
+	workingDir = layout.buildDirectory.dir('storage-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
 tasks.named('check') {
 	dependsOn tasks.named('verifyGuiLayout')
+	dependsOn tasks.named('verifyStoragePages')
 }
 
 jar {

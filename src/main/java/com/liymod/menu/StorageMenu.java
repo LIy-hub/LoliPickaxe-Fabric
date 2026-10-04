@@ -34,8 +34,9 @@ public final class StorageMenu extends AbstractContainerMenu {
         this.hand = data.hand();
         this.ownerStack = player.getItemInHand(hand);
         this.storage = LoliStorageData.open(ownerStack);
-        this.syncedPage = storage.getCurrentPage();
-        this.syncedPageCount = storage.getPageCount();
+        this.syncedPageCount = storage.getVisiblePageCount();
+        this.syncedPage = Math.clamp(storage.getCurrentPage(), 0, syncedPageCount - 1);
+        storage.setCurrentPageFromNetwork(syncedPage);
 
         for (int row = 0; row < 9; row++) {
             for (int column = 0; column < 9; column++) {
@@ -58,7 +59,7 @@ public final class StorageMenu extends AbstractContainerMenu {
         addDataSlot(new DataSlot() {
             @Override
             public int get() {
-                return storage.getPageCount();
+                return storage.getVisiblePageCount();
             }
 
             @Override
@@ -83,13 +84,47 @@ public final class StorageMenu extends AbstractContainerMenu {
     }
 
     public void changePage(ServerPlayer player, int delta) {
-        storage.setCurrentPage(storage.getCurrentPage() + Integer.signum(delta));
-        syncedPage = storage.getCurrentPage();
-        ServerPlayNetworking.send(
-                player,
-                new StoragePageSyncPayload(syncedPage, storage.getPageCount())
-        );
+        storage.setCurrentPage(Math.clamp(storage.getCurrentPage() + Integer.signum(delta),
+                0, storage.getVisiblePageCount() - 1));
         broadcastFullState();
+    }
+
+    @Override
+    public void broadcastChanges() {
+        if (refreshPageState(false)) {
+            // A completed transaction emptied the tail page. Replace all visible slots after the page cue.
+            super.broadcastFullState();
+        } else {
+            super.broadcastChanges();
+        }
+    }
+
+    @Override
+    public void broadcastFullState() {
+        refreshPageState(false);
+        super.broadcastFullState();
+    }
+
+    @Override
+    public void sendAllDataToRemote() {
+        refreshPageState(true);
+        super.sendAllDataToRemote();
+    }
+
+    private boolean refreshPageState(boolean forceCue) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return false;
+        }
+        int count = storage.getVisiblePageCount();
+        int page = Math.clamp(storage.getCurrentPage(), 0, count - 1);
+        boolean pageChanged = page != syncedPage;
+        storage.setCurrentPage(page);
+        if (forceCue || pageChanged || count != syncedPageCount) {
+            syncedPage = page;
+            syncedPageCount = count;
+            ServerPlayNetworking.send(serverPlayer, new StoragePageSyncPayload(page, count));
+        }
+        return pageChanged;
     }
 
     /** Applies the ordered S2C page cue before vanilla writes the following slot snapshot. */

@@ -100,7 +100,7 @@ public final class FinalConfigScreen extends AbstractLoliEditorScreen<FinalConfi
         drawLabel(graphics, titleText, 10, layout.row(0), TEXT_COLOR, mouseX, mouseY);
         drawLabel(graphics, optionText, 36, layout.row(1) + (optionRowHeight - optionText.height()) / 2,
                 TEXT_COLOR, mouseX, mouseY);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.config.page", menu.getOptions().isEmpty() ? 0 : optionIndex + 1, menu.getOptions().size()),
                 layout.width() / 2,

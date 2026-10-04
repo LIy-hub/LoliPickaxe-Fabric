@@ -128,7 +128,7 @@ public final class FinalEnchantmentScreen extends AbstractLoliEditorScreen<Final
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         drawLabel(graphics, titleText, 10, layout.row(0), TEXT_COLOR, mouseX, mouseY);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.enchantment.available"),
                 layout.width() / 2,
@@ -139,13 +139,13 @@ public final class FinalEnchantmentScreen extends AbstractLoliEditorScreen<Final
         drawLabel(graphics, selectionText, 36, layout.row(2) + (selectionRowHeight - selectionText.height()) / 2,
                 TEXT_COLOR, mouseX, mouseY);
 
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.enchantment.level"),
                 layout.width() / 2,
                 layout.row(3),
                 TEXT_COLOR);
-        graphics.centeredText(
+        LoliGui.centeredText(graphics,
                 font,
                 Component.translatable("gui.liymod.enchantment.selected")
                         .append(": " + draftEnchantments.size() + " / " + MAX_ENTRIES),
@@ -156,14 +156,14 @@ public final class FinalEnchantmentScreen extends AbstractLoliEditorScreen<Final
         if (invalidLevel) {
             drawLabel(graphics, errorText, 10, layout.row(7), ERROR_COLOR, mouseX, mouseY);
         } else if (entryLimitReached) {
-            graphics.centeredText(
+            LoliGui.centeredText(graphics,
                     font,
                     Component.literal("64 / 64"),
                     layout.width() / 2,
                     layout.row(7),
                     ERROR_COLOR);
         } else if (selected != null && draftEnchantments.containsKey(selected)) {
-            graphics.centeredText(
+            LoliGui.centeredText(graphics,
                     font,
                     Component.translatable("gui.liymod.enchantment.level")
                             .append(": " + draftEnchantments.get(selected)),

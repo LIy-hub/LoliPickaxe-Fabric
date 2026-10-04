@@ -303,7 +303,7 @@ Assert-True ($passwordPayloadSource -match 'MAX_UTF8_BYTES\s*=\s*256') `
 Assert-True ($storageSource -match 'SLOTS_PER_PAGE\s*=\s*81') `
     'Loli storage page size must remain 81 slots'
 Assert-True ($storageSource -match 'FINAL_PAGE_COUNT\s*=\s*100') `
-    'Final Loli storage must retain 100 pages'
+    'Final Loli storage capacity must retain its 100-page bound'
 Assert-True ($storageSource -match 'MAX_TOTAL_NBT_BYTES\s*=\s*4\s*\*\s*1024\s*\*\s*1024') `
     'Loli storage total NBT safety bound is missing'
 Assert-True ($storageSource -match 'isStorageItem\(stack\)') `
