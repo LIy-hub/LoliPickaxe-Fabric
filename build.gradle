@@ -18,15 +18,21 @@ repositories {
 	mavenCentral()
 }
 
+loom {
+    splitEnvironmentSourceSets()
+    mods { liymod { sourceSet sourceSets.main; sourceSet sourceSets.client } }
+}
+
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
 	inputs.property "version", project.version
+    exclude 'assets/liymod/lolicards/**'
 
 	filesMatching("fabric.mod.json") {
 		expand "version": inputs.properties.version
@@ -45,6 +51,42 @@ java {
 
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
+}
+
+// Geometry checks run without opening Minecraft or adding a test framework dependency.
+sourceSets {
+	guiTest {
+		compileClasspath += sourceSets.client.output + sourceSets.main.output + sourceSets.main.compileClasspath
+		runtimeClasspath += sourceSets.client.output + sourceSets.main.runtimeClasspath
+	}
+}
+
+tasks.register('verifyGuiLayout', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.client.gui.EditorLayoutRegressionTest'
+}
+
+tasks.register('verifyStoragePages', JavaExec) {
+	dependsOn tasks.named('guiTestClasses')
+	classpath = sourceSets.guiTest.runtimeClasspath
+	mainClass = 'com.liymod.storage.StoragePagesRegressionTest'
+	workingDir = layout.buildDirectory.dir('storage-test-run').get().asFile
+	doFirst { workingDir.mkdirs() }
+}
+
+tasks.register('verifyRecipeCodecs', JavaExec) {
+    dependsOn tasks.named('guiTestClasses')
+    classpath = sourceSets.guiTest.runtimeClasspath
+    mainClass = 'com.liymod.recipe.RecipeCodecRegressionTest'
+    workingDir = layout.buildDirectory.dir('recipe-test-run').get().asFile
+    doFirst { workingDir.mkdirs() }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verifyRecipeCodecs')
+	dependsOn tasks.named('verifyGuiLayout')
+	dependsOn tasks.named('verifyStoragePages')
 }
 
 jar {
