@@ -1,4 +1,4 @@
-# Fabric 26.2 GUI layout
+# Fabric 26.3 GUI layout
 
 The configuration, enchantment, potion, teleport and online-card editors use
 runtime-drawn pixel panels. Layout is measured from the active font and translated
@@ -40,8 +40,7 @@ the reported 854x493 window at GUI scale 2. Slot-centre hit tests cover all nine
 rows; a normal small window must retain at least 90 percent of the panel size.
 `verifyStoragePages` exercises real ItemStacks/NBT in
 an isolated bootstrap fixture: growth, shrinkage, sparse page 100, reopening and
-drop-all. It does not exercise a live server connection. Existing release/full-port scripts validate the
-packaged gameplay and resources. These checks do not constitute visual acceptance.
+drop-all. It does not exercise a live server connection. Package inspection checks menu/client classes, matching version metadata, JSON resources and bilingual keys. These checks do not constitute visual acceptance.
 
 In the client, check configuration, enchantment, potion, teleport, online-card,
 storage and password-workbench screens in English and Simplified Chinese. Change
