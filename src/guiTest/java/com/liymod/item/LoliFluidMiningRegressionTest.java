@@ -108,9 +108,11 @@ public final class LoliFluidMiningRegressionTest {
                     "Waterlogged and underwater solids must keep their established fluid state");
         }
         int previousWrites = level.writes;
-        require(!LoliBlockReplacement.remove(level, SOLID, Blocks.AIR.defaultBlockState(), true)
-                        && level.writes == previousWrites,
-                "Air must not trigger world updates or claim a mined block");
+        for (var air : new BlockState[]{Blocks.AIR.defaultBlockState(), Blocks.CAVE_AIR.defaultBlockState(),
+                Blocks.VOID_AIR.defaultBlockState()}) {
+            require(!LoliBlockReplacement.remove(level, SOLID, air, true) && level.writes == previousWrites,
+                    "Every air variant must be skipped without any world updates");
+        }
         level.acceptWrites = false;
         level.blocks.put(SOLID, Blocks.STONE.defaultBlockState());
         require(!LoliBlockReplacement.remove(level, SOLID, level.getBlockState(SOLID), false)

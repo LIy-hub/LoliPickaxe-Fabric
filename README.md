@@ -37,6 +37,10 @@ and survival implementation.
   Large pickaxe storage is compressed only for network transfer and restored on
   receipt, keeping full 100-page storage below vanilla's packet NBT quota without
   changing saved slots, item counts or unrelated custom data.
+  Decoded storage is reused per owning stack and refreshed when saved contents
+  change. Collection opens storage only for eligible nearby drops and saves the
+  whole collection together. Client storage/blacklist menus receive their visible
+  slots from the server without decoding or rewriting all 100 saved pages.
 - While holding the final Loli Pickaxe, press N for per-item mining/combat
   settings, M for enchantments, P for status effects and K for bounded relative
   space folding. The server validates every id, level, setting, dimension,
@@ -67,7 +71,11 @@ and survival implementation.
   The server directly replaces solid blocks with air, avoiding per-block vanilla
   break-effect packets. Loot, Fortune, smelting, experience and storage acceptance
   remain active; waterlogged solids still leave their existing fluid state. Automatic
-  storage is read once and saved once per mining action instead of for every block.
+  storage reuses its decoded snapshot and is saved once per mining action. Indexed
+  partial/empty slots preserve insertion order without scanning every occupied slot
+  for every drop. Unchanged slot encodings and immutable network snapshots are reused.
+  Setting reads use the immutable component directly instead of copying all stored
+  items; air positions are skipped before loot, block writes or result synchronization.
   Block and auto-smelting XP is collected during that action and credited directly
   to the mining player without spawning world orbs, with Mending applied first.
   A held final pickaxe with auto-accept also collects existing XP orbs within the
@@ -173,13 +181,19 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   采掘不增加冷却。客户端收到同一次采掘结果后，在同一帧重建受影响的可见区块网格。
   服务端直接把实体方块替换为空气，省去逐方块的原版碎裂效果发包；掉落、时运、
   自动熔炼、经验和自动收纳继续生效，含水方块仍留下原有流体。镐内储存在同一次
-  采掘中只读取和保存一次，不再为每个方块反复编解码。
+  采掘中复用已解码的数据，结束时保存一次；按可合并槽位和空槽插入，避免每份掉落
+  都扫描全部已占用格子，未变化的槽位编码和网络快照也会复用。
+  读取镐设置不再复制整包物品；空气位置提前跳过，不计算掉落、不写入世界，也不
+  加入采掘结果同步。
   矿物掉落和自动熔炼产生的经验直接收集给采掘玩家，不生成落地经验球；优先用于
   经验修补，剩余部分计入玩家经验。
   手持氪金萝莉并开启自动收纳时，也会吸收周围 4 格已有的经验球，合并经验球中的
   全部经验都会计入。
   大容量镐内储存仅在网络传输时压缩，接收后完整还原，防止 100 页物品数据超过
   原版背包同步的 NBT 解码上限而断开；存档中的槽位、数量及其他自定义数据不变。
+  B 打开的客户端菜单只接收服务端当前页槽位，不再解码或反复重写整份 100 页数据。
+  同一把镐复用收纳缓存，存储内容外部变化后重新校验；附近没有可收纳物品时，不
+  打开或解码储存，同一轮附近物品收纳也只保存一次。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品

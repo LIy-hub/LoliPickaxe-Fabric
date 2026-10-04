@@ -36,61 +36,72 @@ public final class LoliStorageEvents {
                 if (player.tickCount % COLLECT_INTERVAL_TICKS != 0) {
                     continue;
                 }
-                LoliStorageData storage = findStorage(player);
+                ItemStack held = findStorageStack(player);
                 boolean collectExperience = allowsExperienceCollection(player.getMainHandItem())
                         || allowsExperienceCollection(player.getOffhandItem());
-                if (storage == null && !collectExperience) {
+                if (held.isEmpty() && !collectExperience) {
                     continue;
                 }
                 AABB area = player.getBoundingBox().inflate(COLLECT_RANGE);
                 if (collectExperience) {
                     LoliMiningExperience.collectNearby(player, level.getEntitiesOfClass(ExperienceOrb.class, area));
                 }
-                if (storage == null) continue;
+                if (held.isEmpty()) continue;
                 List<ItemEntity> nearby = level.getEntitiesOfClass(ItemEntity.class, area);
-                for (ItemEntity entity : nearby) {
-                    Entity owner = entity.getOwner();
-                    if (!entity.isAlive()
-                            || entity.getItem().isEmpty()
-                            || entity.entityTags().contains(MANUAL_EJECTION_TAG)
-                            || (owner != null && owner != player)) {
-                        continue;
+                if (nearby.isEmpty()) continue;
+                LoliStorageData storage = null;
+                LoliStorageData.Batch batch = null;
+                try {
+                    for (ItemEntity entity : nearby) {
+                        Entity owner = entity.getOwner();
+                        if (!entity.isAlive()
+                                || entity.getItem().isEmpty()
+                                || entity.entityTags().contains(MANUAL_EJECTION_TAG)
+                                || (owner != null && owner != player)) {
+                            continue;
+                        }
+                        if (storage == null) {
+                            storage = LoliStorageData.open(held);
+                            batch = storage.beginBatch();
+                        }
+                        ItemStack before = entity.getItem();
+                        ItemStack remaining = storage.insert(before);
+                        if (remaining.isEmpty()) {
+                            entity.discard();
+                        } else if (remaining.getCount() != before.getCount()) {
+                            entity.setItem(remaining);
+                        }
                     }
-                    ItemStack before = entity.getItem();
-                    ItemStack remaining = storage.insert(before);
-                    if (remaining.isEmpty()) {
-                        entity.discard();
-                    } else if (remaining.getCount() != before.getCount()) {
-                        entity.setItem(remaining);
-                    }
+                } finally {
+                    if (batch != null) batch.close();
                 }
             }
         }
     }
 
-    private static LoliStorageData findStorage(ServerPlayer player) {
+    private static ItemStack findStorageStack(ServerPlayer player) {
         if (player.containerMenu instanceof StorageMenu menu && menu.stillValid(player)) {
             LoliStorageData storage = menu.getStorage();
             if (allowsNearbyCollection(storage.getOwnerStack())) {
-                return storage;
+                return storage.getOwnerStack();
             }
         }
         if (player.containerMenu instanceof BlacklistMenu menu && menu.stillValid(player)) {
             LoliStorageData storage = menu.getStorage();
             if (allowsNearbyCollection(storage.getOwnerStack())) {
-                return storage;
+                return storage.getOwnerStack();
             }
         }
 
         ItemStack mainHand = player.getMainHandItem();
         if (allowsNearbyCollection(mainHand)) {
-            return LoliStorageData.open(mainHand);
+            return mainHand;
         }
         ItemStack offHand = player.getOffhandItem();
         if (allowsNearbyCollection(offHand)) {
-            return LoliStorageData.open(offHand);
+            return offHand;
         }
-        return null;
+        return ItemStack.EMPTY;
     }
 
     /** Marks an intentional player drop so nearby auto-accept cannot undo that action. */

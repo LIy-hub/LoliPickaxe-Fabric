@@ -139,6 +139,8 @@ public final class LoliFinalMiningEvents {
         try (var experience = LoliMiningExperience.begin(serverPlayer)) {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
             boolean autoAccept = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_ACCEPT);
+            boolean selectFluids = LoliFluidMining.isEnabled(tool);
+            boolean autoFurnace = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_FURNACE);
             LoliStorageData storage = autoAccept ? LoliStorageData.open(tool) : null;
             boolean brokeAny = false;
             List<BlockPos> changedPositions = new ArrayList<>();
@@ -147,7 +149,7 @@ public final class LoliFinalMiningEvents {
                     if (!serverLevel.hasChunkAt(target)) {
                         continue;
                     }
-                    if (replaceOne(serverLevel, serverPlayer, tool, target, storage)) {
+                    if (replaceOne(serverLevel, serverPlayer, tool, target, storage, selectFluids, autoFurnace)) {
                         brokeAny = true;
                         changedPositions.add(target.immutable());
                     }
@@ -182,10 +184,13 @@ public final class LoliFinalMiningEvents {
             ServerPlayer player,
             ItemStack tool,
             BlockPos pos,
-            LoliStorageData storage
+            LoliStorageData storage,
+            boolean selectFluids,
+            boolean autoFurnace
     ) {
         BlockState state = level.getBlockState(pos);
-        boolean selectFluids = LoliFluidMining.isEnabled(tool);
+        // Empty positions do not read settings, calculate loot, write blocks or enter the sync batch.
+        if (state.isAir()) return false;
         if (!LoliFluidMining.canMine(state, selectFluids) || !canBreakAt(level, player, pos)) {
             return false;
         }
@@ -226,7 +231,7 @@ public final class LoliFinalMiningEvents {
         level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, state));
         state.spawnAfterBreak(level, pos, tool, true);
 
-        if (LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_FURNACE)) {
+        if (autoFurnace) {
             drops = smeltDrops(level, player, drops);
         }
         deliverDrops(level, player, storage, pos, drops);

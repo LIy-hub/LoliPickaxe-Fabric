@@ -48,13 +48,21 @@ path.
 - In Fabric 26.2 the final pickaxe writes the replacement block state directly,
   avoiding `destroyBlock`'s individual break-effect packets. It retains loot,
   Fortune, special drops, smelting, experience, container removal, neighbor/client
-  updates, permissions and the existing fluid policy. Automatic storage is decoded
-  once per mining action and persisted once at the end, including exceptional exits;
+  updates, permissions and the existing fluid policy. Automatic storage reuses a
+  decoded snapshot per owning stack and is persisted once at the end, including exceptional exits;
   this changes neither saved storage format nor blacklist, size or capacity rules.
 - Large `LoliStorage` custom data is compressed only in the network component codec
   and restored before use. Vanilla's 2 MiB wire NBT quota and the storage's 4 MiB
   decoded budget remain bounded; disk NBT stays unchanged and existing storage
   requires no destructive migration. Other custom data follows the native codec.
+- Storage caches refresh when the owning component's saved contents change and
+  are independent on copied stacks. Partial/empty-slot indexes preserve the legacy
+  ascending merge/insertion order; menu in-place changes invalidate slot encodings.
+  Client menus hold only server-synchronized slots and never rewrite owner NBT.
+  Nearby collection avoids decoding on idle scans and persists once per collection.
+  Immutable custom-data reads and cached network encodings avoid whole-storage
+  copies for settings and repeated sends. Effect limits apply to the effect list,
+  independently of storage size. Air is skipped before per-block mining work.
 - Final-pickaxe block and auto-smelting experience is collected only within the
   active server-thread mining action, applied to Mending equipment and then to the
   mining player directly. No world XP orbs are spawned for that action; unrelated

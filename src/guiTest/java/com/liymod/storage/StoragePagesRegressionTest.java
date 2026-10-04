@@ -3,6 +3,8 @@ package com.liymod.storage;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.DecoderException;
 import java.io.ByteArrayOutputStream;
+import com.liymod.item.LoliFinalEffects;
+import java.util.Map;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponentMap;
@@ -13,6 +15,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.Bootstrap;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -73,8 +76,101 @@ public final class StoragePagesRegressionTest {
         require(fixture(reopened.getOwnerStack()).getVisiblePageCount() == 1,
                 "Empty storage does not survive reopening");
         verifyBatchInsertion();
+        verifyIndexedInsertion();
         verifyLargeStorageNetwork();
-        System.out.println("STORAGE_PAGES_OK empty partial full growth shrink sparse reopen capacity dropAll batch nested exceptionalExit network100Pages boundedDecode=PASS");
+        System.out.println("STORAGE_PAGES_OK empty partial full growth shrink sparse reopen capacity dropAll batch nested exceptionalExit indexedInsertion inPlaceUpdates cacheInvalidation copyIsolation clientMenuNoDecode network100Pages boundedDecode=PASS");
+    }
+
+    private static void verifyIndexedInsertion() throws Exception {
+        ItemStack owner = new ItemStack(Items.NETHERITE_PICKAXE);
+        LoliStorageData storage = fixture(owner);
+        ItemStack variant = new ItemStack(Items.STONE, 62);
+        CompoundTag variantData = new CompoundTag();
+        variantData.putInt("Variant", 1);
+        variant.set(DataComponents.CUSTOM_DATA, CustomData.of(variantData));
+        try (var batch = storage.beginBatch()) {
+            storage.setItem(0, new ItemStack(Items.STONE, 63));
+            storage.setItem(1, variant);
+            storage.setCurrentPage(99);
+            storage.setItem(79, new ItemStack(Items.STONE, 10));
+            require(storage.insert(new ItemStack(Items.STONE, 64)).isEmpty(), "Indexed insertion lost ordinary items");
+        }
+        require(storage.getItem(79).getCount() == 64, "Far partial stacks must merge before earlier empty slots");
+        storage.setCurrentPage(0);
+        require(storage.getItem(0).getCount() == 64 && storage.getItem(1).getCount() == 62
+                        && storage.getItem(2).getCount() == 9,
+                "Indexing must preserve component variants and the original merge/empty-slot order");
+        storage.removeItemNoUpdate(0);
+        require(storage.insert(new ItemStack(Items.STONE, 63)).isEmpty()
+                        && storage.getItem(0).getCount() == 8 && storage.getItem(2).getCount() == 64,
+                "Removed slots must immediately re-enter the empty-slot index");
+        storage.getItem(0).setCount(61); // Reproduce a vanilla menu's in-place transfer.
+        storage.setChanged();
+        require(storage.insert(new ItemStack(Items.STONE, 5)).isEmpty()
+                        && storage.getItem(0).getCount() == 64 && storage.getItem(3).getCount() == 2,
+                "Menu mutations must update both partial-slot and saved-entry caches");
+        storage.getItem(1).setCount(0);
+        storage.setChanged();
+        require(storage.insert(new ItemStack(Items.DIRT, 2)).isEmpty() && storage.getItem(1).is(Items.DIRT),
+                "An in-place emptied slot remained missing from the index");
+        LoliStorageData reopened = fixture(owner.copy());
+        require(reopened.getItem(0).getCount() == 64 && reopened.getItem(1).is(Items.DIRT)
+                        && reopened.getItem(3).getCount() == 2,
+                "Cached encoding saved stale counts or stale component variants");
+    }
+
+    private static void verifyCachedMenu(ItemStack fullOwner) throws Exception {
+        ItemStack owner = fullOwner.copy();
+        long coldStart = System.nanoTime();
+        LoliStorageData cached = LoliStorageData.cached(owner, 100);
+        long coldNanos = System.nanoTime() - coldStart;
+        long warmStart = System.nanoTime();
+        for (int attempt = 0; attempt < 100; attempt++) {
+            require(LoliStorageData.cached(owner, 100) == cached, "An unchanged stack was decoded again");
+        }
+        long warmNanos = System.nanoTime() - warmStart;
+        CustomData original = owner.get(DataComponents.CUSTOM_DATA);
+        long menuStart = System.nanoTime();
+        LoliStorageData menu = LoliStorageData.clientMenu(owner, 100);
+        long menuNanos = System.nanoTime() - menuStart;
+        require(menu.isEmpty(), "Opening a client menu must not decode the owner's 100 saved pages");
+        menu.setCurrentPageFromNetwork(99);
+        menu.setItem(80, new ItemStack(Items.DIAMOND, 7));
+        menu.setBlacklistItem(0, new ItemStack(Items.GOLD_INGOT));
+        menu.getItem(80).shrink(2);
+        menu.setChanged();
+        require(menu.getItem(80).getCount() == 5 && owner.get(DataComponents.CUSTOM_DATA) == original,
+                "Receiving or predicting client slots must never rewrite the owner's authoritative snapshot");
+        ItemStack oldSlot = cached.getItem(80);
+        CustomData.update(DataComponents.CUSTOM_DATA, owner, root -> root.putString("OtherSetting", "preserved"));
+        require(LoliStorageData.cached(owner, 100) == cached && cached.getItem(80) == oldSlot,
+                "Unrelated setting changes must preserve the decoded storage and slot objects");
+        LoliFinalEffects.set(owner, Map.of(Identifier.withDefaultNamespace("night_vision"), 1));
+        require(LoliFinalEffects.get(owner).get(Identifier.withDefaultNamespace("night_vision")) == 1,
+                "A large storage must not disable bounded effect settings");
+        require(LoliStorageData.cached(owner, 100) == cached && cached.getItem(80) == oldSlot,
+                "Effect changes unnecessarily decoded every storage page");
+        ItemStack copy = owner.copy();
+        LoliStorageData copied = LoliStorageData.cached(copy, 100);
+        require(copied != cached, "Copied stacks must not share mutable decoded storage");
+        copied.setCurrentPage(0);
+        copied.removeItemNoUpdate(0);
+        copied.setItem(1, new ItemStack(Items.DIRT, 3));
+        cached.setCurrentPageFromNetwork(0);
+        require(cached.getItem(0).getCount() == 64 && cached.getItem(1).is(Items.STONE),
+                "Mutating a copied pickaxe changed the original cache");
+        owner.set(DataComponents.CUSTOM_DATA, copy.get(DataComponents.CUSTOM_DATA));
+        require(LoliStorageData.cached(owner, 100) == cached && cached.getItem(0).isEmpty()
+                        && cached.getItem(1).is(Items.DIRT) && cached.getItem(1).getCount() == 3,
+                "Externally replaced storage must refresh the existing menu's shared cache");
+        require(cached.insert(new ItemStack(Items.STONE, 64)).isEmpty() && cached.getItem(0).getCount() == 64,
+                "Cache invalidation did not rebuild insertion indexes");
+        long fullStart = System.nanoTime();
+        require(cached.insert(new ItemStack(Items.DIRT, 1)).isEmpty(), "Partial full-storage insertion lost an item");
+        long fullNanos = System.nanoTime() - fullStart;
+        System.out.printf("STORAGE_OPEN_SAMPLE slots=8100 coldDecodeMs=%.3f cached100OpensMs=%.3f clientMenuCreateMs=%.3f indexedFullInsertMs=%.3f%n",
+                coldNanos / 1_000_000.0D, warmNanos / 1_000_000.0D, menuNanos / 1_000_000.0D,
+                fullNanos / 1_000_000.0D);
     }
 
     private static void verifyLargeStorageNetwork() throws Exception {
@@ -138,6 +234,7 @@ public final class StoragePagesRegressionTest {
         }
         require(owner.get(DataComponents.CUSTOM_DATA) == original,
                 "Network encoding must not migrate or mutate saved storage");
+        verifyCachedMenu(owner);
         CompoundTag unrelated = new CompoundTag();
         unrelated.putString("OtherMod", "unchanged");
         CustomData ordinary = CustomData.of(unrelated);

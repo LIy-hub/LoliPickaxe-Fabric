@@ -1,6 +1,7 @@
 package com.liymod.config;
 
 import com.liymod.item.ModItems;
+import com.liymod.nbt.LoliCustomData;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.component.DataComponents;
@@ -187,7 +188,7 @@ public final class LoliItemSettings {
     }
 
     private static CompoundTag root(ItemStack stack) {
-        CompoundTag custom = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        CompoundTag custom = LoliCustomData.view(stack);
         return custom.getCompoundOrEmpty(ROOT_KEY);
     }
 
