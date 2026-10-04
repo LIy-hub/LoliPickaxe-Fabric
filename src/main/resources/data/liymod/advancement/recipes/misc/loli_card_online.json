@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_card_online"
+        "recipes": "liymod:loli_card_online"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

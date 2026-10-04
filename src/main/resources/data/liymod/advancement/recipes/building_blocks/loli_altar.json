@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_altar"
+        "recipes": "liymod:loli_altar"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

@@ -2,6 +2,8 @@
 
 ## 1.0.0 for Minecraft 26.3
 
+- Fix all twenty recipe-unlocked advancement criteria to use the 26.3 `recipes`
+  field. Validate bundled advancements with Minecraft's registry-aware codec.
 - Exclude duplicate legacy card PNGs from runtime and sources JARs. Keep the
   originals in the repository and all ten game-addressable textures unchanged.
 - Create the `mc/26.3` port from `mc/26.2` without changing older branches.

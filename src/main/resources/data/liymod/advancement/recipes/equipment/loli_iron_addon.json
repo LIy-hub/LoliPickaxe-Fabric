@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_iron_addon"
+        "recipes": "liymod:loli_iron_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

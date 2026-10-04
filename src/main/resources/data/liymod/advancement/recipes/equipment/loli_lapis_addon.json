@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_lapis_addon"
+        "recipes": "liymod:loli_lapis_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

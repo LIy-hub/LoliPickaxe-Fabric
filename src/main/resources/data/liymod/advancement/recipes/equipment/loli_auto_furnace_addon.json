@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_auto_furnace_addon"
+        "recipes": "liymod:loli_auto_furnace_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }

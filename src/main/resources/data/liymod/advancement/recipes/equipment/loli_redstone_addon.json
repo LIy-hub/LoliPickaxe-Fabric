@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "liymod:loli_redstone_addon"
+        "recipes": "liymod:loli_redstone_addon"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
