@@ -1,0 +1,28 @@
+name: Publish verified 24 LoliPickaxe builds
+on:
+  push:
+    branches: ["codex/publish-24-builds-20261005"]
+permissions:
+  contents: write
+  actions: read
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: LIy-hub/LoliPickaxe-Fabric
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve exact successful CI builds and verify original JARs
+        run: python3 .github/release-20261005/publish_ci.py
+      - name: Preserve publication evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: publication-evidence-24-builds
+          path: |
+            .github/release-20261005/ci-release/verification-manifest.json
+            .github/release-20261005/ci-release/SHA256SUMS.txt
+            .github/release-20261005/ci-publication-verification.json
+          if-no-files-found: warn
