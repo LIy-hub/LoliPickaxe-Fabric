@@ -1,4 +1,4 @@
-# Fabric 1.21.11 GUI layout
+# Fabric 1.21.9 GUI layout
 
 The configuration, enchantment, potion, teleport and online-card editors use
 runtime-drawn pixel panels. Layout is measured from the active font and translated
