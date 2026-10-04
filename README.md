@@ -47,6 +47,15 @@ and survival implementation.
   loaded entities within 1024 blocks. Inventory-wide holder protection is available as
   an operator option but is disabled by default, preserving the port's original
   main-hand rule.
+- In Fabric 26.2, the per-item **Select fluid blocks** option enables targeting,
+  outlining and mining both source and flowing water/lava while the final pickaxe
+  is in the main hand. Disabled by default, it ignores pure fluids during targeting
+  and preserves them during range mining. Waterlogged/underwater solid blocks still
+  mine normally and leave their vanilla fluid state; fluids produce no item drops.
+  Clearing obeys the configured mining radius, loaded chunks, reach, world border,
+  spawn protection and player build restrictions. Nearby liquid can flow back
+  naturally. The existing `stop_on_liquid` property/item key is retained; an old
+  saved `true` now enables this corrected behavior.
 - Bundled cards and the album display all ten original artworks. The online card
   accepts HTTPS URLs through sneak-use and loads them asynchronously with strict
   time, size, MIME and image-dimension limits. The Loli record is a playable
@@ -144,6 +153,12 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   可选自动范围处决、药水效果和主人绑定掉落物召回；直接右键处决与 6 度挥击解析
   均覆盖 1024 格内所有已加载实体。背包任意位置防护可由管理员开启，但默认关闭，
   因而仍保持当前移植的主手防护规则。
+- Fabric 26.2 单件配置中的「可选择流体方块」默认关闭。主手持氪金萝莉并开启后，
+  水源、流水、岩浆源及流动岩浆均可选中、显示选中轮廓并挖掘；关闭时视线忽略纯流体，
+  范围采掘保留纯流体。含水或水下实体方块照常采掘，并留下原版流体状态；纯流体
+  不产生掉落物。清除遵循采掘半径、已加载区块、接触距离、世界边界、出生点保护及
+  玩家建造限制，附近流体仍可自然流回。保留旧配置/物品键 `stop_on_liquid`，旧存档
+  中的 `true` 现在会启用修正后的流体选中与挖掘行为。
 - 卡片与卡片册可浏览原版全部十张图片；网络卡片通过潜行右键配置 HTTPS 地址，
   并以异步、超时、大小/MIME/尺寸上限安全加载。萝莉唱片可由唱片机播放；卡片、
   卡册、苦力怕唱片和生物灵魂的原版掉落概率也已恢复并可配置。

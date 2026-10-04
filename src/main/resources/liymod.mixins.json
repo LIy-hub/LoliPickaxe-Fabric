@@ -16,6 +16,10 @@
     "ServerPlayerInteractionManagerMixin",
     "TargetPredicateMixin"
   ],
+  "client": [
+    "client.LocalPlayerFluidSelectionMixin",
+    "client.LevelExtractorFluidOutlineMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
 	}

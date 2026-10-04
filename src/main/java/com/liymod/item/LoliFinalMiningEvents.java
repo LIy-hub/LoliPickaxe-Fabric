@@ -1,6 +1,7 @@
 package com.liymod.item;
 
 import com.liymod.LiyMod;
+import com.liymod.combat.LoliExecutionManager;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
 import com.liymod.storage.LoliStorageData;
@@ -30,6 +31,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
@@ -87,6 +89,15 @@ public final class LoliFinalMiningEvents {
                 || !LoliItemSettings.isFinalPickaxe(serverPlayer.getMainHandItem())) {
             return InteractionResult.PASS;
         }
+        // Fabric invokes this callback before vanilla's spectator, reach and build checks.
+        if (serverPlayer.isSpectator() || LoliExecutionManager.isDeadLocked(serverPlayer)
+                || !serverLevel.isInWorldBounds(origin) || !serverLevel.hasChunkAt(origin)
+                || !serverPlayer.isWithinBlockInteractionRange(origin, 1.0D)
+                || !canBreakAt(serverLevel, serverPlayer, origin)
+                || !LoliFluidMining.canMine(serverLevel.getBlockState(origin),
+                        LoliFluidMining.isEnabled(serverPlayer.getMainHandItem()))) {
+            return InteractionResult.FAIL;
+        }
         if (!ACTIVE_MINERS.add(serverPlayer.getUUID())) {
             return InteractionResult.SUCCESS_SERVER;
         }
@@ -135,12 +146,17 @@ public final class LoliFinalMiningEvents {
             BlockPos pos
     ) {
         BlockState state = level.getBlockState(pos);
-        if (state.isAir()
-                || !player.mayInteract(level, pos)
-                || player.blockActionRestricted(level, pos, player.gameMode())
-                || (LoliItemSettings.getBoolean(tool, LoliConfigOption.STOP_ON_LIQUID)
-                && !state.getFluidState().isEmpty())) {
+        boolean selectFluids = LoliFluidMining.isEnabled(tool);
+        if (!LoliFluidMining.canMine(state, selectFluids) || !canBreakAt(level, player, pos)) {
             return false;
+        }
+
+        if (LoliFluidMining.isFluidBlock(state)) {
+            if (!LoliFluidMining.clearFluid(level, pos, state, selectFluids)) {
+                return false;
+            }
+            level.gameEvent(GameEvent.BLOCK_DESTROY, pos, GameEvent.Context.of(player, state));
+            return true;
         }
 
         BlockEntity blockEntity = state.hasBlockEntity() ? level.getBlockEntity(pos) : null;
@@ -175,6 +191,13 @@ public final class LoliFinalMiningEvents {
         }
         deliverDrops(level, player, tool, pos, drops);
         return true;
+    }
+
+    private static boolean canBreakAt(ServerLevel level, ServerPlayer player, BlockPos pos) {
+        return level.isInWorldBounds(pos) && level.getWorldBorder().isWithinBounds(pos)
+                && level.mayInteract(player, pos) && player.mayInteract(level, pos)
+                && !level.getServer().isUnderSpawnProtection(level, pos, player)
+                && !player.blockActionRestricted(level, pos, player.gameMode());
     }
 
     private static List<ItemStack> smeltDrops(
