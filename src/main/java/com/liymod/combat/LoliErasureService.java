@@ -1,6 +1,7 @@
 package com.liymod.combat;
 
 import com.liymod.LiyMod;
+import com.liymod.compat.StrengthConfrontation;
 import com.liymod.damage_type.ModDamageSources;
 import com.liymod.protection.LoliProtection;
 import net.minecraft.network.chat.Component;
@@ -54,6 +55,10 @@ public final class LoliErasureService {
             return immune(serverWorld, attacker, target);
         }
 
+        if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
+            StrengthConfrontation.prepareAbsoluteExecution(target);
+        }
+
         DamageSource source = ModDamageSources.loli(serverWorld, attacker);
         LoliExecutionTicket ticket = LoliExecutionManager.begin(
                 target,
@@ -67,51 +72,70 @@ public final class LoliErasureService {
 
         if (ticket.state() == LoliExecutionTicket.State.DEAD_LOCK) {
             LoliExecutionManager.lock(target);
+            if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
+                StrengthConfrontation.onAbsoluteDeadLock(target);
+            }
             return Result.EXECUTED;
         }
 
-        int playerDeathsBefore = getPlayerDeathCount(target);
-        tryNormalDamage(target, source);
-        recordObservedPlayerDeath(target, playerDeathsBefore);
-        if (LoliExecutionManager.abortForDefense(target)) {
-            return immune(serverWorld, attacker, target);
-        }
+        try (LoliLegacyExecutionPolicy.PreparedExecution legacyExecution =
+                     LoliLegacyExecutionPolicy.prepare(
+                             authority == ExecutionAuthority.ABSOLUTE_EXECUTION ? attacker : null,
+                             target
+                     )) {
+            int playerDeathsBefore = getPlayerDeathCount(target);
+            tryNormalDamage(target, source);
+            recordObservedPlayerDeath(target, playerDeathsBefore);
+            if (LoliExecutionManager.abortForDefense(target)) {
+                return immune(serverWorld, attacker, target);
+            }
 
-        if (target instanceof LivingEntity living) {
-            if (!LoliExecutionManager.isDeathCommitted(target)) {
+            if (target instanceof LivingEntity living) {
+                if (!LoliExecutionManager.isDeathCommitted(target)) {
+                    LoliExecutionManager.beginCommit(target);
+                    if (LoliExecutionManager.abortForDefense(target)) {
+                        return immune(serverWorld, attacker, target);
+                    }
+                    tryNormalDeath(living, source);
+                    recordObservedPlayerDeath(target, playerDeathsBefore);
+                    if (LoliExecutionManager.abortForDefense(target)) {
+                        return immune(serverWorld, attacker, target);
+                    }
+                }
+
+                if (!LoliExecutionManager.isDeathCommitted(target)) {
+                    if (LoliExecutionManager.abortForDefense(target)) {
+                        return immune(serverWorld, attacker, target);
+                    }
+                    forceFallbackDeath(living, source);
+                    if (LoliExecutionManager.abortForDefense(target)) {
+                        return immune(serverWorld, attacker, target);
+                    }
+                }
+            } else {
                 LoliExecutionManager.beginCommit(target);
                 if (LoliExecutionManager.abortForDefense(target)) {
                     return immune(serverWorld, attacker, target);
                 }
-                tryNormalDeath(living, source);
-                recordObservedPlayerDeath(target, playerDeathsBefore);
-                if (LoliExecutionManager.abortForDefense(target)) {
-                    return immune(serverWorld, attacker, target);
-                }
+                LoliExecutionManager.markDeathCommitted(target);
             }
 
-            if (!LoliExecutionManager.isDeathCommitted(target)) {
-                if (LoliExecutionManager.abortForDefense(target)) {
-                    return immune(serverWorld, attacker, target);
-                }
-                forceFallbackDeath(living, source);
-                if (LoliExecutionManager.abortForDefense(target)) {
-                    return immune(serverWorld, attacker, target);
-                }
-            }
-        } else {
-            LoliExecutionManager.beginCommit(target);
             if (LoliExecutionManager.abortForDefense(target)) {
                 return immune(serverWorld, attacker, target);
             }
-            LoliExecutionManager.markDeathCommitted(target);
+            LoliExecutionManager.lock(target);
+            if (LoliExecutionManager.abortForDefense(target)) {
+                return immune(serverWorld, attacker, target);
+            }
+            if (!LoliExecutionManager.isDeadLocked(target)) {
+                return Result.IGNORED;
+            }
+            legacyExecution.commit();
+            if (authority == ExecutionAuthority.ABSOLUTE_EXECUTION) {
+                StrengthConfrontation.onAbsoluteDeadLock(target);
+            }
+            return Result.EXECUTED;
         }
-
-        if (LoliExecutionManager.abortForDefense(target)) {
-            return immune(serverWorld, attacker, target);
-        }
-        LoliExecutionManager.lock(target);
-        return Result.EXECUTED;
     }
 
     private static Result immune(
