@@ -136,7 +136,7 @@ public final class LoliFinalMiningEvents {
             return InteractionResult.SUCCESS_SERVER;
         }
         ACTIVE_MINERS.add(serverPlayer.getUUID());
-        try {
+        try (var experience = LoliMiningExperience.begin(serverPlayer)) {
             LoliPickaxeItem.refreshEnchantments(tool, serverLevel);
             boolean autoAccept = LoliItemSettings.getBoolean(tool, LoliConfigOption.AUTO_ACCEPT);
             LoliStorageData storage = autoAccept ? LoliStorageData.open(tool) : null;

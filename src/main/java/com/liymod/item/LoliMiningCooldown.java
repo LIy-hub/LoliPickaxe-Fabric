@@ -7,7 +7,7 @@ import java.util.function.LongSupplier;
 
 /** Range actions leave a short gap; single-block actions never consume this gate. */
 final class LoliMiningCooldown {
-    static final long INTERVAL_NANOS = 100_000_000L;
+    static final long INTERVAL_NANOS = 20_000_000L;
     private final Map<UUID, Long> nextAllowed = new HashMap<>();
     private final LongSupplier clock;
 

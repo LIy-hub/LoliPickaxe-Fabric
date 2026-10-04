@@ -51,6 +51,13 @@ path.
   updates, permissions and the existing fluid policy. Automatic storage is decoded
   once per mining action and persisted once at the end, including exceptional exits;
   this changes neither saved storage format nor blacklist, size or capacity rules.
+- Final-pickaxe block and auto-smelting experience is collected only within the
+  active server-thread mining action, applied to Mending equipment and then to the
+  mining player directly. No world XP orbs are spawned for that action; unrelated
+  experience awards retain their native behavior. Range actions retain a 20 ms
+  completion gap, independently enforced on both sides.
+  A held final pickaxe with auto-accept also collects nearby existing XP orbs in
+  the normal four-block collection area, preserving each merged orb's complete count.
 
 ## Active execution behavior
 

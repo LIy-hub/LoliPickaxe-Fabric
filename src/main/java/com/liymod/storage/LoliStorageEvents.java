@@ -3,6 +3,7 @@ package com.liymod.storage;
 import com.liymod.LiyMod;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.config.LoliItemSettings;
+import com.liymod.item.LoliMiningExperience;
 import com.liymod.menu.BlacklistMenu;
 import com.liymod.menu.StorageMenu;
 import java.util.List;
@@ -11,6 +12,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.AABB;
@@ -35,10 +37,16 @@ public final class LoliStorageEvents {
                     continue;
                 }
                 LoliStorageData storage = findStorage(player);
-                if (storage == null) {
+                boolean collectExperience = allowsExperienceCollection(player.getMainHandItem())
+                        || allowsExperienceCollection(player.getOffhandItem());
+                if (storage == null && !collectExperience) {
                     continue;
                 }
                 AABB area = player.getBoundingBox().inflate(COLLECT_RANGE);
+                if (collectExperience) {
+                    LoliMiningExperience.collectNearby(player, level.getEntitiesOfClass(ExperienceOrb.class, area));
+                }
+                if (storage == null) continue;
                 List<ItemEntity> nearby = level.getEntitiesOfClass(ItemEntity.class, area);
                 for (ItemEntity entity : nearby) {
                     Entity owner = entity.getOwner();
@@ -103,5 +111,10 @@ public final class LoliStorageEvents {
         }
         return !LoliItemSettings.isFinalPickaxe(stack)
                 || LoliItemSettings.getBoolean(stack, LoliConfigOption.AUTO_ACCEPT);
+    }
+
+    private static boolean allowsExperienceCollection(ItemStack stack) {
+        return LoliItemSettings.isFinalPickaxe(stack)
+                && LoliItemSettings.getBoolean(stack, LoliConfigOption.AUTO_ACCEPT);
     }
 }

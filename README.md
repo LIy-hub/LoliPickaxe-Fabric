@@ -56,7 +56,7 @@ and survival implementation.
   switching back to single-block mode. Client clicks request the immediate server
   action instead of starting vanilla's progressive mining prediction.
   The targeted block keeps its vanilla outline; a separate white range outline
-  uses vanilla's current window-dependent line width. Range actions have a 100 ms
+  uses vanilla's current window-dependent line width. Range actions have a 20 ms
   gap after completion, with client packet throttling and server enforcement;
   single-block mining has no added cooldown. Each received mining batch rebuilds
   its affected visible section meshes in the same frame rather than distributing
@@ -65,6 +65,10 @@ and survival implementation.
   break-effect packets. Loot, Fortune, smelting, experience and storage acceptance
   remain active; waterlogged solids still leave their existing fluid state. Automatic
   storage is read once and saved once per mining action instead of for every block.
+  Block and auto-smelting XP is collected during that action and credited directly
+  to the mining player without spawning world orbs, with Mending applied first.
+  A held final pickaxe with auto-accept also collects existing XP orbs within the
+  same four-block nearby collection area, including every unit in merged stacks.
 - In Fabric 26.2, the per-item **Select fluid blocks** option enables targeting,
   outlining and mining both source and flowing water/lava while the final pickaxe
   is in the main hand. Disabled by default, it ignores pure fluids during targeting
@@ -162,11 +166,15 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
   范围采掘会由服务端一次完成并以单个有界批次同步给附近客户端，不再逐排刷新。
 - Fabric 26.2 中采掘半径 0 显示「单方块挖掘」，只挖准星指向的方块。范围模式
   保留中心方块的原版选中框，并叠加白色范围框，线宽使用原版随窗口调整的数值。
-  每次范围采掘完成后保留 100 毫秒间隔，客户端限制发包，服务端独立校验；单方块
+  每次范围采掘完成后保留 20 毫秒间隔，客户端限制发包，服务端独立校验；单方块
   采掘不增加冷却。客户端收到同一次采掘结果后，在同一帧重建受影响的可见区块网格。
   服务端直接把实体方块替换为空气，省去逐方块的原版碎裂效果发包；掉落、时运、
   自动熔炼、经验和自动收纳继续生效，含水方块仍留下原有流体。镐内储存在同一次
   采掘中只读取和保存一次，不再为每个方块反复编解码。
+  矿物掉落和自动熔炼产生的经验直接收集给采掘玩家，不生成落地经验球；优先用于
+  经验修补，剩余部分计入玩家经验。
+  手持氪金萝莉并开启自动收纳时，也会吸收周围 4 格已有的经验球，合并经验球中的
+  全部经验都会计入。
 - 手持任一种萝莉镐时，B 打开 9×9 分页储存，Shift+B 丢出全部储存物，U 编辑
   9×9 幽灵槽黑名单。氪金萝莉提供 100 页，普通萝莉页数随储存升级级数变化；
   只有主手或副手实际持有储存镐时才会自动吸取附近掉落物，玩家主动丢出的物品
