@@ -1,10 +1,10 @@
 package com.liymod.combat;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 
 public final class LoliExecutionTicket {
     public enum State {
@@ -30,9 +30,9 @@ public final class LoliExecutionTicket {
             DamageSource damageSource,
             ExecutionAuthority authority
     ) {
-        this.targetId = target.getUuid();
+        this.targetId = target.getUUID();
         this.originalEntityId = target.getId();
-        this.attackerId = attacker == null ? null : attacker.getUuid();
+        this.attackerId = attacker == null ? null : attacker.getUUID();
         this.damageSource = damageSource;
         this.authority = authority;
         this.target = target;

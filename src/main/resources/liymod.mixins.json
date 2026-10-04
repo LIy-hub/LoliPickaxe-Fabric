@@ -5,6 +5,7 @@
   "mixins": [
     "accessor.EntityAccessor",
     "accessor.LivingEntityAccessor",
+    "accessor.PrimedTntAccessor",
     "EntityMixin",
     "LivingEntityMixin",
     "PlayerManagerMixin",
@@ -13,9 +14,15 @@
     "ServerPlayNetworkHandlerMixin",
     "ServerPlayerEntityMixin",
     "ServerPlayerInteractionManagerMixin",
-    "TargetPredicateMixin"
+    "TargetPredicateMixin",
+    "LootTableMixin",
+    "LegacyItemStackMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  },
+  "client": [
+    "client.LegacyPickRangeMixin",
+    "client.LegacyGameRendererMixin"
+  ]
 }
