@@ -11,6 +11,7 @@ import java.util.UUID;
 public enum LoliConfigOption {
     MAX_MINING_RANGE("max_mining_range", ValueType.INTEGER, 5, 0.0D, 5.0D, false),
     MINING_RADIUS("mining_radius", ValueType.INTEGER, 0, 0.0D, 5.0D, true),
+    // Keep the legacy enum/id so existing server properties and per-pickaxe data remain readable.
     STOP_ON_LIQUID("stop_on_liquid", ValueType.BOOLEAN, false, 0.0D, 1.0D, true),
     AUTO_FURNACE("auto_furnace", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),
     AUTO_ACCEPT("auto_accept", ValueType.BOOLEAN, true, 0.0D, 1.0D, true),

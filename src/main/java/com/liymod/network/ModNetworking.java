@@ -52,27 +52,27 @@ public final class ModNetworking {
                 LoliCardOnlineUpdatePayload.CODEC
         );
         ServerPlayNetworking.registerGlobalReceiver(PasswordUpdatePayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof PasswordWorkbenchMenu menu
                             && menu.stillValid(context.player())) {
                         menu.setPassword(payload.password());
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(StorageOpenPayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (!LoliStorageMenus.open(context.player(), InteractionHand.MAIN_HAND, payload.mode())) {
                         LoliStorageMenus.open(context.player(), InteractionHand.OFF_HAND, payload.mode());
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(StoragePagePayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof StorageMenu menu
                             && menu.stillValid(context.player())) {
                         menu.changePage(context.player(), payload.delta());
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(StorageDropAllPayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof StorageMenu menu
                             && menu.stillValid(context.player())) {
                         menu.dropAll(context.player());
@@ -81,27 +81,27 @@ public final class ModNetworking {
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(BlacklistUpdatePayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof BlacklistMenu menu
                             && menu.stillValid(context.player())) {
                         menu.updateEntry(payload.slot(), payload.clear());
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliMenuOpenPayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (!FinalToolMenus.open(context.player(), InteractionHand.MAIN_HAND, payload.mode())) {
                         FinalToolMenus.open(context.player(), InteractionHand.OFF_HAND, payload.mode());
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliItemSettingPayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof FinalConfigMenu menu
                             && menu.stillValid(context.player())) {
                         menu.update(payload.optionId(), payload.encodedValue());
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliEnchantmentUpdatePayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof FinalEnchantmentMenu menu
                             && menu.stillValid(context.player())) {
                         LoliFinalEnchantments.update(
@@ -113,7 +113,7 @@ public final class ModNetworking {
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliEffectUpdatePayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof FinalEffectMenu menu
                             && menu.stillValid(context.player())) {
                         LoliFinalEffects.update(
@@ -125,7 +125,7 @@ public final class ModNetworking {
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliTeleportPayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     if (context.player().containerMenu instanceof FinalTeleportMenu menu
                             && menu.stillValid(context.player())) {
                         LoliTeleportService.teleportRelative(
@@ -138,7 +138,7 @@ public final class ModNetworking {
                     }
                 }));
         ServerPlayNetworking.registerGlobalReceiver(LoliCardOnlineUpdatePayload.TYPE, (payload, context) ->
-                context.player().getServer().execute(() -> {
+                LoliPacketTasks.execute(context.player().getServer(), () -> {
                     var stack = context.player().getItemInHand(payload.hand());
                     if (stack.is(ModItems.LOLI_CARD_ONLINE)) {
                         LoliCardData.setUrl(stack, payload.url());
