@@ -19,7 +19,7 @@ public final class LoliPickaxeUpgradeRecipe extends CustomRecipe {
     public LoliPickaxeUpgradeRecipe() { super(net.minecraft.world.item.crafting.CraftingBookCategory.MISC); }
     public static final MapCodec<LoliPickaxeUpgradeRecipe> MAP_CODEC = MapCodec.unit(LoliPickaxeUpgradeRecipe::new);
     public static final StreamCodec<RegistryFriendlyByteBuf, LoliPickaxeUpgradeRecipe> STREAM_CODEC =
-            StreamCodec.unit(new LoliPickaxeUpgradeRecipe());
+            StreamCodec.of((buffer, recipe) -> { }, buffer -> new LoliPickaxeUpgradeRecipe());
 
     @Override
     public boolean matches(CraftingInput input, Level level) {
