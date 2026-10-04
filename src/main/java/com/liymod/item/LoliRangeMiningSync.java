@@ -15,10 +15,14 @@ public final class LoliRangeMiningSync {
     }
 
     public static void send(ServerLevel level, BlockPos origin, List<BlockPos> changedPositions) {
-        if (changedPositions.isEmpty()) {
+        // This legacy batch is an AIR-only update. Waterlogged blocks and fluid refills
+        // keep their real state through vanilla block packets instead of becoming ghost air.
+        List<BlockPos> airPositions = changedPositions.stream()
+                .filter(pos -> level.getBlockState(pos).isAir()).toList();
+        if (airPositions.isEmpty()) {
             return;
         }
-        LoliRangeMiningSyncPayload payload = new LoliRangeMiningSyncPayload(changedPositions);
+        LoliRangeMiningSyncPayload payload = new LoliRangeMiningSyncPayload(airPositions);
         double centerX = origin.getX() + 0.5D;
         double centerY = origin.getY() + 0.5D;
         double centerZ = origin.getZ() + 0.5D;

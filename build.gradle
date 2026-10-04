@@ -117,3 +117,31 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+tasks.register('verifyFluidMining', JavaExec) {
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.item.LoliFluidMiningRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyFluidMining') }
+
+tasks.register('verifyMiningInteractions', JavaExec) {
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.item.MiningInteractionRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyMiningInteractions') }
+
+tasks.register('verifyKillSummaries', JavaExec) {
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.combat.LoliKillSummaryRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyKillSummaries') }
+
+tasks.register('verifyDivineChat', JavaExec) {
+ dependsOn tasks.named('guiTestClasses')
+ classpath = sourceSets.guiTest.runtimeClasspath
+ mainClass = 'com.liymod.client.gui.LoliChatRainbowRegressionTest'
+}
+tasks.named('check') { dependsOn tasks.named('verifyDivineChat') }
