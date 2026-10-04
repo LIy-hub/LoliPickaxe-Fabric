@@ -210,6 +210,9 @@ Fabric 环境重新实现；它并非原作者发布的官方续作。
 
 ## Development
 
+See [GUI layout and validation](docs/gui-validation.md) for editor behavior and
+client checks / 界面行为与客户端检查见上述文档。
+
 Build and run the configuration regression checks with Java 25:
 
 ```powershell

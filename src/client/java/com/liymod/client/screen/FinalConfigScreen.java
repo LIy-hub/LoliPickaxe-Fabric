@@ -1,5 +1,7 @@
 package com.liymod.client.screen;
 
+import com.liymod.client.gui.EditorLayout;
+import com.liymod.client.gui.LoliGui;
 import com.liymod.config.LoliConfigOption;
 import com.liymod.menu.FinalConfigMenu;
 import com.liymod.network.LoliItemSettingPayload;
@@ -11,17 +13,11 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.Tooltip;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 
 /** Server-authoritative editor for the final pickaxe's per-item options. */
-public final class FinalConfigScreen extends AbstractContainerScreen<FinalConfigMenu> {
-    private static final Identifier TEXTURE =
-            Identifier.fromNamespaceAndPath("liymod", "textures/gui/loli_pickaxe_config.png");
-    private static final int PANEL_HEIGHT = 120;
+public final class FinalConfigScreen extends AbstractLoliEditorScreen<FinalConfigMenu> {
     private static final int TEXT_COLOR = 0xFF404040;
     private static final int ERROR_COLOR = 0xFFB02020;
 
@@ -32,9 +28,14 @@ public final class FinalConfigScreen extends AbstractContainerScreen<FinalConfig
     private Button previousButton;
     private Button nextButton;
     private boolean invalidValue;
+    private LoliGui.TextBlock titleText;
+    private LoliGui.TextBlock optionText;
+    private LoliGui.TextBlock helpText;
+    private LoliGui.TextBlock errorText;
+    private int optionRowHeight;
 
     public FinalConfigScreen(FinalConfigMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title, 220, 140);
+        super(menu, inventory, title);
         for (LoliConfigOption option : menu.getOptions()) {
             draftValues.put(option.id(), menu.getEncodedValue(option));
         }
@@ -42,29 +43,42 @@ public final class FinalConfigScreen extends AbstractContainerScreen<FinalConfig
 
     @Override
     protected void init() {
+        String previousValue = valueBox == null ? null : valueBox.getValue();
+        boolean previousInvalid = invalidValue;
         super.init();
+        int panelWidth = EditorLayout.panelWidth(width, 300);
+        int contentWidth = panelWidth - 20;
+        titleText = LoliGui.text(font, title, contentWidth, 2);
+        helpText = LoliGui.text(font, Component.translatable("gui.liymod.config.server_authoritative"), contentWidth, 2);
+        errorText = LoliGui.text(font, Component.translatable("gui.liymod.config.invalid"), contentWidth, 2);
+        optionRowHeight = menu.getOptions().stream()
+                .mapToInt(option -> LoliGui.text(font, Component.translatable(option.translationKey()), contentWidth - 52, 2).height())
+                .max().orElse(font.lineHeight);
+        optionRowHeight = Math.max(20, optionRowHeight);
+        placePanel(EditorLayout.create(width, height, 300, titleText.height(), optionRowHeight, 20,
+                font.lineHeight, 20, Math.max(helpText.height(), errorText.height())));
         previousButton = addRenderableWidget(Button.builder(
                         Component.literal("<"),
                         button -> changeOption(-1))
-                .bounds(leftPos + 10, topPos + 28, 20, 20)
+                .bounds(leftPos + 10, topPos + layout.row(1), 20, 20)
                 .tooltip(Tooltip.create(Component.translatable("gui.liymod.config.previous")))
                 .build());
         nextButton = addRenderableWidget(Button.builder(
                         Component.literal(">"),
                         button -> changeOption(1))
-                .bounds(leftPos + 190, topPos + 28, 20, 20)
+                .bounds(leftPos + layout.width() - 30, topPos + layout.row(1), 20, 20)
                 .tooltip(Tooltip.create(Component.translatable("gui.liymod.config.next")))
                 .build());
         booleanButton = addRenderableWidget(Button.builder(
                         Component.empty(),
                         button -> toggleBoolean())
-                .bounds(leftPos + 70, topPos + 58, 80, 20)
+                .bounds(leftPos + (layout.width() - 100) / 2, topPos + layout.row(2), 100, 20)
                 .build());
         valueBox = new EditBox(
                 font,
-                leftPos + 30,
-                topPos + 58,
-                160,
+                leftPos + 10,
+                topPos + layout.row(2),
+                layout.contentWidth(),
                 20,
                 Component.translatable("gui.liymod.config.title"));
         valueBox.setMaxLength(LoliItemSettingPayload.MAX_VALUE_LENGTH);
@@ -72,64 +86,28 @@ public final class FinalConfigScreen extends AbstractContainerScreen<FinalConfig
         addRenderableWidget(Button.builder(
                         Component.translatable("gui.liymod.config.save"),
                         button -> saveAndClose())
-                .bounds(leftPos + 10, topPos + 94, 200, 20)
+                .bounds(leftPos + 10, topPos + layout.row(4), layout.contentWidth(), 20)
                 .build());
         showCurrentOption();
-    }
-
-    @Override
-    public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float deltaTicks) {
-        super.extractBackground(graphics, mouseX, mouseY, deltaTicks);
-        graphics.blit(
-                RenderPipelines.GUI_TEXTURED,
-                TEXTURE,
-                leftPos,
-                topPos,
-                0.0F,
-                0.0F,
-                imageWidth,
-                PANEL_HEIGHT,
-                imageWidth,
-                PANEL_HEIGHT,
-                256,
-                256);
+        if (previousValue != null && valueBox.isVisible()) {
+            valueBox.setValue(previousValue);
+        }
+        invalidValue = previousInvalid;
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        List<LoliConfigOption> options = menu.getOptions();
-        graphics.centeredText(font, title, imageWidth / 2, 7, TEXT_COLOR);
-        if (options.isEmpty()) {
-            return;
-        }
-        LoliConfigOption option = options.get(optionIndex);
+        drawLabel(graphics, titleText, 10, layout.row(0), TEXT_COLOR, mouseX, mouseY);
+        drawLabel(graphics, optionText, 36, layout.row(1) + (optionRowHeight - optionText.height()) / 2,
+                TEXT_COLOR, mouseX, mouseY);
         graphics.centeredText(
                 font,
-                Component.translatable(option.translationKey()),
-                imageWidth / 2,
-                32,
+                Component.translatable("gui.liymod.config.page", menu.getOptions().isEmpty() ? 0 : optionIndex + 1, menu.getOptions().size()),
+                layout.width() / 2,
+                layout.row(3),
                 TEXT_COLOR);
-        graphics.centeredText(
-                font,
-                Component.translatable("gui.liymod.config.page", optionIndex + 1, options.size()),
-                imageWidth / 2,
-                82,
-                TEXT_COLOR);
-        if (invalidValue) {
-            graphics.centeredText(
-                    font,
-                    Component.translatable("gui.liymod.config.invalid"),
-                    imageWidth / 2,
-                    121,
-                    ERROR_COLOR);
-        } else {
-            graphics.centeredText(
-                    font,
-                    Component.translatable("gui.liymod.config.server_authoritative"),
-                    imageWidth / 2,
-                    121,
-                    TEXT_COLOR);
-        }
+        drawLabel(graphics, invalidValue ? errorText : helpText, 10, layout.row(5),
+                invalidValue ? ERROR_COLOR : TEXT_COLOR, mouseX, mouseY);
     }
 
     private void changeOption(int delta) {
@@ -158,6 +136,8 @@ public final class FinalConfigScreen extends AbstractContainerScreen<FinalConfig
     private void showCurrentOption() {
         LoliConfigOption option = currentOption();
         boolean hasOption = option != null;
+        optionText = LoliGui.text(font, hasOption ? Component.translatable(option.translationKey()) : Component.empty(),
+                layout.contentWidth() - 52, 2);
         previousButton.active = hasOption;
         nextButton.active = hasOption;
         boolean isBoolean = hasOption && option.type() == LoliConfigOption.ValueType.BOOLEAN;

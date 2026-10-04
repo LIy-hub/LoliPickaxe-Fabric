@@ -1,5 +1,6 @@
 package com.liymod.client.screen;
 
+import com.liymod.client.gui.LoliGui;
 import com.liymod.menu.StorageMenu;
 import com.liymod.network.StorageDropAllPayload;
 import com.liymod.network.StoragePagePayload;
@@ -17,10 +18,15 @@ import net.minecraft.world.entity.player.Inventory;
 public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu> {
     private static final Identifier TEXTURE =
             Identifier.fromNamespaceAndPath("liymod", "textures/gui/container/loli_pickaxe_container.png");
-    private static final int TEXT_COLOR = 0xFFF5F5F5;
+    private static final int TEXT_COLOR = LoliGui.TEXT_COLOR;
 
     private Button previousButton;
     private Button nextButton;
+    private LoliGui.TextBlock titleText;
+    private LoliGui.TextBlock pageText;
+    private int pageY;
+    private int displayedPage = -1;
+    private int displayedPageCount = -1;
 
     public LoliStorageScreen(StorageMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, 240, 256);
@@ -31,22 +37,28 @@ public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu
     @Override
     protected void init() {
         super.init();
+        titleText = LoliGui.text(font, title, 60, 2);
+        int navigationY = 8 + titleText.height() + 6;
+        pageY = navigationY + 26;
+        displayedPage = -1;
+        displayedPageCount = -1;
         previousButton = addRenderableWidget(Button.builder(
                         Component.literal("<"),
                         button -> changePage(-1))
-                .bounds(leftPos + 173, topPos + 22, 20, 20)
+                .bounds(leftPos + 176, topPos + navigationY, 20, 20)
                 .tooltip(Tooltip.create(Component.translatable("gui.liymod.loli_storage.previous_page")))
                 .build());
         nextButton = addRenderableWidget(Button.builder(
                         Component.literal(">"),
                         button -> changePage(1))
-                .bounds(leftPos + 213, topPos + 22, 20, 20)
+                .bounds(leftPos + 216, topPos + navigationY, 20, 20)
                 .tooltip(Tooltip.create(Component.translatable("gui.liymod.loli_storage.next_page")))
                 .build());
         addRenderableWidget(Button.builder(
-                        Component.translatable("gui.liymod.loli_storage.drop_all"),
+                        Component.translatable("gui.liymod.loli_storage.drop_all_short"),
                         button -> ClientPlayNetworking.send(new StorageDropAllPayload()))
-                .bounds(leftPos + 173, topPos + 50, 60, 20)
+                .bounds(leftPos + 176, topPos + pageY + 2 * font.lineHeight + 6, 60, 20)
+                .tooltip(Tooltip.create(Component.translatable("gui.liymod.loli_storage.drop_all")))
                 .build());
         updatePageButtons();
     }
@@ -73,17 +85,14 @@ public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu
                 imageHeight,
                 256,
                 256);
+        LoliGui.panel(graphics, leftPos + 172, topPos, 68, imageHeight);
     }
 
     @Override
     protected void extractLabels(GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
-        graphics.text(font, title, titleLabelX, titleLabelY, TEXT_COLOR, true);
-        graphics.text(font, playerInventoryTitle, inventoryLabelX, inventoryLabelY, TEXT_COLOR, true);
-        Component page = Component.translatable(
-                "gui.liymod.loli_storage.page",
-                menu.getCurrentPage() + 1,
-                menu.getPageCount());
-        graphics.text(font, page, 203 - font.width(page) / 2, 29, TEXT_COLOR, true);
+        titleText.draw(graphics, font, 176, 8, TEXT_COLOR, mouseX, mouseY, leftPos, topPos);
+        pageText.draw(graphics, font, 176, pageY, TEXT_COLOR, mouseX, mouseY, leftPos, topPos);
+        // The grid has no free label row between storage and player slots.
     }
 
     private void changePage(int delta) {
@@ -97,6 +106,12 @@ public final class LoliStorageScreen extends AbstractContainerScreen<StorageMenu
 
     private void updatePageButtons() {
         int currentPage = menu.getCurrentPage();
+        int pageCount = menu.getPageCount();
+        if (currentPage != displayedPage || pageCount != displayedPageCount) {
+            pageText = LoliGui.text(font, Component.translatable("gui.liymod.loli_storage.page", currentPage + 1, pageCount), 60, 2);
+            displayedPage = currentPage;
+            displayedPageCount = pageCount;
+        }
         if (previousButton != null) {
             previousButton.active = currentPage > 0;
         }
